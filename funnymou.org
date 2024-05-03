@@ -1,3 +1,18 @@
+ cut -c 16- funnymou.asm > fm.asm
+
+zmac -c -n funnymou.asm
+split -b4k funnymou.cim
+
+md5 zout/funnymou.cim
+MD5 (zout/funnymou.cim) = 5c73be3625ac5f1e295bb48d33b451bf
+
+
+ zmac -c -n -s -e funnymou.asm
+ head -n 10 funnymou.lst | cut -c 16-
+
+ diff -y <(xxd xaa) <(xxd dump/suprmous.x1)
+
+ 
 https://www.system16.com/hardware.php?id=631
 
 ROM_START( funnymou )
@@ -8,7 +23,7 @@ ROM_START( funnymou )
 	ROM_LOAD( "fm.4",         0x3000, 0x1000, CRC(603333df) SHA1(04723fbd912e3d8fabf88643742c3553f4bb603b) )
 	ROM_LOAD( "fm.5",         0x4000, 0x1000, CRC(2ef9cbf1) SHA1(02323499ddcf4dcbbe432e2dbf5d305e5f9e15ad) )
 
-	ROM_REGION( 0x10000, "audiocpu", 0 )
+	ROM_REGION( 0x10000, "audiocpu", 0 )<
 	ROM_LOAD( "fm.6",         0x0000, 0x1000, CRC(fba71785) SHA1(56537a64a1e6cffedb8a6bd77e3edfa8aca94822) )
 
 	ROM_REGION( 0x3000, "gfx1", 0 ) /* chars and sprites */
