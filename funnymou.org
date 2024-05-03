@@ -1,0 +1,98 @@
+https://www.system16.com/hardware.php?id=631
+
+ROM_START( funnymou )
+	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_LOAD( "fm.1",         0x0000, 0x1000, CRC(ad72b467) SHA1(98c79424bc98f2f1af79a04dabdd3985a71d761c) )
+	ROM_LOAD( "fm.2",         0x1000, 0x1000, CRC(53f5be5e) SHA1(9ed0a04fb19f93336fa3a9882c6842062d841201) )
+	ROM_LOAD( "fm.3",         0x2000, 0x1000, CRC(b5b8d34d) SHA1(e0edcdb7f070061f6f86991e22c0ea0808d4fbe4) )
+	ROM_LOAD( "fm.4",         0x3000, 0x1000, CRC(603333df) SHA1(04723fbd912e3d8fabf88643742c3553f4bb603b) )
+	ROM_LOAD( "fm.5",         0x4000, 0x1000, CRC(2ef9cbf1) SHA1(02323499ddcf4dcbbe432e2dbf5d305e5f9e15ad) )
+
+	ROM_REGION( 0x10000, "audiocpu", 0 )
+	ROM_LOAD( "fm.6",         0x0000, 0x1000, CRC(fba71785) SHA1(56537a64a1e6cffedb8a6bd77e3edfa8aca94822) )
+
+	ROM_REGION( 0x3000, "gfx1", 0 ) /* chars and sprites */
+	ROM_LOAD( "fm.8",         0x0000, 0x1000, CRC(dbef9db8) SHA1(2bb070603f79e4acb7821cfa61ea1b4aed6d8e1f) )
+	ROM_LOAD( "fm.9",         0x1000, 0x1000, CRC(700d996e) SHA1(31884ec80b5eb70dc8e96712b5541754997b0ca8) )
+	ROM_LOAD( "fm.7",         0x2000, 0x1000, CRC(e9295071) SHA1(6034b7bc86bf070464af82bf1b9a55da81e864d9) )
+
+	ROM_REGION( 0x0040, "proms", 0 )
+	ROM_LOAD( "smouse2.clr",  0x0000, 0x0020, CRC(8c295553) SHA1(7b43a4f023a163c233f6d9cf13fa4beee95d19d6) )
+	ROM_LOAD( "smouse1.clr",  0x0020, 0x0020, CRC(d815504b) SHA1(5d11a650a885c7035e303c6758702baa8f0e7615) )
+ROM_END
+
+
+
+void thepit_state::thepit_main_map(address_map &map)
+{
+	map(0x0000, 0x4fff).rom();
+	map(0x8000, 0x87ff).ram();
+	map(0x8800, 0x8bff).mirror(0x0400).ram().w(FUNC(thepit_state::colorram_w)).share("colorram");
+	map(0x9000, 0x93ff).mirror(0x0400).ram().w(FUNC(thepit_state::videoram_w)).share("videoram");
+	map(0x9800, 0x983f).mirror(0x0700).ram().share("attributesram");
+	map(0x9840, 0x985f).ram().share("spriteram");
+	map(0x9860, 0x98ff).ram();
+	map(0xa000, 0xa000).r(FUNC(thepit_state::input_port_0_r)).nopw(); // Not hooked up according to the schematics
+	map(0xa800, 0xa800).portr("IN1");
+	map(0xb000, 0xb000).portr("DSW");
+	map(0xb000, 0xb007).w(m_mainlatch, FUNC(ls259_device::write_d0));
+	map(0xb800, 0xb800).r("watchdog", FUNC(watchdog_timer_device::reset_r)).w("soundlatch", FUNC(generic_latch_8_device::write));
+}
+
+
+
+The Pit/Round Up/Intrepid/Super Mouse memory map (preliminary)
+
+Driver by Zsolt Vasvari
+
+Main CPU:
+
+0000-4fff ROM
+8000-87ff RAM
+8800-8bff Color RAM        (Not used in Intrepid/Super Mouse)
+8c00-8fff Mirror for above (Not used in Intrepid/Super Mouse)
+9000-93ff Video RAM
+9400-97ff Mirror for above (Color RAM in Intrepid/Super Mouse)
+9800-983f Attributes RAM
+9840-985f Sprite RAM
+
+Read:
+
+a000      Input Port 0
+a800      Input Port 1
+b000      DIP Switches
+b800      Watchdog Reset
+
+Write:
+
+b000      NMI Enable
+b002      Coin Lockout
+b003      Sound Enable
+b005      Intrepid graphics bank select
+b006      Flip Screen X
+b007      Flip Screen Y
+b800      Sound Command
+
+
+Sound CPU:
+
+0000-0fff ROM  (0000-07ff in The Pit)
+3800-3bff RAM
+
+
+Port I/O Read:
+
+8f  AY8910 Read Port
+
+
+Port I/O Write:
+
+00  Reset Sound Command
+8c  AY8910 #2 Control Port    (Intrepid/Super Mouse only)
+8d  AY8910 #2 Write Port      (Intrepid/Super Mouse only)
+8e  AY8910 #1 Control Port
+8f  AY8910 #1 Write Port
+
+***********************************************************
+
+
