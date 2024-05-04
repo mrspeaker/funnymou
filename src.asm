@@ -1,21 +1,41 @@
-   watchdog = $b800
 
-     lives           = $8100 ;
+     credits         = $8023
+     is_playing      = $8030
+     score_lo        = $8044
+     score_mid       = $8045
+     score_hi        = $8046
+     hiscore_lo      = $804A
+     hiscore_mid     = $804B
+     hiscore_hi      = $804C
+     lives           = $8100
      lives_copy      = $8200 ; seems to mimic 8100?
 
+     bombs           = $867f
 
      screen_ram      = $9000 ; - 0x93ff  videoram
      start_of_tiles  = $9040 ; top right tile
      END_OF_TILES    = $93BF ; bottom left tile
+     end_of_scr_ram  = $93ff
 
+     color_ram       = $9400
      x_offset        = $9800
+     sprite_ram      = $9840
+
+     int_enable      = $b000 ; interrupt enable
+     coin_lockout    = $b002 ; dunno
+     sound_enable    = $b003
+     flip_scr_x      = $b006
+     flip_scr_y      = $b007
+     watchdog        = $B800 ;  or is it "sound command"?
+
+     hw_in_1         = $A800 ; 0x4 = P1
 
 start:
     nop
     nop
     nop
     ld   a,$00
-    ld   ($b000),a
+    ld   (int_enable),a
     jp   init_game
 
     nop
@@ -34,11 +54,11 @@ start:
     call $0933
     xor  a
     ld   b,$08
-    ld   hl,$B000
+    ld   hl,int_enable
     ld   (hl),a
     inc  hl
     djnz $002D
-    ld   a,($B000)
+    ld   a,(int_enable)
     ld   ($8020),a
     ld   b,a
     and  $07
@@ -56,10 +76,11 @@ start:
 
      dc   20,0
 
- dunno_1:
+ ;; Non-Maskable Interrupt handler. Fires every frame
+ NMI_LOOP:
     push af
     ld   a,$00
-    ld   ($B000),a
+    ld   (int_enable),a
     push bc
     push de
     push hl
@@ -78,7 +99,7 @@ start:
     nop
     nop
     nop
-    call $0100
+    call main_loop
     nop
     nop
     nop
@@ -97,68 +118,76 @@ start:
     pop  de
     pop  bc
     ld   a,$01
-    ld   ($B000),a
+    ld   (int_enable),a
     pop  af
     ret
 
-     dc 100,0
+     dc 97,0
 
- dunno_2:
+ ;; dunno if it's main loop. called from NMI
+ main_loop:
+     nop
+     nop
+     nop
     call $0743
     call $0629
-    ld   a,($8030)
+    ld   a,(is_playing)
     and  a
-    jp   nz,$01EB
-    ld   a,($A800)
-    and  $08
-    jp   nz,$0123
-    ld   a,($A800)
-    and  $04
-    jp   nz,$015B
-    jp   $01EB
-    ld   a,($8023)
-    cp   $02
-    jp   c,$0118
+    jp   nz,_no_start_buttons
+    ld   a,(hw_in_1)
+    and  $08    ; 2P plutton
+    jp   nz,_check_2P
+ _has_one_credit:
+    ld   a,(hw_in_1) ; reload in_1. for some reason
+    and  $04    ; 1P button
+    jp   nz,start_game_p1
+    jp   _no_start_buttons  ; no buttons
+ _check_2P:
+    ld   a,(credits)
+    cp   $02    ; has two?
+    jp   c,_has_one_credit
     ld   a,$02
-    ld   ($8030),a
-    ld   a,($8023)
+    ld   (is_playing),a
+    ld   a,(credits)
     sub  $02
     daa
-    ld   ($8023),a
+    ld   (credits),a
     ld   a,$01
     ld   ($803C),a
     ld   a,($8026)
     and  a
     jp   nz,$0150
     ld   a,$03
-    ld   ($8200),a
+    ld   (lives_copy),a
     ld   ($8300),a
     jp   $0193
     ld   a,$05
-    ld   ($8200),a
+    ld   (lives_copy),a
     ld   ($8300),a
     jp   $0193
-    ld   a,($8023)
+
+ start_game_p1:
+    ld   a,(credits)
     and  a
-    jp   z,$01EB
+    jp   z,_no_start_buttons
     ld   a,$01
-    ld   ($8030),a
-    ld   a,($8023)
+    ld   (is_playing),a
+    ld   a,(credits)
     sub  $01
     daa
-    ld   ($8023),a
+    ld   (credits),a
     ld   a,$00
     ld   ($803C),a
     ld   a,($8026)
     and  a
     jp   nz,$0189
     ld   a,$03
-    ld   ($8200),a
+    ld   (lives_copy),a
     ld   a,$00
     ld   ($8300),a
     jp   $0193
     ld   a,$05
-    ld   ($8200),a
+    ld   (lives_copy),a
     ld   a,$00
     ld   ($8300),a
     ld   a,$00
@@ -190,7 +219,7 @@ start:
     ld   b,$01
     call $07BC
     ld   a,$01
-    ld   ($B003),a
+    ld   (sound_enable),a
     ld   a,$E0
     ld   (watchdog),a
     ld   a,$01
@@ -202,13 +231,16 @@ start:
     nop
     nop
     nop
+
+
+ _no_start_buttons:
     ld   a,($8039)
     and  a
     ret  nz
-    ld   a,($8030)
+    ld   a,(is_playing)
     and  a
     jp   nz,$02C7
-    ld   a,($8023)
+    ld   a,(credits)
     and  a
     jp   nz,$0208
     ld   a,($803B)
@@ -232,7 +264,7 @@ start:
     ld   hl,lives
     ld   a,$00
     ld   b,$03
-    ld   (hl),a
+    ld   (hl),a ; set 3 lives
     inc  l
     jp   nz,$0230
     inc  h
@@ -333,11 +365,11 @@ start:
     and  a
     jp   z,$0319
     ret
-    ld   a,($8030)
+    ld   a,(is_playing)
     cp   $02
     jp   z,$0332
     ld   a,$00
-    ld   ($8030),a
+    ld   (is_playing),a
     ld   ($803B),a
     ld   a,($8039)
     set  2,a
@@ -409,7 +441,7 @@ start:
     jp   z,$03E9
     dec  (hl)
     ld   hl,lives
-    ld   de,$8200
+    ld   de,lives_copy
     ld   bc,$00FF
     ldir
     ld   a,(lives)
@@ -422,9 +454,11 @@ start:
     set  4,a
     ld   ($8039),a
     ret
-    ld   ($B003),a
-    ld   ($B006),a
-    ld   ($B007),a
+
+ ;;
+    ld   (sound_enable),a
+    ld   (flip_scr_x),a
+    ld   (flip_scr_y),a
     ld   a,$01
     ld   ($8034),a
     ld   ($8035),a
@@ -459,7 +493,7 @@ start:
     ldir
     jp   $0447
     ld   hl,lives
-    ld   de,$8200
+    ld   de,lives_copy
     ld   bc,$00FF
     ldir
     ld   a,(lives)
@@ -483,7 +517,7 @@ start:
     ld   a,($8031)
     and  a
     jp   z,$0484
-    ld   a,($8200)
+    ld   a,(lives_copy)
     and  a
     jp   nz,$04C1
     jp   $048B
@@ -495,13 +529,13 @@ start:
     jp   nz,$04A0
     ld   a,$00
     ld   ($8036),a
-    ld   ($B006),a
-    ld   ($B007),a
+    ld   (flip_scr_x),a
+    ld   (flip_scr_y),a
     jp   $04AB
     ld   a,$01
     ld   ($8036),a
-    ld   ($B006),a
-    ld   ($B007),a
+    ld   (flip_scr_x),a
+    ld   (flip_scr_y),a
     ld   a,$00
     ld   ($8033),a
     ld   ($8032),a
@@ -516,8 +550,8 @@ start:
     ld   ($8032),a
     ld   a,$00
     ld   ($8036),a
-    ld   ($B006),a
-    ld   ($B007),a
+    ld   (flip_scr_x),a
+    ld   (flip_scr_y),a
     ld   ($8031),a
     ld   a,($8039)
     set  4,a
@@ -557,7 +591,7 @@ start:
     ldir
     jp   $0538
     ld   hl,lives
-    ld   de,$8200
+    ld   de,lives_copy
     ld   bc,$00FF
     ldir
     ld   a,$00
@@ -577,8 +611,8 @@ start:
     nop
     nop
     ld   a,$01
-    ld   ($B000),a
-    ld   ($B002),a
+    ld   (int_enable),a
+    ld   (coin_lockout),a
     nop
     nop
     nop
@@ -664,7 +698,7 @@ start:
     ld   a,($8031)
     and  a
     jp   nz,$0653
-    ld   hl,$8044
+    ld   hl,score_lo
     ld   c,$00
     jp   $0658
     ld   hl,$8047
@@ -763,7 +797,7 @@ start:
     ld   a,c
     and  a
     jp   nz,$06FF
-    ld   ix,$8046
+    ld   ix,score_hi
     ld   hl,$06CB
     call $070A
     ret
@@ -862,7 +896,7 @@ start:
     ld   a,b
     and  a
     ret  z
-    ld   a,($8023)
+    ld   a,(credits)
     ld   b,a
     and  $0F
     ld   ($907F),a
@@ -885,7 +919,7 @@ start:
     rlca
     ld   (iy+$03),$09
     xor  a
-    ld   ($B002),a
+    ld   (coin_lockout),a
     inc  b
     jp   $07BC
 
@@ -913,7 +947,7 @@ start:
     ld   (hl),$00
     inc  l
     jp   nz,$081B
-    ld   hl,$B000
+    ld   hl,int_enable
     ld   b,$08
     ld   (hl),$00
     inc  l
@@ -2755,7 +2789,7 @@ start:
     and  a
     jp   nz,$10ED
     ld   ($8683),a
-    ld   a,($867F)
+    ld   a,(bombs)
     and  a
     ret  z
     jp   $1046
@@ -2773,24 +2807,26 @@ start:
     and  $10
     ret  z
     call $251B
-    ld   de,$FFE2
+    ld   de,$FFE2 ; controls?
     add  hl,de
     ld   a,(hl)
-    cp   $F0
+    cp   $F0    ; fire?
     ret  c
-    ld   a,($867F)
+    ld   a,(bombs) ;(only here when holding a bomb
     and  a
-    ret  z
-    sub  $01
-    ld   ($867F),a
+    ret  z      ; out of bombs
+    sub  $01    ; use a bomb
+    ld   (bombs),a
     call $106C
     jp   $109E
+
+ ;; drop bomb?
     push hl
     push de
     push bc
     push af
     ld   hl,$91C3
-    ld   a,($867F)
+    ld   a,(bombs)
     ld   c,$06
     ld   de,$0020
     and  a
@@ -2816,6 +2852,8 @@ start:
     pop  de
     pop  hl
     ret
+
+ ;; (after?) Drop bomb?
     ld   a,$00
     ld   ($8683),a
     ld   ($8681),a
@@ -2854,6 +2892,8 @@ start:
     ld   a,($8685)
     ld   (hl),a
     ret
+
+
     ld   a,($868B)
     and  a
     jp   nz,$110D
@@ -2915,7 +2955,7 @@ start:
     ld   a,($8683)
     and  a
     ret  z
-    ld   a,($B000)
+    ld   a,(int_enable)
     and  $80
     jp   nz,$118C
     ld   a,($841F)
@@ -5578,7 +5618,7 @@ start:
     ld   a,($8031)
     and  a
     jp   nz,$203A
-    ld   hl,$8200
+    ld   hl,lives_copy
     jp   $203D
     ld   hl,$8300
     ld   de,lives
@@ -5600,7 +5640,7 @@ start:
     inc  hl
     djnz $2066
     ld   a,$05
-    ld   ($867F),a
+    ld   (bombs),a
     call $106C
     ld   a,$06
     ld   ($803B),a
@@ -5708,7 +5748,7 @@ start:
     inc  de
     add  hl,bc
     jr   $2136
-    ld   hl,$804C
+    ld   hl,hiscore_hi
     push de
     ld   b,$03
     ld   a,(de)
@@ -5722,14 +5762,14 @@ start:
     pop  de
     ret
     pop  de
-    ld   hl,$804C
+    ld   hl,hiscore_hi
     ld   b,$03
     ld   a,(de)
     ld   (hl),a
     dec  hl
     dec  de
     djnz $215C
-    ld   de,$804C
+    ld   de,hiscore_hi
     ld   hl,$9221
     ld   b,$06
     ld   c,b
@@ -5803,7 +5843,7 @@ start:
     call $20EC
     ld   hl,$2372
     call $212E
-    ld   a,($8030)
+    ld   a,(is_playing)
     cp   $01
     jp   z,$2240
     ld   a,($8035)
@@ -5820,22 +5860,22 @@ start:
     call $212E
     ex   af,af'
     ld   (hl),a
-    ld   de,$8046
+    ld   de,score_hi
     rrca
     jp   c,$223A
     ld   de,$8049
     call $213F
     jp   $2261
-    ld   de,$8046
+    ld   de,score_hi
     call $213F
     xor  a
     ld   ($8036),a
-    ld   ($B003),a
-    ld   hl,$B006
+    ld   (sound_enable),a
+    ld   hl,flip_scr_x
     ld   (hl),a
     inc  l
     ld   (hl),a
-    ld   hl,$8044
+    ld   hl,score_lo
     ld   b,$06
     ld   (hl),a
     inc  hl
@@ -5848,7 +5888,7 @@ start:
     res  3,a
     ld   ($8039),a
     jp   $1FD1
-    ld   de,$8046
+    ld   de,score_hi
     call $213F
     nop
     nop
@@ -5882,7 +5922,7 @@ start:
     and  a
     jp   z,$22BE
     ld   a,$01
-    ld   hl,$B006
+    ld   hl,flip_scr_x
     ld   (hl),a
     inc  l
     ld   (hl),a
@@ -5917,7 +5957,7 @@ start:
     ld   ($8039),a
     jp   $1FD1
     ld   a,($8031)
-    ld   hl,$8200
+    ld   hl,lives_copy
     and  a
     jp   z,$2312
     inc  h
@@ -6022,6 +6062,7 @@ start:
     call $100F
     call $41BC
     ret
+
     call $2539
     ret
     call $2A51
@@ -6274,7 +6315,7 @@ start:
     inc  (hl)
     bit  0,(hl)
     jp   z,$28D2
-    ld   a,($8030)
+    ld   a,(is_playing)
     and  a
     jp   nz,$2571
     ld   hl,$8423
@@ -9112,7 +9153,7 @@ start:
     nop
     nop
     nop
-    ld   a,($B000)
+    ld   a,(int_enable)
     and  $80
     ret  nz
     ld   a,($841F)
@@ -10329,6 +10370,8 @@ start:
     inc  hl
     djnz $41CE
     ret
+
+ ;;
     ld   a,($85C4)
     and  a
     jp   nz,$4217
@@ -10406,7 +10449,7 @@ start:
     ld   a,($A000)
     and  $10
     jp   z,$4443
-    ld   a,($8030)
+    ld   a,(is_playing)
     and  a
     jp   z,$4443
     ld   a,$E0
@@ -10479,6 +10522,8 @@ start:
     ld   a,$01
     ld   ($8033),a
     ret
+
+ ;;
     ld   a,($8480)
     and  $7F
     cp   $03
@@ -10497,6 +10542,8 @@ start:
     ld   a,$91
     ld   (watchdog),a
     ret
+
+ ;;
     inc  a
     or   $80
     ld   ($8480),a
@@ -10516,15 +10563,15 @@ start:
     ld   a,($8474)
     and  a
     jp   z,$43E0
-    ld   a,($8030)
+    ld   a,(is_playing)
     and  a
     jp   z,$436C
-    ld   a,($8023)
+    ld   a,(credits)
     cp   $09
     jp   nc,$43BA
     add  a,$01
     daa
-    ld   ($8023),a
+    ld   (credits),a
     ld   b,$01
     call $07BC
     ld   hl,$92EC
@@ -10565,7 +10612,7 @@ start:
     djnz $43AE
     ret
     ld   a,$09
-    ld   ($8023),a
+    ld   (credits),a
     jp   $4367
     inc  h
     inc  e
