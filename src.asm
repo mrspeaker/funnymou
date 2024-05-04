@@ -1,6 +1,14 @@
    watchdog = $b800
 
-   lives    = $8100
+     lives           = $8100 ;
+     lives_copy      = $8200 ; seems to mimic 8100?
+
+
+     screen_ram      = $9000 ; - 0x93ff  videoram
+     start_of_tiles  = $9040 ; top right tile
+     END_OF_TILES    = $93BF ; bottom left tile
+
+     x_offset        = $9800
 
 start:
     nop
@@ -9,6 +17,7 @@ start:
     ld   a,$00
     ld   ($b000),a
     jp   init_game
+
     nop
     nop
     nop
@@ -44,7 +53,10 @@ start:
     and  $40
     ld   ($8027),a
     jp   $0580
+
      dc   20,0
+
+ dunno_1:
     push af
     ld   a,$00
     ld   ($B000),a
@@ -88,7 +100,10 @@ start:
     ld   ($B000),a
     pop  af
     ret
+
      dc 100,0
+
+ dunno_2:
     call $0743
     call $0629
     ld   a,($8030)
@@ -552,7 +567,9 @@ start:
     set  6,a
     ld   ($8039),a
     ret
+
      dc   55,0
+
     call $05C0
     call $05E2
     ld   a,(watchdog)
@@ -566,7 +583,9 @@ start:
     nop
     nop
     jp   $1FD1
+
      dc   38,0
+
     ld   hl,$9380
     ld   de,$05FA
     ld   b,$1A
@@ -580,6 +599,7 @@ start:
     ld   ($9061),a
     ld   ($9181),a
     ret
+
     ld   hl,$9401
     ld   de,$0020
     ld   b,$20
@@ -871,7 +891,7 @@ start:
 
  init_game:
     ld   a,(watchdog)
-    ld   hl,$9000
+    ld   hl,screen_ram
     ld   b,$04
     ld   a,$24
     ld   (hl),a
@@ -889,7 +909,7 @@ start:
     ld   a,(watchdog)
     inc  h
     djnz $080B
-    ld   hl,$9800
+    ld   hl,x_offset
     ld   (hl),$00
     inc  l
     jp   nz,$081B
@@ -928,7 +948,7 @@ start:
     jr   nz,$0832
     inc  d
     ld   c,$20
-    ld   hl,$9000
+    ld   hl,screen_ram
     ld   b,$04
     ld   a,c
     add  a,$2F
@@ -939,7 +959,7 @@ start:
     inc  h
     djnz $0867
     ld   a,(watchdog)
-    ld   hl,$9000
+    ld   hl,screen_ram
     ld   b,$04
     ld   a,c
     add  a,$2F
@@ -981,13 +1001,13 @@ start:
     jr   nz,$0890
     inc  d
     ld   c,$20
-    ld   hl,$9800
+    ld   hl,x_offset
     ld   a,c
     add  a,$2F
     ld   (hl),a
     inc  l
     jr   nz,$08C0
-    ld   hl,$9800
+    ld   hl,x_offset
     ld   a,c
     add  a,$2F
     cp   (hl)
@@ -1056,7 +1076,7 @@ start:
     ld   a,(watchdog)
     jp   $092D
     ld   a,(watchdog)
-    ld   hl,$9000
+    ld   hl,screen_ram
     ld   b,$04
     ld   (hl),$24
     inc  l
@@ -1072,7 +1092,7 @@ start:
     inc  h
     djnz $094B
     ld   a,(watchdog)
-    ld   hl,$9800
+    ld   hl,x_offset
     ld   (hl),$00
     inc  l
     jr   nz,$0959
@@ -5664,7 +5684,7 @@ start:
     add  hl,de
     pop  bc
     djnz $210B
-    ld   hl,$9800
+    ld   hl,x_offset
     ld   b,$40
     ld   (hl),$00
     inc  l
@@ -6236,7 +6256,7 @@ start:
     ld   a,d
     and  $03
     ld   d,a
-    ld   hl,$9000
+    ld   hl,screen_ram
     add  hl,de
     ret
     ld   a,($8400)

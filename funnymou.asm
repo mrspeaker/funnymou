@@ -1,7 +1,14 @@
              	    watchdog = $b800
 
-                    lives      = $8100 ;
-                    lives_copy = $8200 ; seems to mimic 8100?
+                    lives           = $8100 ;
+                    lives_copy      = $8200 ; seems to mimic 8100?
+
+
+                    screen_ram      = $9000 ; - 0x93ff  videoram
+                    start_of_tiles  = $9040 ; top right tile
+                    END_OF_TILES    = $93BF ; bottom left tile
+
+                    x_offset        = $9800
 
 0000          	start:
 0000  00      	    nop
@@ -884,7 +891,7 @@ zeros               dc   55,0
 
                 init_game:
 07F1  3A00B8  	    ld   a,(watchdog)
-07F4  210090  	    ld   hl,$9000
+07F4  210090  	    ld   hl,screen_ram
 07F7  0604    	    ld   b,$04
 07F9  3E24    	    ld   a,$24
 07FB  77      	    ld   (hl),a
@@ -902,7 +909,7 @@ zeros               dc   55,0
 0812  3A00B8  	    ld   a,(watchdog)
 0815  24      	    inc  h
 0816  10F3    	    djnz $080B
-0818  210098  	    ld   hl,$9800
+0818  210098  	    ld   hl,x_offset
 081B  3600    	    ld   (hl),$00
 081D  2C      	    inc  l
 081E  C21B08  	    jp   nz,$081B
@@ -941,7 +948,7 @@ zeros               dc   55,0
 085C  20D4    	    jr   nz,$0832
 085E  14      	    inc  d
 085F  0E20    	    ld   c,$20
-0861  210090  	    ld   hl,$9000
+0861  210090  	    ld   hl,screen_ram
 0864  0604    	    ld   b,$04
 0866  79      	    ld   a,c
 0867  C62F    	    add  a,$2F
@@ -952,7 +959,7 @@ zeros               dc   55,0
 086E  24      	    inc  h
 086F  10F6    	    djnz $0867
 0871  3A00B8  	    ld   a,(watchdog)
-0874  210090  	    ld   hl,$9000
+0874  210090  	    ld   hl,screen_ram
 0877  0604    	    ld   b,$04
 0879  79      	    ld   a,c
 087A  C62F    	    add  a,$2F
@@ -994,13 +1001,13 @@ zeros               dc   55,0
 08B7  20D7    	    jr   nz,$0890
 08B9  14      	    inc  d
 08BA  0E20    	    ld   c,$20
-08BC  210098  	    ld   hl,$9800
+08BC  210098  	    ld   hl,x_offset
 08BF  79      	    ld   a,c
 08C0  C62F    	    add  a,$2F
 08C2  77      	    ld   (hl),a
 08C3  2C      	    inc  l
 08C4  20FA    	    jr   nz,$08C0
-08C6  210098  	    ld   hl,$9800
+08C6  210098  	    ld   hl,x_offset
 08C9  79      	    ld   a,c
 08CA  C62F    	    add  a,$2F
 08CC  BE      	    cp   (hl)
@@ -1069,7 +1076,7 @@ zeros               dc   55,0
 092D  3A00B8  	    ld   a,(watchdog)
 0930  C32D09  	    jp   $092D
 0933  3A00B8  	    ld   a,(watchdog)
-0936  210090  	    ld   hl,$9000
+0936  210090  	    ld   hl,screen_ram
 0939  0604    	    ld   b,$04
 093B  3624    	    ld   (hl),$24
 093D  2C      	    inc  l
@@ -1085,7 +1092,7 @@ zeros               dc   55,0
 0950  24      	    inc  h
 0951  10F8    	    djnz $094B
 0953  3A00B8  	    ld   a,(watchdog)
-0956  210098  	    ld   hl,$9800
+0956  210098  	    ld   hl,x_offset
 0959  3600    	    ld   (hl),$00
 095B  2C      	    inc  l
 095C  20FB    	    jr   nz,$0959
@@ -5677,7 +5684,7 @@ zeros               dc   55,0
 2115  19      	    add  hl,de
 2116  C1      	    pop  bc
 2117  10F2    	    djnz $210B
-2119  210098  	    ld   hl,$9800
+2119  210098  	    ld   hl,x_offset
 211C  0640    	    ld   b,$40
 211E  3600    	    ld   (hl),$00
 2120  2C      	    inc  l
@@ -6249,7 +6256,7 @@ zeros               dc   55,0
 2530  7A      	    ld   a,d
 2531  E603    	    and  $03
 2533  57      	    ld   d,a
-2534  210090  	    ld   hl,$9000
+2534  210090  	    ld   hl,screen_ram
 2537  19      	    add  hl,de
 2538  C9      	    ret
 2539  3A0084  	    ld   a,($8400)
