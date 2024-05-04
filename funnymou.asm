@@ -1,6 +1,7 @@
              	    watchdog = $b800
 
-             	    lives    = $8100
+                    lives      = $8100 ;
+                    lives_copy = $8200 ; seems to mimic 8100?
 
 0000          	start:
 0000  00      	    nop
@@ -9,6 +10,7 @@
 0003  3E00    	    ld   a,$00
 0005  3200B0  	    ld   ($b000),a
 0008  C3F107  	    jp   init_game
+
 000B  00      	    nop
 000C  00      	    nop
 000D  00      	    nop
@@ -44,26 +46,10 @@
 004A  E640    	    and  $40
 004C  322780  	    ld   ($8027),a
 004F  C38005  	    jp   $0580
-0052  00      	    nop
-0053  00      	    nop
-0054  00      	    nop
-0055  00      	    nop
-0056  00      	    nop
-0057  00      	    nop
-0058  00      	    nop
-0059  00      	    nop
-005A  00      	    nop
-005B  00      	    nop
-005C  00      	    nop
-005D  00      	    nop
-005E  00      	    nop
-005F  00      	    nop
-0060  00      	    nop
-0061  00      	    nop
-0062  00      	    nop
-0063  00      	    nop
-0064  00      	    nop
-0065  00      	    nop
+
+zeros               dc   20,0
+
+                dunno_1:
 0066  F5      	    push af
 0067  3E00    	    ld   a,$00
 0069  3200B0  	    ld   ($B000),a
@@ -108,106 +94,9 @@
 009D  F1      	    pop  af
 009E  C9      	    ret
 
-009F  00      	    nop
-00A0  00      	    nop
-00A1  00      	    nop
-00A2  00      	    nop
-00A3  00      	    nop
-00A4  00      	    nop
-00A5  00      	    nop
-00A6  00      	    nop
-00A7  00      	    nop
-00A8  00      	    nop
-00A9  00      	    nop
-00AA  00      	    nop
-00AB  00      	    nop
-00AC  00      	    nop
-00AD  00      	    nop
-00AE  00      	    nop
-00AF  00      	    nop
-00B0  00      	    nop
-00B1  00      	    nop
-00B2  00      	    nop
-00B3  00      	    nop
-00B4  00      	    nop
-00B5  00      	    nop
-00B6  00      	    nop
-00B7  00      	    nop
-00B8  00      	    nop
-00B9  00      	    nop
-00BA  00      	    nop
-00BB  00      	    nop
-00BC  00      	    nop
-00BD  00      	    nop
-00BE  00      	    nop
-00BF  00      	    nop
-00C0  00      	    nop
-00C1  00      	    nop
-00C2  00      	    nop
-00C3  00      	    nop
-00C4  00      	    nop
-00C5  00      	    nop
-00C6  00      	    nop
-00C7  00      	    nop
-00C8  00      	    nop
-00C9  00      	    nop
-00CA  00      	    nop
-00CB  00      	    nop
-00CC  00      	    nop
-00CD  00      	    nop
-00CE  00      	    nop
-00CF  00      	    nop
-00D0  00      	    nop
-00D1  00      	    nop
-00D2  00      	    nop
-00D3  00      	    nop
-00D4  00      	    nop
-00D5  00      	    nop
-00D6  00      	    nop
-00D7  00      	    nop
-00D8  00      	    nop
-00D9  00      	    nop
-00DA  00      	    nop
-00DB  00      	    nop
-00DC  00      	    nop
-00DD  00      	    nop
-00DE  00      	    nop
-00DF  00      	    nop
-00E0  00      	    nop
-00E1  00      	    nop
-00E2  00      	    nop
-00E3  00      	    nop
-00E4  00      	    nop
-00E5  00      	    nop
-00E6  00      	    nop
-00E7  00      	    nop
-00E8  00      	    nop
-00E9  00      	    nop
-00EA  00      	    nop
-00EB  00      	    nop
-00EC  00      	    nop
-00ED  00      	    nop
-00EE  00      	    nop
-00EF  00      	    nop
-00F0  00      	    nop
-00F1  00      	    nop
-00F2  00      	    nop
-00F3  00      	    nop
-00F4  00      	    nop
-00F5  00      	    nop
-00F6  00      	    nop
-00F7  00      	    nop
-00F8  00      	    nop
-00F9  00      	    nop
-00FA  00      	    nop
-00FB  00      	    nop
-00FC  00      	    nop
-00FD  00      	    nop
-00FE  00      	    nop
-00FF  00      	    nop
-0100  00      	    nop
-0101  00      	    nop
-0102  00      	    nop
+zeros               dc 100,0
+
+                dunno_2:
 0103  CD4307  	    call $0743
 0106  CD2906  	    call $0629
 0109  3A3080  	    ld   a,($8030)
@@ -671,61 +560,9 @@
 0543  CBF7    	    set  6,a
 0545  323980  	    ld   ($8039),a
 0548  C9      	    ret
-0549  00      	    nop
-054A  00      	    nop
-054B  00      	    nop
-054C  00      	    nop
-054D  00      	    nop
-054E  00      	    nop
-054F  00      	    nop
-0550  00      	    nop
-0551  00      	    nop
-0552  00      	    nop
-0553  00      	    nop
-0554  00      	    nop
-0555  00      	    nop
-0556  00      	    nop
-0557  00      	    nop
-0558  00      	    nop
-0559  00      	    nop
-055A  00      	    nop
-055B  00      	    nop
-055C  00      	    nop
-055D  00      	    nop
-055E  00      	    nop
-055F  00      	    nop
-0560  00      	    nop
-0561  00      	    nop
-0562  00      	    nop
-0563  00      	    nop
-0564  00      	    nop
-0565  00      	    nop
-0566  00      	    nop
-0567  00      	    nop
-0568  00      	    nop
-0569  00      	    nop
-056A  00      	    nop
-056B  00      	    nop
-056C  00      	    nop
-056D  00      	    nop
-056E  00      	    nop
-056F  00      	    nop
-0570  00      	    nop
-0571  00      	    nop
-0572  00      	    nop
-0573  00      	    nop
-0574  00      	    nop
-0575  00      	    nop
-0576  00      	    nop
-0577  00      	    nop
-0578  00      	    nop
-0579  00      	    nop
-057A  00      	    nop
-057B  00      	    nop
-057C  00      	    nop
-057D  00      	    nop
-057E  00      	    nop
-057F  00      	    nop
+
+zeros               dc   55,0
+
 0580  CDC005  	    call $05C0
 0583  CDE205  	    call $05E2
 0586  3A00B8  	    ld   a,(watchdog)
@@ -739,44 +576,9 @@
 0595  00      	    nop
 0596  00      	    nop
 0597  C3D11F  	    jp   $1FD1
-059A  00      	    nop
-059B  00      	    nop
-059C  00      	    nop
-059D  00      	    nop
-059E  00      	    nop
-059F  00      	    nop
-05A0  00      	    nop
-05A1  00      	    nop
-05A2  00      	    nop
-05A3  00      	    nop
-05A4  00      	    nop
-05A5  00      	    nop
-05A6  00      	    nop
-05A7  00      	    nop
-05A8  00      	    nop
-05A9  00      	    nop
-05AA  00      	    nop
-05AB  00      	    nop
-05AC  00      	    nop
-05AD  00      	    nop
-05AE  00      	    nop
-05AF  00      	    nop
-05B0  00      	    nop
-05B1  00      	    nop
-05B2  00      	    nop
-05B3  00      	    nop
-05B4  00      	    nop
-05B5  00      	    nop
-05B6  00      	    nop
-05B7  00      	    nop
-05B8  00      	    nop
-05B9  00      	    nop
-05BA  00      	    nop
-05BB  00      	    nop
-05BC  00      	    nop
-05BD  00      	    nop
-05BE  00      	    nop
-05BF  00      	    nop
+
+                    dc   38,0
+
 05C0  218093  	    ld   hl,$9380
 05C3  11FA05  	    ld   de,$05FA
 05C6  061A    	    ld   b,$1A
@@ -790,6 +592,7 @@
 05DB  326190  	    ld   ($9061),a
 05DE  328191  	    ld   ($9181),a
 05E1  C9      	    ret
+
 05E2  210194  	    ld   hl,$9401
 05E5  112000  	    ld   de,$0020
 05E8  0620    	    ld   b,$20
