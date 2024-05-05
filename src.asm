@@ -1,6 +1,7 @@
 
      credits         = $8023
      is_playing      = $8030
+     screen_state    = $8039 ; 10=ready, 40=go to gamble
      cur_screen      = $803B ; 1=splash;6=game etc
      score_lo        = $8044
      score_mid       = $8045
@@ -100,6 +101,9 @@
      SCR_GAMBLE      = $07
      SCR_LUCKY       = $08
 
+
+     TILE_BLANK      = $24
+
  ;;; ============ start of suprmous.x1 =============
 
 start:
@@ -108,11 +112,13 @@ start:
     nop
     ld   a,$00
     ld   (int_enable),a
-    jp   init_game
+    jp   init_game_RAM_test
 
     nop
     nop
     nop
+
+ done_RAM_test:
     ld   a,(watchdog)
     ld   hl,$8000
     ld   a,$88
@@ -123,7 +129,7 @@ start:
     jp   nz,$0018
     ld   sp,$87FE
     ld   a,(watchdog)
-    call $0933
+    call clear_screen
     xor  a
     ld   b,$08
     ld   hl,dip_switch
@@ -296,9 +302,9 @@ start:
     ld   (watchdog),a
     ld   a,$01
     ld   ($8038),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  4,a
-    ld   ($8039),a
+    ld   (screen_state),a
     nop
     nop
     nop
@@ -306,7 +312,7 @@ start:
 
 
  _no_start_buttons:
-    ld   a,($8039)
+    ld   a,(screen_state)
     and  a
     ret  nz
     ld   a,(is_playing)
@@ -327,14 +333,14 @@ start:
     cp   SCR_PUSH_P1
     ret  z
     ld   a,$01
-    ld   ($8039),a
+    ld   (screen_state),a
     jp   $0229
  _press_p2:
     ld   a,(cur_screen)
     cp   SCR_PUSH_P1P2
     ret  z
     ld   a,$02
-    ld   ($8039),a
+    ld   (screen_state),a
     jp   $0229
     ld   hl,lives
     ld   a,$00
@@ -373,23 +379,23 @@ start:
     ld   a,$00
     ld   ($8033),a
     ld   ($8032),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  5,a
-    ld   ($8039),a
+    ld   (screen_state),a
     jp   $0229
     ld   a,$00
     ld   ($8033),a
     ld   ($8032),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  7,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
     ld   a,$00
     ld   ($8033),a
     ld   ($8032),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  6,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
     ld   a,(cur_screen)
     cp   SCR_SPLASH
@@ -447,9 +453,9 @@ start:
     ld   a,$00
     ld   (is_playing),a
     ld   (cur_screen),a ; SCR_NONE
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  2,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
     ld   a,($8031)
     and  a
@@ -461,9 +467,9 @@ start:
     jp   nz,$0321
     ld   a,$01
     ld   ($8031),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  4,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
     ld   a,$01
     ld   ($8035),a
@@ -472,9 +478,9 @@ start:
     jp   nz,$0321
     ld   a,$00
     ld   ($8031),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  4,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
     ld   a,($803D)
     dec  a
@@ -492,9 +498,9 @@ start:
     ld   a,$E0
     ld   (watchdog),a
     ret
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  5,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
     ld   a,(cur_screen)
     cp   SCR_GAME
@@ -526,9 +532,9 @@ start:
     ld   a,$00
     ld   ($8033),a
     ld   ($8032),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  4,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
 
  ;;
@@ -551,9 +557,9 @@ start:
     ld   a,$00
     ld   ($8033),a
     ld   ($8032),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  3,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
     ld   hl,lives
     ld   a,$00
@@ -586,9 +592,9 @@ start:
     ld   a,$00
     ld   ($8033),a
     ld   ($8032),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  3,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
     ld   a,($8031)
     and  a
@@ -617,9 +623,9 @@ start:
     ld   ($8032),a
     ld   a,$01
     ld   ($8031),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  4,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
     ld   a,$00
     ld   ($8033),a
@@ -629,9 +635,9 @@ start:
     ld   (flip_scr_x),a
     ld   (flip_scr_y),a
     ld   ($8031),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  4,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
     ld   a,(cur_screen)
     cp   $06
@@ -644,9 +650,9 @@ start:
     ld   ($8033),a
     ld   a,$08
     ld   (cur_screen),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  2,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
     ld   a,($8101)
     add  a,$01
@@ -673,9 +679,9 @@ start:
     ld   a,$00
     ld   ($8032),a
     ld   ($8033),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     set  6,a
-    ld   ($8039),a
+    ld   (screen_state),a
     ret
 
      dc   55,0
@@ -746,6 +752,7 @@ start:
     dec  e
     ld   l,$00
     inc  h
+
     ld   a,(de)
     ld   (hl),a
     push de
@@ -755,6 +762,8 @@ start:
     inc  de
     djnz $061D
     ret
+
+
     nop
     nop
     nop
@@ -763,6 +772,7 @@ start:
     ld   bc,$0020
     ldir
     ret
+
     nop
     nop
     nop
@@ -920,6 +930,8 @@ start:
     ld   a,$24
     ld   (de),a
     ret
+
+
     ld   iy,$8020
     ld   a,(hw_in_1)
     ld   (iy+$01),a
@@ -999,7 +1011,7 @@ start:
     inc  b
     jp   $07BC
 
- init_game:
+ init_game_RAM_test:      ; RAM test
     ld   a,(watchdog)
     ld   hl,screen_ram
     ld   b,$04
@@ -1127,7 +1139,9 @@ start:
     ld   a,(watchdog)
     dec  c
     jr   nz,$08BC
-    jp   $000E
+    jp   done_RAM_test
+
+
     ld   hl,$0905
     ld   a,d
     and  a
@@ -1183,12 +1197,14 @@ start:
     ld   d,$24
     rla
     djnz $092C
-    ld   a,(watchdog)
+    ld   a,(watchdog) ; infinite loop
     jp   $092D
+
+ clear_screen:
     ld   a,(watchdog)
     ld   hl,screen_ram
     ld   b,$04
-    ld   (hl),$24
+    ld   (hl),TILE_BLANK
     inc  l
     jr   nz,$093B
     inc  h
@@ -1260,13 +1276,15 @@ start:
     dec  e
     jr   $09D1
     inc  h
+
+
     nop
     nop
     nop
     ld   hl,$9043
     ld   b,$1C
     ld   c,$1D
-    ld   de,$09EF
+    ld   de,very_chunky_data_2
     call $09DC
     ld   hl,$9443
     ld   b,$1C
@@ -1275,6 +1293,7 @@ start:
     call $09DC
     call $0962
     ret
+
     push bc
     push hl
     ld   a,(de)
@@ -1289,6 +1308,8 @@ start:
     dec  c
     jp   nz,$09DC
     ret
+
+ very_chunky_data_2:
     inc  h
     inc  h
     inc  h
@@ -2855,6 +2876,7 @@ start:
     add  a,(hl)
     add  a,(hl)
     add  a,(hl)
+
     ld   a,($803E)
     and  a
     jp   nz,$1038
@@ -3220,6 +3242,8 @@ start:
     daa
     ld   (hl),a
     ret
+
+
     ld   a,($8101)
     and  $03
     jp   z,$1322
@@ -3230,7 +3254,7 @@ start:
     cp   $03
     jp   z,$133D
     ld   a,$83
-    ld   de,$1391
+    ld   de,very_chunk_data_1
     call $1346
     ret
     ld   a,$83
@@ -3245,6 +3269,8 @@ start:
     ld   de,$1CC1
     call $1346
     ret
+
+
     ld   hl,$9043
     ld   b,$1C
     ld   c,$1C
@@ -3257,6 +3283,7 @@ start:
     ld   c,$1C
     call $1384
     ret
+
     push bc
     push hl
     ld   a,(de)
@@ -3271,6 +3298,7 @@ start:
     dec  c
     jr   nz,$1360
     ret
+
     push bc
     push hl
     ld   a,(de)
@@ -3296,6 +3324,9 @@ start:
     dec  c
     jr   nz,$1384
     ret
+
+ ;; very chunky data
+ very_chunk_data_1:
     dec  h
     dec  h
     dec  h
@@ -5652,13 +5683,15 @@ start:
     dec  h
     dec  h
     dec  h
-    ld   a,($8039)
+
+ main_game_loop:
+    ld   a,(screen_state)
     and  a
     jp   nz,$1FE3
     ld   a,(cur_screen)
-    cp   $06
+    cp   SCR_GAME
     jp   nz,$1FE0
-    jp   $1FD1
+    jp   main_game_loop
     rrca
     jp   c,$219E
     rrca
@@ -5674,13 +5707,11 @@ start:
     rrca
     jp   c,$20B3
     rrca
-
  ;;; ============ start of suprmous.x3 =============
-
     jp   c,$20D9
     xor  a
-    ld   ($8039),a
-    jp   $1FD1
+    ld   (screen_state),a
+    jp   main_game_loop
 
     call $20EC
     ld   hl,cat1_enable ; clear cat enable data
@@ -5729,10 +5760,12 @@ start:
     call $106C
     ld   a,$06
     ld   (cur_screen),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     res  5,a
-    ld   ($8039),a
+    ld   (screen_state),a
     jp   $1FD1
+
+
     ld   hl,$9262
     ld   de,$20AB
     ld   b,$08
@@ -5748,6 +5781,8 @@ start:
     inc  a
     ld   ($9182),a
     ret
+
+
     ld   hl,$9662
     ld   de,$FFE0
     ld   b,$08
@@ -5771,16 +5806,16 @@ start:
     ld   (watchdog),a
     ld   a,$00
     ld   ($8480),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     res  6,a
-    ld   ($8039),a
+    ld   (screen_state),a
     jp   $1FD1
     call $20EC
     ld   a,$01
     ld   (cur_screen),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     res  7,a
-    ld   ($8039),a
+    ld   (screen_state),a
     jp   $1FD1
 
     ld   hl,$9002
@@ -5873,6 +5908,7 @@ start:
     rrca
     call $2184
     dec  b
+
     ld   a,(de)
     dec  de
     and  $0F
@@ -5901,9 +5937,9 @@ start:
     ld   ($8032),a
     ld   a,$02
     ld   (cur_screen),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     res  0,a
-    ld   ($8039),a
+    ld   (screen_state),a
     jp   $1FD1
     call $20EC
     ld   hl,$2362
@@ -5917,14 +5953,14 @@ start:
     ld   ($8032),a
     ld   a,$03
     ld   (cur_screen),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     res  1,a
-    ld   ($8039),a
+    ld   (screen_state),a
     jp   $1FD1
     call $20EC
-    ld   a,($8039)
+    ld   a,(screen_state)
     res  2,a
-    ld   ($8039),a
+    ld   (screen_state),a
     jp   $1FD1
     call $20EC
     ld   hl,$2372
@@ -5970,9 +6006,9 @@ start:
     ld   ($803D),a
     ld   a,$04
     ld   (cur_screen),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     res  3,a
-    ld   ($8039),a
+    ld   (screen_state),a
     jp   $1FD1
     ld   de,score_hi
     call $213F
@@ -6001,6 +6037,7 @@ start:
     djnz $22A6
     ld   (hl),$00
     ret
+
     ld   a,($8031)
     and  a
     jp   z,$22BE
@@ -6038,9 +6075,9 @@ start:
     ld   (cur_screen),a
     ld   a,$40
     ld   ($803D),a
-    ld   a,($8039)
+    ld   a,(screen_state)
     res  4,a
-    ld   ($8039),a
+    ld   (screen_state),a
     jp   $1FD1
     ld   a,($8031)
     ld   hl,lives_copy
@@ -6129,6 +6166,8 @@ start:
     ld   c,$15
     inc  h
     rst  $38
+
+
     ld   a,($841F)
     cp   $02
     jp   z,$23C5
@@ -6155,6 +6194,7 @@ start:
     call $3206
     call $23D3
     ret
+
     ld   a,($8033)
     and  a
     ret  nz
@@ -6227,6 +6267,8 @@ start:
     ld   a,$E0
     ld   (watchdog),a
     ret
+
+
     call $4247
     ret
     ld   bc,$0000
@@ -6386,6 +6428,8 @@ start:
     ld   hl,screen_ram
     add  hl,de
     ret
+
+
     ld   a,($8400)
     and  a
     jp   nz,$2554
@@ -9586,6 +9630,7 @@ mthing
     ld   a,(hl)
     ex   de,hl
     ret
+
     xor  a
     ld   hl,$8040
     ld   (hl),$01
@@ -9607,6 +9652,7 @@ mthing
     daa
     ld   (hl),a
     ret
+
     ret  m
     inc  (hl)
     cp   $24
@@ -9950,6 +9996,8 @@ mthing
     call $1360
     pop  hl
     ret
+
+
     ld   hl,$8120
     ld   ix,$3FC6
     ld   iy,$400E
@@ -10016,6 +10064,8 @@ mthing
     set  2,h
     call $1384
     jp   $3E7B
+
+
     exx
     ld   hl,$8120
     ld   ix,$3FC6
@@ -10050,6 +10100,7 @@ mthing
     djnz $3ECE
     exx
     ret
+
     ld   hl,$8140
     ld   bc,$0000
     ld   a,(hl)
@@ -10089,6 +10140,8 @@ mthing
     nop
     dec  b
     nop
+
+
     ld   a,$09
     ld   hl,$8140
     ld   bc,$0000
@@ -10329,6 +10382,7 @@ mthing
     nop
     nop
     nop
+
     ld   a,(carrying_1)
     and  a
     jp   nz,$40A9
@@ -10453,6 +10507,8 @@ mthing
     ld   c,$01
     call $3EB2
     jp   $4084
+
+
     ld   a,$00
     ld   ($8180),a
     ld   a,($8180)
@@ -10525,6 +10581,8 @@ mthing
     add  a,$02
     ld   ($85C6),a
     jp   $4232
+
+
     ld   hl,$85C0
     ld   b,$10
     ld   a,$00
@@ -10544,6 +10602,8 @@ mthing
     ld   a,($85C6)
     ld   (hl),a
     ret
+
+
     call $48EF
     ld   hl,$8479
     ld   a,(hl)

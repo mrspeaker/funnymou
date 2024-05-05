@@ -1,6 +1,7 @@
 
                     credits         = $8023
                     is_playing      = $8030
+                    screen_state    = $8039 ; 10=ready, 40=go to gamble
                     cur_screen      = $803B ; 1=splash;6=game etc
                     score_lo        = $8044
                     score_mid       = $8045
@@ -100,6 +101,9 @@
                     SCR_GAMBLE      = $07
                     SCR_LUCKY       = $08
 
+
+                    TILE_BLANK      = $24
+
                 ;;; ============ start of suprmous.x1 =============
 
 0000          	start:
@@ -108,11 +112,13 @@
 0002  00      	    nop
 0003  3E00    	    ld   a,$00
 0005  3200B0  	    ld   (int_enable),a
-0008  C3F107  	    jp   init_game
+0008  C3F107  	    jp   init_game_RAM_test
 
 000B  00      	    nop
 000C  00      	    nop
 000D  00      	    nop
+
+                done_RAM_test:
 000E  3A00B8  	    ld   a,(watchdog)
 0011  210080  	    ld   hl,$8000
 0014  3E88    	    ld   a,$88
@@ -123,7 +129,7 @@
 001B  C21800  	    jp   nz,$0018
 001E  31FE87  	    ld   sp,$87FE
 0021  3A00B8  	    ld   a,(watchdog)
-0024  CD3309  	    call $0933
+0024  CD3309  	    call clear_screen
 0027  AF      	    xor  a
 0028  0608    	    ld   b,$08
 002A  2100B0  	    ld   hl,dip_switch
@@ -296,9 +302,9 @@ zeros               dc 97,0
 01D7  3200B8  	    ld   (watchdog),a
 01DA  3E01    	    ld   a,$01
 01DC  323880  	    ld   ($8038),a
-01DF  3A3980  	    ld   a,($8039)
+01DF  3A3980  	    ld   a,(screen_state)
 01E2  CBE7    	    set  4,a
-01E4  323980  	    ld   ($8039),a
+01E4  323980  	    ld   (screen_state),a
 01E7  00      	    nop
 01E8  00      	    nop
 01E9  00      	    nop
@@ -306,7 +312,7 @@ zeros               dc 97,0
 
     ;; ....
                 _no_start_buttons:
-01EB  3A3980  	    ld   a,($8039)
+01EB  3A3980  	    ld   a,(screen_state)
 01EE  A7      	    and  a
 01EF  C0      	    ret  nz
 01F0  3A3080  	    ld   a,(is_playing)
@@ -327,14 +333,14 @@ zeros               dc 97,0
 0210  FE02    	    cp   SCR_PUSH_P1
 0212  C8      	    ret  z
 0213  3E01    	    ld   a,$01
-0215  323980  	    ld   ($8039),a
+0215  323980  	    ld   (screen_state),a
 0218  C32902  	    jp   $0229
                 _press_p2:
 021B  3A3B80  	    ld   a,(cur_screen)
 021E  FE03    	    cp   SCR_PUSH_P1P2
 0220  C8      	    ret  z
 0221  3E02    	    ld   a,$02
-0223  323980  	    ld   ($8039),a
+0223  323980  	    ld   (screen_state),a
 0226  C32902  	    jp   $0229
 0229  210081  	    ld   hl,lives
 022C  3E00    	    ld   a,$00
@@ -373,23 +379,23 @@ zeros               dc 97,0
 0275  3E00    	    ld   a,$00
 0277  323380  	    ld   ($8033),a
 027A  323280  	    ld   ($8032),a
-027D  3A3980  	    ld   a,($8039)
+027D  3A3980  	    ld   a,(screen_state)
 0280  CBEF    	    set  5,a
-0282  323980  	    ld   ($8039),a
+0282  323980  	    ld   (screen_state),a
 0285  C32902  	    jp   $0229
 0288  3E00    	    ld   a,$00
 028A  323380  	    ld   ($8033),a
 028D  323280  	    ld   ($8032),a
-0290  3A3980  	    ld   a,($8039)
+0290  3A3980  	    ld   a,(screen_state)
 0293  CBFF    	    set  7,a
-0295  323980  	    ld   ($8039),a
+0295  323980  	    ld   (screen_state),a
 0298  C9      	    ret
 0299  3E00    	    ld   a,$00
 029B  323380  	    ld   ($8033),a
 029E  323280  	    ld   ($8032),a
-02A1  3A3980  	    ld   a,($8039)
+02A1  3A3980  	    ld   a,(screen_state)
 02A4  CBF7    	    set  6,a
-02A6  323980  	    ld   ($8039),a
+02A6  323980  	    ld   (screen_state),a
 02A9  C9      	    ret
 02AA  3A3B80  	    ld   a,(cur_screen)
 02AD  FE01    	    cp   SCR_SPLASH
@@ -447,9 +453,9 @@ zeros               dc 97,0
 0321  3E00    	    ld   a,$00
 0323  323080  	    ld   (is_playing),a
 0326  323B80  	    ld   (cur_screen),a ; SCR_NONE
-0329  3A3980  	    ld   a,($8039)
+0329  3A3980  	    ld   a,(screen_state)
 032C  CBD7    	    set  2,a
-032E  323980  	    ld   ($8039),a
+032E  323980  	    ld   (screen_state),a
 0331  C9      	    ret
 0332  3A3180  	    ld   a,($8031)
 0335  A7      	    and  a
@@ -461,9 +467,9 @@ zeros               dc 97,0
 0342  C22103  	    jp   nz,$0321
 0345  3E01    	    ld   a,$01
 0347  323180  	    ld   ($8031),a
-034A  3A3980  	    ld   a,($8039)
+034A  3A3980  	    ld   a,(screen_state)
 034D  CBE7    	    set  4,a
-034F  323980  	    ld   ($8039),a
+034F  323980  	    ld   (screen_state),a
 0352  C9      	    ret
 0353  3E01    	    ld   a,$01
 0355  323580  	    ld   ($8035),a
@@ -472,9 +478,9 @@ zeros               dc 97,0
 035C  C22103  	    jp   nz,$0321
 035F  3E00    	    ld   a,$00
 0361  323180  	    ld   ($8031),a
-0364  3A3980  	    ld   a,($8039)
+0364  3A3980  	    ld   a,(screen_state)
 0367  CBE7    	    set  4,a
-0369  323980  	    ld   ($8039),a
+0369  323980  	    ld   (screen_state),a
 036C  C9      	    ret
 036D  3A3D80  	    ld   a,($803D)
 0370  3D      	    dec  a
@@ -492,9 +498,9 @@ zeros               dc 97,0
 0389  3EE0    	    ld   a,$E0
 038B  3200B8  	    ld   (watchdog),a
 038E  C9      	    ret
-038F  3A3980  	    ld   a,($8039)
+038F  3A3980  	    ld   a,(screen_state)
 0392  CBEF    	    set  5,a
-0394  323980  	    ld   ($8039),a
+0394  323980  	    ld   (screen_state),a
 0397  C9      	    ret
 0398  3A3B80  	    ld   a,(cur_screen)
 039B  FE06    	    cp   SCR_GAME
@@ -526,9 +532,9 @@ zeros               dc 97,0
 03D8  3E00    	    ld   a,$00
 03DA  323380  	    ld   ($8033),a
 03DD  323280  	    ld   ($8032),a
-03E0  3A3980  	    ld   a,($8039)
+03E0  3A3980  	    ld   a,(screen_state)
 03E3  CBE7    	    set  4,a
-03E5  323980  	    ld   ($8039),a
+03E5  323980  	    ld   (screen_state),a
 03E8  C9      	    ret
 
                 ;;
@@ -551,9 +557,9 @@ zeros               dc 97,0
 040C  3E00    	    ld   a,$00
 040E  323380  	    ld   ($8033),a
 0411  323280  	    ld   ($8032),a
-0414  3A3980  	    ld   a,($8039)
+0414  3A3980  	    ld   a,(screen_state)
 0417  CBDF    	    set  3,a
-0419  323980  	    ld   ($8039),a
+0419  323980  	    ld   (screen_state),a
 041C  C9      	    ret
 041D  210081  	    ld   hl,lives
 0420  3E00    	    ld   a,$00
@@ -586,9 +592,9 @@ zeros               dc 97,0
 0462  3E00    	    ld   a,$00
 0464  323380  	    ld   ($8033),a
 0467  323280  	    ld   ($8032),a
-046A  3A3980  	    ld   a,($8039)
+046A  3A3980  	    ld   a,(screen_state)
 046D  CBDF    	    set  3,a
-046F  323980  	    ld   ($8039),a
+046F  323980  	    ld   (screen_state),a
 0472  C9      	    ret
 0473  3A3180  	    ld   a,($8031)
 0476  A7      	    and  a
@@ -617,9 +623,9 @@ zeros               dc 97,0
 04B0  323280  	    ld   ($8032),a
 04B3  3E01    	    ld   a,$01
 04B5  323180  	    ld   ($8031),a
-04B8  3A3980  	    ld   a,($8039)
+04B8  3A3980  	    ld   a,(screen_state)
 04BB  CBE7    	    set  4,a
-04BD  323980  	    ld   ($8039),a
+04BD  323980  	    ld   (screen_state),a
 04C0  C9      	    ret
 04C1  3E00    	    ld   a,$00
 04C3  323380  	    ld   ($8033),a
@@ -629,9 +635,9 @@ zeros               dc 97,0
 04CE  3206B0  	    ld   (flip_scr_x),a
 04D1  3207B0  	    ld   (flip_scr_y),a
 04D4  323180  	    ld   ($8031),a
-04D7  3A3980  	    ld   a,($8039)
+04D7  3A3980  	    ld   a,(screen_state)
 04DA  CBE7    	    set  4,a
-04DC  323980  	    ld   ($8039),a
+04DC  323980  	    ld   (screen_state),a
 04DF  C9      	    ret
 04E0  3A3B80  	    ld   a,(cur_screen)
 04E3  FE06    	    cp   $06
@@ -644,9 +650,9 @@ zeros               dc 97,0
 04F3  323380  	    ld   ($8033),a
 04F6  3E08    	    ld   a,$08
 04F8  323B80  	    ld   (cur_screen),a
-04FB  3A3980  	    ld   a,($8039)
+04FB  3A3980  	    ld   a,(screen_state)
 04FE  CBD7    	    set  2,a
-0500  323980  	    ld   ($8039),a
+0500  323980  	    ld   (screen_state),a
 0503  C9      	    ret
 0504  3A0181  	    ld   a,($8101)
 0507  C601    	    add  a,$01
@@ -673,9 +679,9 @@ zeros               dc 97,0
 0538  3E00    	    ld   a,$00
 053A  323280  	    ld   ($8032),a
 053D  323380  	    ld   ($8033),a
-0540  3A3980  	    ld   a,($8039)
+0540  3A3980  	    ld   a,(screen_state)
 0543  CBF7    	    set  6,a
-0545  323980  	    ld   ($8039),a
+0545  323980  	    ld   (screen_state),a
 0548  C9      	    ret
 
 zeros               dc   55,0
@@ -746,6 +752,7 @@ zeros               dc   55,0
 0619  1D      	    dec  e
 061A  2E00    	    ld   l,$00
 061C  24      	    inc  h
+
 061D  1A      	    ld   a,(de)
 061E  77      	    ld   (hl),a
 061F  D5      	    push de
@@ -755,6 +762,8 @@ zeros               dc   55,0
 0625  13      	    inc  de
 0626  10F5    	    djnz $061D
 0628  C9      	    ret
+
+
 0629  00      	    nop
 062A  00      	    nop
 062B  00      	    nop
@@ -763,6 +772,7 @@ zeros               dc   55,0
 0632  012000  	    ld   bc,$0020
 0635  EDB0    	    ldir
 0637  C9      	    ret
+
 0638  00      	    nop
 0639  00      	    nop
 063A  00      	    nop
@@ -920,6 +930,8 @@ zeros               dc   55,0
 073F  3E24    	    ld   a,$24
 0741  12      	    ld   (de),a
 0742  C9      	    ret
+
+
 0743  FD212080	    ld   iy,$8020
 0747  3A00A8  	    ld   a,(hw_in_1)
 074A  FD7701  	    ld   (iy+$01),a
@@ -999,7 +1011,7 @@ zeros               dc   55,0
 07ED  04      	    inc  b
 07EE  C3BC07  	    jp   $07BC
 
-                init_game:
+                init_game_RAM_test:      ; RAM test
 07F1  3A00B8  	    ld   a,(watchdog)
 07F4  210090  	    ld   hl,screen_ram
 07F7  0604    	    ld   b,$04
@@ -1127,7 +1139,9 @@ zeros               dc   55,0
 08D4  3A00B8  	    ld   a,(watchdog)
 08D7  0D      	    dec  c
 08D8  20E2    	    jr   nz,$08BC
-08DA  C30E00  	    jp   $000E
+08DA  C30E00  	    jp   done_RAM_test
+
+
 08DD  210509  	    ld   hl,$0905
 08E0  7A      	    ld   a,d
 08E1  A7      	    and  a
@@ -1183,12 +1197,14 @@ zeros               dc   55,0
 0928  1624    	    ld   d,$24
 092A  17      	    rla
 092B  10FF    	    djnz $092C
-092D  3A00B8  	    ld   a,(watchdog)
+092D  3A00B8  	    ld   a,(watchdog) ; infinite loop
 0930  C32D09  	    jp   $092D
+
+                clear_screen:
 0933  3A00B8  	    ld   a,(watchdog)
 0936  210090  	    ld   hl,screen_ram
 0939  0604    	    ld   b,$04
-093B  3624    	    ld   (hl),$24
+093B  3624    	    ld   (hl),TILE_BLANK
 093D  2C      	    inc  l
 093E  20FB    	    jr   nz,$093B
 0940  24      	    inc  h
@@ -1260,13 +1276,15 @@ zeros               dc   55,0
 09B7  1D      	    dec  e
 09B8  1817    	    jr   $09D1
 09BA  24      	    inc  h
+
+
 09BB  00      	    nop
 09BC  00      	    nop
 09BD  00      	    nop
 09BE  214390  	    ld   hl,$9043
 09C1  061C    	    ld   b,$1C
 09C3  0E1D    	    ld   c,$1D
-09C5  11EF09  	    ld   de,$09EF
+09C5  11EF09  	    ld   de,very_chunky_data_2
 09C8  CDDC09  	    call $09DC
 09CB  214394  	    ld   hl,$9443
 09CE  061C    	    ld   b,$1C
@@ -1275,6 +1293,7 @@ zeros               dc   55,0
 09D5  CDDC09  	    call $09DC
 09D8  CD6209  	    call $0962
 09DB  C9      	    ret
+
 09DC  C5      	    push bc
 09DD  E5      	    push hl
 09DE  1A      	    ld   a,(de)
@@ -1289,6 +1308,8 @@ zeros               dc   55,0
 09EA  0D      	    dec  c
 09EB  C2DC09  	    jp   nz,$09DC
 09EE  C9      	    ret
+
+                very_chunky_data_2:
 09EF  24      	    inc  h
 09F0  24      	    inc  h
 09F1  24      	    inc  h
@@ -2855,6 +2876,7 @@ zeros               dc   55,0
 100C  86      	    add  a,(hl)
 100D  86      	    add  a,(hl)
 100E  86      	    add  a,(hl)
+
 100F  3A3E80  	    ld   a,($803E)
 1012  A7      	    and  a
 1013  C23810  	    jp   nz,$1038
@@ -3220,6 +3242,8 @@ zeros               dc   55,0
 1308  27      	    daa
 1309  77      	    ld   (hl),a
 130A  C9      	    ret
+
+
 130B  3A0181  	    ld   a,($8101)
 130E  E603    	    and  $03
 1310  CA2213  	    jp   z,$1322
@@ -3230,7 +3254,7 @@ zeros               dc   55,0
 131D  FE03    	    cp   $03
 131F  CA3D13  	    jp   z,$133D
 1322  3E83    	    ld   a,$83
-1324  119113  	    ld   de,$1391
+1324  119113  	    ld   de,very_chunk_data_1
 1327  CD4613  	    call $1346
 132A  C9      	    ret
 132B  3E83    	    ld   a,$83
@@ -3245,6 +3269,8 @@ zeros               dc   55,0
 133F  11C11C  	    ld   de,$1CC1
 1342  CD4613  	    call $1346
 1345  C9      	    ret
+
+
 1346  214390  	    ld   hl,$9043
 1349  061C    	    ld   b,$1C
 134B  0E1C    	    ld   c,$1C
@@ -3257,6 +3283,7 @@ zeros               dc   55,0
 135A  0E1C    	    ld   c,$1C
 135C  CD8413  	    call $1384
 135F  C9      	    ret
+
 1360  C5      	    push bc
 1361  E5      	    push hl
 1362  1A      	    ld   a,(de)
@@ -3271,6 +3298,7 @@ zeros               dc   55,0
 136E  0D      	    dec  c
 136F  20EF    	    jr   nz,$1360
 1371  C9      	    ret
+
 1372  C5      	    push bc
 1373  E5      	    push hl
 1374  1A      	    ld   a,(de)
@@ -3296,6 +3324,9 @@ zeros               dc   55,0
 138D  0D      	    dec  c
 138E  20F4    	    jr   nz,$1384
 1390  C9      	    ret
+
+                ;; very chunky data
+                very_chunk_data_1:
 1391  25      	    dec  h
 1392  25      	    dec  h
 1393  25      	    dec  h
@@ -5652,13 +5683,15 @@ zeros               dc   55,0
 1FCE  25      	    dec  h
 1FCF  25      	    dec  h
 1FD0  25      	    dec  h
-1FD1  3A3980  	    ld   a,($8039)
+
+                main_game_loop:
+1FD1  3A3980  	    ld   a,(screen_state)
 1FD4  A7      	    and  a
 1FD5  C2E31F  	    jp   nz,$1FE3
 1FD8  3A3B80  	    ld   a,(cur_screen)
-1FDB  FE06    	    cp   $06
+1FDB  FE06    	    cp   SCR_GAME
 1FDD  C2E01F  	    jp   nz,$1FE0
-1FE0  C3D11F  	    jp   $1FD1
+1FE0  C3D11F  	    jp   main_game_loop
 1FE3  0F      	    rrca
 1FE4  DA9E21  	    jp   c,$219E
 1FE7  0F      	    rrca
@@ -5674,13 +5707,11 @@ zeros               dc   55,0
 1FFB  0F      	    rrca
 1FFC  DAB320  	    jp   c,$20B3
 1FFF  0F      	    rrca
-
                 ;;; ============ start of suprmous.x3 =============
-
 2000  DAD920  	    jp   c,$20D9
 2003  AF      	    xor  a
-2004  323980  	    ld   ($8039),a
-2007  C3D11F  	    jp   $1FD1
+2004  323980  	    ld   (screen_state),a
+2007  C3D11F  	    jp   main_game_loop
 
 200A  CDEC20  	    call $20EC
 200D  210085  	    ld   hl,cat1_enable ; clear cat enable data
@@ -5729,10 +5760,12 @@ zeros               dc   55,0
 206F  CD6C10  	    call $106C
 2072  3E06    	    ld   a,$06
 2074  323B80  	    ld   (cur_screen),a
-2077  3A3980  	    ld   a,($8039)
+2077  3A3980  	    ld   a,(screen_state)
 207A  CBAF    	    res  5,a
-207C  323980  	    ld   ($8039),a
+207C  323980  	    ld   (screen_state),a
 207F  C3D11F  	    jp   $1FD1
+
+
 2082  216292  	    ld   hl,$9262
 2085  11AB20  	    ld   de,$20AB
 2088  0608    	    ld   b,$08
@@ -5748,6 +5781,8 @@ zeros               dc   55,0
 2098  3C      	    inc  a
 2099  328291  	    ld   ($9182),a
 209C  C9      	    ret
+
+
 209D  216296  	    ld   hl,$9662
 20A0  11E0FF  	    ld   de,$FFE0
 20A3  0608    	    ld   b,$08
@@ -5771,16 +5806,16 @@ zeros               dc   55,0
 20C6  3200B8  	    ld   (watchdog),a
 20C9  3E00    	    ld   a,$00
 20CB  328084  	    ld   ($8480),a
-20CE  3A3980  	    ld   a,($8039)
+20CE  3A3980  	    ld   a,(screen_state)
 20D1  CBB7    	    res  6,a
-20D3  323980  	    ld   ($8039),a
+20D3  323980  	    ld   (screen_state),a
 20D6  C3D11F  	    jp   $1FD1
 20D9  CDEC20  	    call $20EC
 20DC  3E01    	    ld   a,$01
 20DE  323B80  	    ld   (cur_screen),a
-20E1  3A3980  	    ld   a,($8039)
+20E1  3A3980  	    ld   a,(screen_state)
 20E4  CBBF    	    res  7,a
-20E6  323980  	    ld   ($8039),a
+20E6  323980  	    ld   (screen_state),a
 20E9  C3D11F  	    jp   $1FD1
 
 20EC  210290  	    ld   hl,$9002
@@ -5873,6 +5908,7 @@ zeros               dc   55,0
 217D  0F      	    rrca
 217E  CD8421  	    call $2184
 2181  05      	    dec  b
+
 2182  1A      	    ld   a,(de)
 2183  1B      	    dec  de
 2184  E60F    	    and  $0F
@@ -5901,9 +5937,9 @@ zeros               dc   55,0
 21B7  323280  	    ld   ($8032),a
 21BA  3E02    	    ld   a,$02
 21BC  323B80  	    ld   (cur_screen),a
-21BF  3A3980  	    ld   a,($8039)
+21BF  3A3980  	    ld   a,(screen_state)
 21C2  CB87    	    res  0,a
-21C4  323980  	    ld   ($8039),a
+21C4  323980  	    ld   (screen_state),a
 21C7  C3D11F  	    jp   $1FD1
 21CA  CDEC20  	    call $20EC
 21CD  216223  	    ld   hl,$2362
@@ -5917,14 +5953,14 @@ zeros               dc   55,0
 21E3  323280  	    ld   ($8032),a
 21E6  3E03    	    ld   a,$03
 21E8  323B80  	    ld   (cur_screen),a
-21EB  3A3980  	    ld   a,($8039)
+21EB  3A3980  	    ld   a,(screen_state)
 21EE  CB8F    	    res  1,a
-21F0  323980  	    ld   ($8039),a
+21F0  323980  	    ld   (screen_state),a
 21F3  C3D11F  	    jp   $1FD1
 21F6  CDEC20  	    call $20EC
-21F9  3A3980  	    ld   a,($8039)
+21F9  3A3980  	    ld   a,(screen_state)
 21FC  CB97    	    res  2,a
-21FE  323980  	    ld   ($8039),a
+21FE  323980  	    ld   (screen_state),a
 2201  C3D11F  	    jp   $1FD1
 2204  CDEC20  	    call $20EC
 2207  217223  	    ld   hl,$2372
@@ -5970,9 +6006,9 @@ zeros               dc   55,0
 225E  323D80  	    ld   ($803D),a
 2261  3E04    	    ld   a,$04
 2263  323B80  	    ld   (cur_screen),a
-2266  3A3980  	    ld   a,($8039)
+2266  3A3980  	    ld   a,(screen_state)
 2269  CB9F    	    res  3,a
-226B  323980  	    ld   ($8039),a
+226B  323980  	    ld   (screen_state),a
 226E  C3D11F  	    jp   $1FD1
 2271  114680  	    ld   de,score_hi
 2274  CD3F21  	    call $213F
@@ -6001,6 +6037,7 @@ zeros               dc   55,0
 22A9  10FB    	    djnz $22A6
 22AB  3600    	    ld   (hl),$00
 22AD  C9      	    ret
+
 22AE  3A3180  	    ld   a,($8031)
 22B1  A7      	    and  a
 22B2  CABE22  	    jp   z,$22BE
@@ -6038,9 +6075,9 @@ zeros               dc   55,0
 22F4  323B80  	    ld   (cur_screen),a
 22F7  3E40    	    ld   a,$40
 22F9  323D80  	    ld   ($803D),a
-22FC  3A3980  	    ld   a,($8039)
+22FC  3A3980  	    ld   a,(screen_state)
 22FF  CBA7    	    res  4,a
-2301  323980  	    ld   ($8039),a
+2301  323980  	    ld   (screen_state),a
 2304  C3D11F  	    jp   $1FD1
 2307  3A3180  	    ld   a,($8031)
 230A  210082  	    ld   hl,lives_copy
@@ -6129,6 +6166,8 @@ zeros               dc   55,0
 238D  0E15    	    ld   c,$15
 238F  24      	    inc  h
 2390  FF      	    rst  $38
+
+
 2391  3A1F84  	    ld   a,($841F)
 2394  FE02    	    cp   $02
 2396  CAC523  	    jp   z,$23C5
@@ -6155,6 +6194,7 @@ zeros               dc   55,0
 23CC  CD0632  	    call $3206
 23CF  CDD323  	    call $23D3
 23D2  C9      	    ret
+
 23D3  3A3380  	    ld   a,($8033)
 23D6  A7      	    and  a
 23D7  C0      	    ret  nz
@@ -6227,6 +6267,8 @@ zeros               dc   55,0
 2462  3EE0    	    ld   a,$E0
 2464  3200B8  	    ld   (watchdog),a
 2467  C9      	    ret
+
+
 2468  CD4742  	    call $4247
 246B  C9      	    ret
 246C  010000  	    ld   bc,$0000
@@ -6386,6 +6428,8 @@ zeros               dc   55,0
 2534  210090  	    ld   hl,screen_ram
 2537  19      	    add  hl,de
 2538  C9      	    ret
+
+
 2539  3A0084  	    ld   a,($8400)
 253C  A7      	    and  a
 253D  C25425  	    jp   nz,$2554
@@ -9586,6 +9630,7 @@ _
 3BBA  7E      	    ld   a,(hl)
 3BBB  EB      	    ex   de,hl
 3BBC  C9      	    ret
+
 3BBD  AF      	    xor  a
 3BBE  214080  	    ld   hl,$8040
 3BC1  3601    	    ld   (hl),$01
@@ -9607,6 +9652,7 @@ _
 3BD4  27      	    daa
 3BD5  77      	    ld   (hl),a
 3BD6  C9      	    ret
+
 3BD7  F8      	    ret  m
 3BD8  34      	    inc  (hl)
 3BD9  FE24    	    cp   $24
@@ -9950,6 +9996,8 @@ _
 3E24  CD6013  	    call $1360
 3E27  E1      	    pop  hl
 3E28  C9      	    ret
+
+
 3E29  212081  	    ld   hl,$8120
 3E2C  DD21C63F	    ld   ix,$3FC6
 3E30  FD210E40	    ld   iy,$400E
@@ -10016,6 +10064,8 @@ _
 3EAA  CBD4    	    set  2,h
 3EAC  CD8413  	    call $1384
 3EAF  C37B3E  	    jp   $3E7B
+
+
 3EB2  D9      	    exx
 3EB3  212081  	    ld   hl,$8120
 3EB6  DD21C63F	    ld   ix,$3FC6
@@ -10050,6 +10100,7 @@ _
 3EEE  10DE    	    djnz $3ECE
 3EF0  D9      	    exx
 3EF1  C9      	    ret
+
 3EF2  214081  	    ld   hl,$8140
 3EF5  010000  	    ld   bc,$0000
 3EF8  7E      	    ld   a,(hl)
@@ -10089,6 +10140,8 @@ _
 3F31  00      	    nop
 3F32  05      	    dec  b
 3F33  00      	    nop
+
+
 3F34  3E09    	    ld   a,$09
 3F36  214081  	    ld   hl,$8140
 3F39  010000  	    ld   bc,$0000
@@ -10329,6 +10382,7 @@ _
 407A  00      	    nop
 407B  00      	    nop
 407C  00      	    nop
+
 407D  3AA080  	    ld   a,(carrying_1)
 4080  A7      	    and  a
 4081  C2A940  	    jp   nz,$40A9
@@ -10453,6 +10507,8 @@ _
 4173  0E01    	    ld   c,$01
 4175  CDB23E  	    call $3EB2
 4178  C38440  	    jp   $4084
+
+
 417B  3E00    	    ld   a,$00
 417D  328081  	    ld   ($8180),a
 4180  3A8081  	    ld   a,($8180)
@@ -10525,6 +10581,8 @@ _
 421F  C602    	    add  a,$02
 4221  32C685  	    ld   ($85C6),a
 4224  C33242  	    jp   $4232
+
+
 4227  21C085  	    ld   hl,$85C0
 422A  0610    	    ld   b,$10
 422C  3E00    	    ld   a,$00
@@ -10544,6 +10602,8 @@ _
 4242  3AC685  	    ld   a,($85C6)
 4245  77      	    ld   (hl),a
 4246  C9      	    ret
+
+
 4247  CDEF48  	    call $48EF
 424A  217984  	    ld   hl,$8479
 424D  7E      	    ld   a,(hl)
