@@ -15,6 +15,7 @@
      carrying_2      = $80A1 ; carrying food
      carrying_3      = $80A2 ; carrying food... dropped?
      carry_x         = $80A5
+     carry_tile      = $80A6 ; what item player is carrying
      carry_y         = $80A8
 
      lives           = $8100
@@ -110,6 +111,8 @@
 
 
      TILE_BLANK      = $24
+     TILE_WATER      = $37
+     TILE_WATER_2    = $38
 
  ;;; ============ start of suprmous.x1 =============
 
@@ -2927,7 +2930,7 @@ start:
     ld   a,(controls)
     and  $10    ; fire pressed?
     ret  z
-    call $251B
+    call get_player_tile_pos
     ld   de,$FFE2
     add  hl,de
     ld   a,(hl)
@@ -6428,6 +6431,8 @@ start:
     ld   (hl),a
     ex   af,af'
     jp   $2574
+
+ get_player_tile_pos:
     ld   a,(player_y)
     rrca
     rrca
@@ -6586,18 +6591,21 @@ mthing
     ld   (player_y),a
     cp   $E0
     jp   nc,$268B
-    call $251B
+    call get_player_tile_pos
     ld   bc,$FFE2
     add  hl,bc
     ld   a,(hl)
-    cp   $37
-    jp   z,$266E
-    cp   $38
-    jp   z,$266E
+    cp   TILE_WATER ; fell in water
+    jp   z,player_fell_water
+    cp   TILE_WATER_2
+    jp   z,player_fell_water
     ret
+
+ player_fell_water: ; can you fall in water?
     ld   a,$01
-    ld   ($842A),a
+    ld   ($842A),a ; hmm?
     ret
+
     ld   a,($8429)
     inc  a
     ld   ($8429),a
@@ -6683,7 +6691,7 @@ mthing
     ld   a,$14  ; min $14 x
     ld   (player_x),a
     jp   $2829
-    call $251B
+    call get_player_tile_pos
     ld   bc,$0002
     push hl
     add  hl,bc
@@ -6714,7 +6722,7 @@ mthing
     ld   a,$D4  ; max $d4 x
     ld   (player_x),a
     jp   $2829
-    call $251B
+    call get_player_tile_pos
     ld   bc,$FFC2
     push hl
     add  hl,bc
@@ -6746,7 +6754,7 @@ mthing
     ld   a,$E2
     ld   (player_y),a
     jp   $283E
-    call $251B
+    call get_player_tile_pos
     ld   bc,$FFE3
     push hl
     add  hl,bc
@@ -6777,7 +6785,7 @@ mthing
     ld   a,$22
     ld   (player_y),a
     jp   $283E
-    call $251B
+    call get_player_tile_pos
     ld   bc,$FFE1
     push hl
     add  hl,bc
@@ -6898,7 +6906,7 @@ mthing
     and  $07
     cp   $04
     ret  nz
-    call $251B
+    call get_player_tile_pos
     push hl
     ld   bc,$FFE2
     add  hl,bc
@@ -6933,6 +6941,7 @@ mthing
     call $295A
     pop  hl
     ret
+
     ld   bc,$FFE1
     add  hl,bc
     ld   a,(hl)
@@ -7603,7 +7612,7 @@ mthing
     cp   $02
     jp   nz,$3043
     ex   de,hl
-    call $30B3
+    call get_tile_pos
     ld   bc,$FFE2
     add  hl,bc
     ld   a,$FE
@@ -7745,7 +7754,7 @@ mthing
     ld   (de),a
     jp   $2E09
     inc  de
-    call $30B3
+    call get_tile_pos
     ld   b,h
     ld   c,l
     ld   hl,$0002
@@ -7786,7 +7795,7 @@ mthing
     ld   (de),a
     jp   $2E09
     inc  de
-    call $30B3
+    call get_tile_pos
     ld   b,h
     ld   c,l
     ld   hl,$FFC2
@@ -7827,7 +7836,7 @@ mthing
     ld   a,$E4
     ld   (de),a
     jp   $2E09
-    call $30B3
+    call get_tile_pos
     ld   b,h
     ld   c,l
     ld   hl,$FFE3
@@ -7870,7 +7879,7 @@ mthing
     ld   a,$14
     ld   (de),a
     jp   $2E09
-    call $30B3
+    call get_tile_pos
     ld   b,h
     ld   c,l
     ld   hl,$FFE1
@@ -8045,6 +8054,10 @@ mthing
     ld   a,(de)
     ld   (hl),a
     ret
+
+ ;; in: de = x, de-1 = y
+ ;; out: hl = screen pos of entity
+ get_tile_pos:
     ld   a,(de)
     rrca
     rrca
@@ -10440,7 +10453,7 @@ mthing
     ld   a,(carry_x)
     ld   (hl),a
     inc  hl
-    ld   a,($80A6)
+    ld   a,(carry_tile)
     ld   (hl),a
     inc  hl
     ld   a,($80A7)
@@ -10483,37 +10496,22 @@ mthing
     cp   $7B
     jp   z,$40F4
     jp   $4084
-    ld   hl,$4106
+    ld   hl,pickup_data
     ld   b,$00
     add  hl,bc
     ld   a,(hl)
-    ld   ($80A6),a
+    ld   (carry_tile),a
     inc  hl
     ld   a,(hl)
     ld   ($80A7),a
     jp   $4092
-    ld   ($3607),a
-    rlca
-    inc  (hl)
-    rlca
-    dec  (hl)
-    rlca
-    inc  sp
-    rlca
-    nop
-    nop
-    nop
-    nop
-    ld   bc,$0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+
+ pickup_data:
+     db $32, $07, $36, $07, $34, $07, $35, $07
+     db $33, $07, $00, $00, $00, $00, $01, $01
+     db $00, $00, $00, $00, $00, $00, $00, $00
+     db $00, $00
+
     ld   a,(carrying_3)
     cp   $01
     jp   z,$4135

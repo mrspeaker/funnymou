@@ -5,6 +5,8 @@ cut -c 16- funnymou.asm > src.asm
 zmac -c -n src.asm
 split -b4k zout/src.cim zout/f
 
+# cmp -l -x dump/suprmous.x1 zout/faa
+
 f1a=`shasum zout/faa | sed 's/.*=.//g'`
 f1b=`shasum dump/suprmous.x1 | sed 's/.*=.//g'`
 echo $f1a

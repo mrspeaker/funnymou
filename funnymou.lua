@@ -208,6 +208,7 @@ tap_snake1 = mem:install_write_tap(0x8600, 0x8600, "writes", function(offset, da
    end
 end)
 
+
 tap_snake2 = mem:install_write_tap(0x8602, 0x8602, "writes", function(offset, data)
    if data == 1 and peek(0x8030) == 1 then
       return 0

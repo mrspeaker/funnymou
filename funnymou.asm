@@ -15,6 +15,7 @@
                     carrying_2      = $80A1 ; carrying food
                     carrying_3      = $80A2 ; carrying food... dropped?
                     carry_x         = $80A5
+                    carry_tile      = $80A6 ; what item player is carrying
                     carry_y         = $80A8
 
                     lives           = $8100
@@ -110,6 +111,8 @@
 
 
                     TILE_BLANK      = $24
+                    TILE_WATER      = $37
+                    TILE_WATER_2    = $38
 
                 ;;; ============ start of suprmous.x1 =============
 
@@ -2927,7 +2930,7 @@ zeros               dc   55,0
 104B  3A0184  	    ld   a,(controls)
 104E  E610    	    and  $10    ; fire pressed?
 1050  C8      	    ret  z
-1051  CD1B25  	    call $251B
+1051  CD1B25  	    call get_player_tile_pos
 1054  11E2FF  	    ld   de,$FFE2
 1057  19      	    add  hl,de
 1058  7E      	    ld   a,(hl)
@@ -6428,6 +6431,8 @@ zeros               dc   55,0
 2516  77      	    ld   (hl),a
 2517  08      	    ex   af,af'
 2518  C37425  	    jp   $2574
+
+                get_player_tile_pos:
 251B  3A0784  	    ld   a,(player_y)
 251E  0F      	    rrca
 251F  0F      	    rrca
@@ -6586,18 +6591,21 @@ zeros               dc   55,0
 2653  320784  	    ld   (player_y),a
 2656  FEE0    	    cp   $E0
 2658  D28B26  	    jp   nc,$268B
-265B  CD1B25  	    call $251B
+265B  CD1B25  	    call get_player_tile_pos
 265E  01E2FF  	    ld   bc,$FFE2
 2661  09      	    add  hl,bc
 2662  7E      	    ld   a,(hl)
-2663  FE37    	    cp   $37
-2665  CA6E26  	    jp   z,$266E
-2668  FE38    	    cp   $38
-266A  CA6E26  	    jp   z,$266E
+2663  FE37    	    cp   TILE_WATER ; fell in water
+2665  CA6E26  	    jp   z,player_fell_water
+2668  FE38    	    cp   TILE_WATER_2
+266A  CA6E26  	    jp   z,player_fell_water
 266D  C9      	    ret
+
+                player_fell_water: ; can you fall in water?
 266E  3E01    	    ld   a,$01
-2670  322A84  	    ld   ($842A),a
+2670  322A84  	    ld   ($842A),a ; hmm?
 2673  C9      	    ret
+
 2674  3A2984  	    ld   a,($8429)
 2677  3C      	    inc  a
 2678  322984  	    ld   ($8429),a
@@ -6683,7 +6691,7 @@ zeros               dc   55,0
 271B  3E14    	    ld   a,$14  ; min $14 x
 271D  320684  	    ld   (player_x),a
 2720  C32928  	    jp   $2829
-2723  CD1B25  	    call $251B
+2723  CD1B25  	    call get_player_tile_pos
 2726  010200  	    ld   bc,$0002
 2729  E5      	    push hl
 272A  09      	    add  hl,bc
@@ -6714,7 +6722,7 @@ zeros               dc   55,0
 275D  3ED4    	    ld   a,$D4  ; max $d4 x
 275F  320684  	    ld   (player_x),a
 2762  C32928  	    jp   $2829
-2765  CD1B25  	    call $251B
+2765  CD1B25  	    call get_player_tile_pos
 2768  01C2FF  	    ld   bc,$FFC2
 276B  E5      	    push hl
 276C  09      	    add  hl,bc
@@ -6746,7 +6754,7 @@ zeros               dc   55,0
 279F  3EE2    	    ld   a,$E2
 27A1  320784  	    ld   (player_y),a
 27A4  C33E28  	    jp   $283E
-27A7  CD1B25  	    call $251B
+27A7  CD1B25  	    call get_player_tile_pos
 27AA  01E3FF  	    ld   bc,$FFE3
 27AD  E5      	    push hl
 27AE  09      	    add  hl,bc
@@ -6777,7 +6785,7 @@ zeros               dc   55,0
 27E1  3E22    	    ld   a,$22
 27E3  320784  	    ld   (player_y),a
 27E6  C33E28  	    jp   $283E
-27E9  CD1B25  	    call $251B
+27E9  CD1B25  	    call get_player_tile_pos
 27EC  01E1FF  	    ld   bc,$FFE1
 27EF  E5      	    push hl
 27F0  09      	    add  hl,bc
@@ -6898,7 +6906,7 @@ zeros               dc   55,0
 28DD  E607    	    and  $07
 28DF  FE04    	    cp   $04
 28E1  C0      	    ret  nz
-28E2  CD1B25  	    call $251B
+28E2  CD1B25  	    call get_player_tile_pos
 28E5  E5      	    push hl
 28E6  01E2FF  	    ld   bc,$FFE2
 28E9  09      	    add  hl,bc
@@ -6933,6 +6941,7 @@ zeros               dc   55,0
 291E  CD5A29  	    call $295A
 2921  E1      	    pop  hl
 2922  C9      	    ret
+
 2923  01E1FF  	    ld   bc,$FFE1
 2926  09      	    add  hl,bc
 2927  7E      	    ld   a,(hl)
@@ -7603,7 +7612,7 @@ _
 2DC3  FE02    	    cp   $02
 2DC5  C24330  	    jp   nz,$3043
 2DC8  EB      	    ex   de,hl
-2DC9  CDB330  	    call $30B3
+2DC9  CDB330  	    call get_tile_pos
 2DCC  01E2FF  	    ld   bc,$FFE2
 2DCF  09      	    add  hl,bc
 2DD0  3EFE    	    ld   a,$FE
@@ -7745,7 +7754,7 @@ _
 2ED3  12      	    ld   (de),a
 2ED4  C3092E  	    jp   $2E09
 2ED7  13      	    inc  de
-2ED8  CDB330  	    call $30B3
+2ED8  CDB330  	    call get_tile_pos
 2EDB  44      	    ld   b,h
 2EDC  4D      	    ld   c,l
 2EDD  210200  	    ld   hl,$0002
@@ -7786,7 +7795,7 @@ _
 2F1F  12      	    ld   (de),a
 2F20  C3092E  	    jp   $2E09
 2F23  13      	    inc  de
-2F24  CDB330  	    call $30B3
+2F24  CDB330  	    call get_tile_pos
 2F27  44      	    ld   b,h
 2F28  4D      	    ld   c,l
 2F29  21C2FF  	    ld   hl,$FFC2
@@ -7827,7 +7836,7 @@ _
 2F6A  3EE4    	    ld   a,$E4
 2F6C  12      	    ld   (de),a
 2F6D  C3092E  	    jp   $2E09
-2F70  CDB330  	    call $30B3
+2F70  CDB330  	    call get_tile_pos
 2F73  44      	    ld   b,h
 2F74  4D      	    ld   c,l
 2F75  21E3FF  	    ld   hl,$FFE3
@@ -7870,7 +7879,7 @@ _
 2FB8  3E14    	    ld   a,$14
 2FBA  12      	    ld   (de),a
 2FBB  C3092E  	    jp   $2E09
-2FBE  CDB330  	    call $30B3
+2FBE  CDB330  	    call get_tile_pos
 2FC1  44      	    ld   b,h
 2FC2  4D      	    ld   c,l
 2FC3  21E1FF  	    ld   hl,$FFE1
@@ -8045,6 +8054,10 @@ _
 30B0  1A      	    ld   a,(de)
 30B1  77      	    ld   (hl),a
 30B2  C9      	    ret
+
+                ;; in: de = x, de-1 = y
+                ;; out: hl = screen pos of entity
+                get_tile_pos:
 30B3  1A      	    ld   a,(de)
 30B4  0F      	    rrca
 30B5  0F      	    rrca
@@ -10440,7 +10453,7 @@ _
 4095  3AA580  	    ld   a,(carry_x)
 4098  77      	    ld   (hl),a
 4099  23      	    inc  hl
-409A  3AA680  	    ld   a,($80A6)
+409A  3AA680  	    ld   a,(carry_tile)
 409D  77      	    ld   (hl),a
 409E  23      	    inc  hl
 409F  3AA780  	    ld   a,($80A7)
@@ -10483,37 +10496,22 @@ _
 40EC  FE7B    	    cp   $7B
 40EE  CAF440  	    jp   z,$40F4
 40F1  C38440  	    jp   $4084
-40F4  210641  	    ld   hl,$4106
+40F4  210641  	    ld   hl,pickup_data
 40F7  0600    	    ld   b,$00
 40F9  09      	    add  hl,bc
 40FA  7E      	    ld   a,(hl)
-40FB  32A680  	    ld   ($80A6),a
+40FB  32A680  	    ld   (carry_tile),a
 40FE  23      	    inc  hl
 40FF  7E      	    ld   a,(hl)
 4100  32A780  	    ld   ($80A7),a
 4103  C39240  	    jp   $4092
-4106  320736  	    ld   ($3607),a
-4109  07      	    rlca
-410A  34      	    inc  (hl)
-410B  07      	    rlca
-410C  35      	    dec  (hl)
-410D  07      	    rlca
-410E  33      	    inc  sp
-410F  07      	    rlca
-4110  00      	    nop
-4111  00      	    nop
-4112  00      	    nop
-4113  00      	    nop
-4114  010100  	    ld   bc,$0001
-4117  00      	    nop
-4118  00      	    nop
-4119  00      	    nop
-411A  00      	    nop
-411B  00      	    nop
-411C  00      	    nop
-411D  00      	    nop
-411E  00      	    nop
-411F  00      	    nop
+
+                pickup_data:
+4106                db $32, $07, $36, $07, $34, $07, $35, $07
+410E                db $33, $07, $00, $00, $00, $00, $01, $01
+4116                db $00, $00, $00, $00, $00, $00, $00, $00
+411E                db $00, $00
+
 4120  3AA280  	    ld   a,(carrying_3)
 4123  FE01    	    cp   $01
 4125  CA3541  	    jp   z,$4135
