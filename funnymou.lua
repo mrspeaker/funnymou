@@ -182,6 +182,11 @@ is_playing = 0x830
 
 poke_rom(0x0008, { 0, 0, 0 }) -- skip RAM check
 
+poke_rom(0x1391, { 0xf4 })
+poke_rom(0x1391+27, { 0x36 })
+poke_rom(0x1391+28, { 0x35 })
+poke_rom(0x13cb, { 0x35, 0x35 })
+
 --[[
 tap_cat1 = mem:install_write_tap(0x8500, 0x8500, "writes", function(offset, data)
    if data == 1 and peek(0x8030) == 1 then

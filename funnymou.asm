@@ -19,6 +19,7 @@
                     carry_y         = $80A8
 
                     lives           = $8100
+                    cur_map         = $8101
                     lives_copy      = $8200 ; seems to mimic 8100?
 
                     player_bytes    = $8400 ;
@@ -109,10 +110,12 @@
                     SCR_GAMBLE      = $07
                     SCR_LUCKY       = $08
 
+                    TILES_H = $1B
 
                     TILE_BLANK      = $24
                     TILE_WATER      = $37
                     TILE_WATER_2    = $38
+                    TILE_PLATFORM   = $F4
 
                 ;;; ============ start of suprmous.x1 =============
 
@@ -676,10 +679,10 @@ zeros               dc 97,0
 04FE  CBD7    	    set  2,a
 0500  323980  	    ld   (screen_state),a
 0503  C9      	    ret
-0504  3A0181  	    ld   a,($8101)
+0504  3A0181  	    ld   a,(cur_map)
 0507  C601    	    add  a,$01
 0509  27      	    daa
-050A  320181  	    ld   ($8101),a
+050A  320181  	    ld   (cur_map),a
 050D  210381  	    ld   hl,$8103
 0510  3E00    	    ld   a,$00
 0512  06FC    	    ld   b,$FC
@@ -3266,34 +3269,35 @@ zeros               dc   55,0
 1309  77      	    ld   (hl),a
 130A  C9      	    ret
 
-
-130B  3A0181  	    ld   a,($8101)
+                draw_cur_level_map:
+130B  3A0181  	    ld   a,(cur_map)
 130E  E603    	    and  $03
-1310  CA2213  	    jp   z,$1322
+1310  CA2213  	    jp   z,map_1
 1313  FE01    	    cp   $01
 1315  CA2B13  	    jp   z,$132B
 1318  FE02    	    cp   $02
 131A  CA3413  	    jp   z,$1334
 131D  FE03    	    cp   $03
 131F  CA3D13  	    jp   z,$133D
+                map_1:
 1322  3E83    	    ld   a,$83
-1324  119113  	    ld   de,very_chunk_data_1
-1327  CD4613  	    call $1346
+1324  119113  	    ld   de,level_1_map
+1327  CD4613  	    call draw_map
 132A  C9      	    ret
 132B  3E83    	    ld   a,$83
 132D  11A116  	    ld   de,$16A1
-1330  CD4613  	    call $1346
+1330  CD4613  	    call draw_map
 1333  C9      	    ret
 1334  3E83    	    ld   a,$83
 1336  11B119  	    ld   de,$19B1
-1339  CD4613  	    call $1346
+1339  CD4613  	    call draw_map
 133C  C9      	    ret
 133D  3E83    	    ld   a,$83
 133F  11C11C  	    ld   de,$1CC1
-1342  CD4613  	    call $1346
+1342  CD4613  	    call draw_map
 1345  C9      	    ret
 
-
+                draw_map:
 1346  214390  	    ld   hl,$9043
 1349  061C    	    ld   b,$1C
 134B  0E1C    	    ld   c,$1C
@@ -3349,150 +3353,23 @@ zeros               dc   55,0
 1390  C9      	    ret
 
                 ;; very chunky data
-                very_chunk_data_1:
-1391  25      	    dec  h
-1392  25      	    dec  h
-1393  25      	    dec  h
-1394  25      	    dec  h
-1395  25      	    dec  h
-1396  25      	    dec  h
-1397  25      	    dec  h
-1398  25      	    dec  h
-1399  25      	    dec  h
-139A  25      	    dec  h
-139B  25      	    dec  h
-139C  25      	    dec  h
-139D  25      	    dec  h
-139E  25      	    dec  h
-139F  25      	    dec  h
-13A0  25      	    dec  h
-13A1  25      	    dec  h
-13A2  25      	    dec  h
-13A3  25      	    dec  h
-13A4  25      	    dec  h
-13A5  25      	    dec  h
-13A6  25      	    dec  h
-13A7  25      	    dec  h
-13A8  25      	    dec  h
-13A9  25      	    dec  h
-13AA  25      	    dec  h
-13AB  25      	    dec  h
-13AC  25      	    dec  h
-13AD  25      	    dec  h
-13AE  25      	    dec  h
-13AF  25      	    dec  h
-13B0  25      	    dec  h
-13B1  25      	    dec  h
-13B2  25      	    dec  h
-13B3  25      	    dec  h
-13B4  25      	    dec  h
-13B5  25      	    dec  h
-13B6  25      	    dec  h
-13B7  25      	    dec  h
-13B8  25      	    dec  h
-13B9  25      	    dec  h
-13BA  25      	    dec  h
-13BB  25      	    dec  h
-13BC  25      	    dec  h
-13BD  25      	    dec  h
-13BE  25      	    dec  h
-13BF  25      	    dec  h
-13C0  25      	    dec  h
-13C1  25      	    dec  h
-13C2  25      	    dec  h
-13C3  25      	    dec  h
-13C4  25      	    dec  h
-13C5  25      	    dec  h
-13C6  25      	    dec  h
-13C7  25      	    dec  h
-13C8  25      	    dec  h
-13C9  25      	    dec  h
-13CA  25      	    dec  h
-13CB  25      	    dec  h
-13CC  F5      	    push af
-13CD  F5      	    push af
-13CE  F5      	    push af
-13CF  F5      	    push af
-13D0  F5      	    push af
-13D1  F5      	    push af
-13D2  F5      	    push af
-13D3  F5      	    push af
-13D4  F5      	    push af
-13D5  F5      	    push af
-13D6  F5      	    push af
-13D7  F5      	    push af
-13D8  F5      	    push af
-13D9  F5      	    push af
-13DA  F5      	    push af
-13DB  F5      	    push af
-13DC  F5      	    push af
-13DD  F5      	    push af
-13DE  F5      	    push af
-13DF  F5      	    push af
-13E0  F5      	    push af
-13E1  F5      	    push af
-13E2  F5      	    push af
-13E3  F5      	    push af
-13E4  F42525  	    call p,$2525
-13E7  25      	    dec  h
-13E8  F42525  	    call p,$2525
-13EB  25      	    dec  h
-13EC  F42525  	    call p,$2525
-13EF  25      	    dec  h
-13F0  25      	    dec  h
-13F1  25      	    dec  h
-13F2  25      	    dec  h
-13F3  25      	    dec  h
-13F4  F42525  	    call p,$2525
-13F7  25      	    dec  h
-13F8  25      	    dec  h
-13F9  25      	    dec  h
-13FA  25      	    dec  h
-13FB  25      	    dec  h
-13FC  F42525  	    call p,$2525
-13FF  25      	    dec  h
-1400  F42525  	    call p,$2525
-1403  25      	    dec  h
-1404  F42525  	    call p,$2525
-1407  25      	    dec  h
-1408  F42525  	    call p,$2525
-140B  25      	    dec  h
-140C  25      	    dec  h
-140D  25      	    dec  h
-140E  25      	    dec  h
-140F  25      	    dec  h
-1410  F42525  	    call p,$2525
-1413  25      	    dec  h
-1414  25      	    dec  h
-1415  25      	    dec  h
-1416  25      	    dec  h
-1417  25      	    dec  h
-1418  F42525  	    call p,$2525
-141B  25      	    dec  h
-141C  F42525  	    call p,$2525
-141F  25      	    dec  h
-1420  F42525  	    call p,$2525
-1423  25      	    dec  h
-1424  F42525  	    call p,$2525
-1427  25      	    dec  h
-1428  25      	    dec  h
-1429  25      	    dec  h
-142A  25      	    dec  h
-142B  25      	    dec  h
-142C  F42525  	    call p,$2525
-142F  25      	    dec  h
-1430  25      	    dec  h
-1431  25      	    dec  h
-1432  25      	    dec  h
-1433  25      	    dec  h
-1434  F42525  	    call p,$2525
-1437  25      	    dec  h
-1438  F42525  	    call p,$2525
-143B  25      	    dec  h
-143C  F5      	    push af
-143D  F5      	    push af
-143E  F5      	    push af
-143F  F5      	    push af
+                level_1_map:
+1391  25      	    dc   54, $25  ; two rows of blanks
+13B8                dc    5, $25  ; plus the top of col 3
+13CC  F5      	    dc   24, $F5  ; 24 ladder tiles
+13E4  F42525  	    db   $f4
+13E5                db   $25, $25, $25, $f4, $25, $25, $25
+13EC  F42525  	    db   $f4, $25, $25, $25, $25, $25, $25, $25
+13F4  F42525  	    db   $f4, $25, $25, $25, $25, $25, $25, $25
+13FC  F42525  	    db   $f4, $25, $25, $25, $f4, $25, $25, $25
+1404  F42525  	    db   $f4, $25, $25, $25, $f4, $25, $25, $25
+140C  25      	    db   $25, $25, $25, $25, $f4, $25, $25, $25
+1414  25      	    db   $25, $25, $25, $25, $f4, $25, $25, $25
+141C  F42525  	    db   $f4, $25, $25, $25, $f4, $25, $25, $25
+1424  F42525  	    db   $f4, $25, $25, $25, $25, $25, $25, $25
+142C  F42525  	    db   $f4, $25, $25, $25, $25, $25, $25, $25
+1434  F42525  	    db   $f4, $25, $25, $25, $f4, $25, $25, $25
+143C  F5      	    db   $f5, $f5, $f5, $f5
 1440  F43535  	    call p,$3535
 1443  35      	    dec  (hl)
 1444  35      	    dec  (hl)
@@ -5765,7 +5642,7 @@ zeros               dc   55,0
 2043  EDB0    	    ldir
 2045  CD8220  	    call $2082
 2048  CD9D20  	    call $209D
-204B  CD0B13  	    call $130B
+204B  CD0B13  	    call draw_cur_level_map
 204E  CD293E  	    call $3E29
 2051  CD343F  	    call $3F34
 2054  CD7B41  	    call $417B
@@ -8232,7 +8109,7 @@ _
 31CF  E5      	    push hl
 31D0  60      	    ld   h,b
 31D1  69      	    ld   l,c
-31D2  3A0181  	    ld   a,($8101)
+31D2  3A0181  	    ld   a,(cur_map)
 31D5  FE09    	    cp   $09
 31D7  DADC31  	    jp   c,$31DC
 31DA  3E09    	    ld   a,$09
@@ -8433,7 +8310,7 @@ _
 32F7  E5      	    push hl
 32F8  60      	    ld   h,b
 32F9  69      	    ld   l,c
-32FA  3A0181  	    ld   a,($8101)
+32FA  3A0181  	    ld   a,(cur_map)
 32FD  FE09    	    cp   $09
 32FF  DA0433  	    jp   c,$3304
 3302  3E09    	    ld   a,$09
@@ -9821,7 +9698,7 @@ _
 3C91  C9      	    ret
 3C92  CDEF48  	    call $48EF
 3C95  DD21E33B	    ld   ix,$3BE3
-3C99  3A0181  	    ld   a,($8101)
+3C99  3A0181  	    ld   a,(cur_map)
 3C9C  E603    	    and  $03
 3C9E  110700  	    ld   de,$0007
 3CA1  A7      	    and  a
@@ -10030,7 +9907,7 @@ _
 3E01  CD193E  	    call $3E19
 3E04  C9      	    ret
 3E05  DD21F23C	    ld   ix,$3CF2
-3E09  3A0181  	    ld   a,($8101)
+3E09  3A0181  	    ld   a,(cur_map)
 3E0C  E603    	    and  $03
 3E0E  110600  	    ld   de,$0006
 3E11  A7      	    and  a
@@ -10052,7 +9929,7 @@ _
 3E2C  DD21C63F	    ld   ix,$3FC6
 3E30  FD210E40	    ld   iy,$400E
 3E34  111200  	    ld   de,$0012
-3E37  3A0181  	    ld   a,($8101)
+3E37  3A0181  	    ld   a,(cur_map)
 3E3A  E603    	    and  $03
 3E3C  A7      	    and  a
 3E3D  CA483E  	    jp   z,$3E48
@@ -10121,7 +9998,7 @@ _
 3EB6  DD21C63F	    ld   ix,$3FC6
 3EBA  0609    	    ld   b,$09
 3EBC  111200  	    ld   de,$0012
-3EBF  3A0181  	    ld   a,($8101)
+3EBF  3A0181  	    ld   a,(cur_map)
 3EC2  E603    	    and  $03
 3EC4  A7      	    and  a
 3EC5  CACE3E  	    jp   z,$3ECE
@@ -10227,7 +10104,7 @@ _
 3F62  212081  	    ld   hl,$8120
 3F65  DD21C63F	    ld   ix,$3FC6
 3F69  111200  	    ld   de,$0012
-3F6C  3A0181  	    ld   a,($8101)
+3F6C  3A0181  	    ld   a,(cur_map)
 3F6F  E603    	    and  $03
 3F71  A7      	    and  a
 3F72  CA7B3F  	    jp   z,$3F7B

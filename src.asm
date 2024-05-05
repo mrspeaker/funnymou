@@ -19,6 +19,7 @@
      carry_y         = $80A8
 
      lives           = $8100
+     cur_map         = $8101
      lives_copy      = $8200 ; seems to mimic 8100?
 
      player_bytes    = $8400 ;
@@ -109,10 +110,12 @@
      SCR_GAMBLE      = $07
      SCR_LUCKY       = $08
 
+     TILES_H = $1B
 
      TILE_BLANK      = $24
      TILE_WATER      = $37
      TILE_WATER_2    = $38
+     TILE_PLATFORM   = $F4
 
  ;;; ============ start of suprmous.x1 =============
 
@@ -676,10 +679,10 @@ start:
     set  2,a
     ld   (screen_state),a
     ret
-    ld   a,($8101)
+    ld   a,(cur_map)
     add  a,$01
     daa
-    ld   ($8101),a
+    ld   (cur_map),a
     ld   hl,$8103
     ld   a,$00
     ld   b,$FC
@@ -3266,34 +3269,35 @@ start:
     ld   (hl),a
     ret
 
-
-    ld   a,($8101)
+ draw_cur_level_map:
+    ld   a,(cur_map)
     and  $03
-    jp   z,$1322
+    jp   z,map_1
     cp   $01
     jp   z,$132B
     cp   $02
     jp   z,$1334
     cp   $03
     jp   z,$133D
+ map_1:
     ld   a,$83
-    ld   de,very_chunk_data_1
-    call $1346
+    ld   de,level_1_map
+    call draw_map
     ret
     ld   a,$83
     ld   de,$16A1
-    call $1346
+    call draw_map
     ret
     ld   a,$83
     ld   de,$19B1
-    call $1346
+    call draw_map
     ret
     ld   a,$83
     ld   de,$1CC1
-    call $1346
+    call draw_map
     ret
 
-
+ draw_map:
     ld   hl,$9043
     ld   b,$1C
     ld   c,$1C
@@ -3349,150 +3353,23 @@ start:
     ret
 
  ;; very chunky data
- very_chunk_data_1:
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    push af
-    push af
-    push af
-    push af
+ level_1_map:
+    dc   54, $25  ; two rows of blanks
+     dc    5, $25  ; plus the top of col 3
+    dc   24, $F5  ; 24 ladder tiles
+    db   $f4
+     db   $25, $25, $25, $f4, $25, $25, $25
+    db   $f4, $25, $25, $25, $25, $25, $25, $25
+    db   $f4, $25, $25, $25, $25, $25, $25, $25
+    db   $f4, $25, $25, $25, $f4, $25, $25, $25
+    db   $f4, $25, $25, $25, $f4, $25, $25, $25
+    db   $25, $25, $25, $25, $f4, $25, $25, $25
+    db   $25, $25, $25, $25, $f4, $25, $25, $25
+    db   $f4, $25, $25, $25, $f4, $25, $25, $25
+    db   $f4, $25, $25, $25, $25, $25, $25, $25
+    db   $f4, $25, $25, $25, $25, $25, $25, $25
+    db   $f4, $25, $25, $25, $f4, $25, $25, $25
+    db   $f5, $f5, $f5, $f5
     call p,$3535
     dec  (hl)
     dec  (hl)
@@ -5765,7 +5642,7 @@ start:
     ldir
     call $2082
     call $209D
-    call $130B
+    call draw_cur_level_map
     call $3E29
     call $3F34
     call $417B
@@ -8232,7 +8109,7 @@ mthing
     push hl
     ld   h,b
     ld   l,c
-    ld   a,($8101)
+    ld   a,(cur_map)
     cp   $09
     jp   c,$31DC
     ld   a,$09
@@ -8433,7 +8310,7 @@ mthing
     push hl
     ld   h,b
     ld   l,c
-    ld   a,($8101)
+    ld   a,(cur_map)
     cp   $09
     jp   c,$3304
     ld   a,$09
@@ -9821,7 +9698,7 @@ mthing
     ret
     call $48EF
     ld   ix,$3BE3
-    ld   a,($8101)
+    ld   a,(cur_map)
     and  $03
     ld   de,$0007
     and  a
@@ -10030,7 +9907,7 @@ mthing
     call $3E19
     ret
     ld   ix,$3CF2
-    ld   a,($8101)
+    ld   a,(cur_map)
     and  $03
     ld   de,$0006
     and  a
@@ -10052,7 +9929,7 @@ mthing
     ld   ix,$3FC6
     ld   iy,$400E
     ld   de,$0012
-    ld   a,($8101)
+    ld   a,(cur_map)
     and  $03
     and  a
     jp   z,$3E48
@@ -10121,7 +9998,7 @@ mthing
     ld   ix,$3FC6
     ld   b,$09
     ld   de,$0012
-    ld   a,($8101)
+    ld   a,(cur_map)
     and  $03
     and  a
     jp   z,$3ECE
@@ -10227,7 +10104,7 @@ mthing
     ld   hl,$8120
     ld   ix,$3FC6
     ld   de,$0012
-    ld   a,($8101)
+    ld   a,(cur_map)
     and  $03
     and  a
     jp   z,$3F7B
