@@ -1,3 +1,4 @@
+     ram_start       = $8000
 
      credits         = $8023
      is_playing      = $8030
@@ -13,6 +14,8 @@
      carrying_1      = $80A0 ; carrying food
      carrying_2      = $80A1 ; carrying food
      carrying_3      = $80A2 ; carrying food... dropped?
+     carry_x         = $80A5
+     carry_y         = $80A8
 
      lives           = $8100
      lives_copy      = $8200 ; seems to mimic 8100?
@@ -35,7 +38,7 @@
      cat1_x          = $8518
      cat1_y          = $8519
      cat1_fr         = $851A
-
+     cat1_dir        = $851B ; 1 = L, 2 = R, 4 = U, 5 = d
      cat2_bytes      = $8550 ; 29 bytes: to 856D
      cat2_x          = $8558
      cat2_y          = $8559
@@ -48,6 +51,8 @@
 
      snake1_enable   = $8600
      snake1_active   = $8601
+     snake2_enable   = $8602
+     snake2_active   = $8603
 
      snake1_bytes    = $8610 ; tee hee, snake bytes
      snake1_x        = $8618
@@ -67,6 +72,8 @@
      bomb_um2        = $8687
      bomb_set_timer  = $868A
      bomb_exploding  = $868B
+
+     stack_location  = $87FE
 
      screen_ram      = $9000 ; - 0x93ff  videoram
      start_of_tiles  = $9040 ; top right tile
@@ -120,14 +127,16 @@ start:
 
  done_RAM_test:
     ld   a,(watchdog)
-    ld   hl,$8000
+ _clear_ram:
+    ld   hl,ram_start
     ld   a,$88
     ld   c,$00
+ __i01:
     ld   (hl),c
     inc  hl
     cp   h
-    jp   nz,$0018
-    ld   sp,$87FE
+    jp   nz,__i01
+    ld   sp,stack_location
     ld   a,(watchdog)
     call clear_screen
     xor  a
@@ -238,11 +247,11 @@ start:
     ld   a,$03
     ld   (lives_copy),a
     ld   ($8300),a
-    jp   $0193
+    jp   start_game
     ld   a,$05
     ld   (lives_copy),a
     ld   ($8300),a
-    jp   $0193
+    jp   start_game
 
  start_game_p1:
     ld   a,(credits)
@@ -263,20 +272,23 @@ start:
     ld   (lives_copy),a
     ld   a,$00
     ld   ($8300),a
-    jp   $0193
+    jp   start_game
     ld   a,$05
     ld   (lives_copy),a
     ld   a,$00
     ld   ($8300),a
+
+ start_game:
     ld   a,$00
     ld   hl,lives
     ld   b,$03
+ __i02:
     ld   (hl),a
     inc  l
-    jp   nz,$019A
+    jp   nz,__i02
     inc  h
     inc  l
-    djnz $019A
+    djnz __i02
     ld   a,$00
     ld   ($8031),a
     ld   ($8032),a
@@ -334,18 +346,19 @@ start:
     ret  z
     ld   a,$01
     ld   (screen_state),a
-    jp   $0229
+    jp   _press_either
  _press_p2:
     ld   a,(cur_screen)
     cp   SCR_PUSH_P1P2
     ret  z
     ld   a,$02
     ld   (screen_state),a
-    jp   $0229
+    jp   _press_either
+ _press_either:
     ld   hl,lives
     ld   a,$00
     ld   b,$03
-    ld   (hl),a ; set 3 lives
+    ld   (hl),a
     inc  l
     jp   nz,$0230
     inc  h
@@ -356,6 +369,7 @@ start:
     inc  hl
     djnz $023D
     ret
+
     ld   a,($8033)
     and  a
     jp   z,$025E
@@ -419,7 +433,7 @@ start:
     jp   nz,$04E0
     ld   a,(cur_screen)
     cp   SCR_GAME_OVER
-    jp   z,$02F5
+    jp   z,_scr_game_over_2
     cp   SCR_READY
     jp   z,$036D
     cp   SCR_GAME
@@ -429,6 +443,8 @@ start:
     cp   SCR_LUCKY
     jp   z,$4556
     ret
+
+ _scr_game_over_2:
     ld   a,($803D)
     dec  a
     ld   ($803D),a
@@ -502,18 +518,21 @@ start:
     set  5,a
     ld   (screen_state),a
     ret
+
     ld   a,(cur_screen)
     cp   SCR_GAME
-    jp   z,$03B5
+    jp   z,_scr_game_1
     cp   SCR_GAMBLE
-    jp   z,$03AB
+    jp   z,_scr_gamble_1
     cp   SCR_LUCKY
-    jp   z,$03AB
+    jp   z,_scr_gamble_1
     ret
+ _scr_gamble_1:
     ld   a,($8031)
     and  a
     jp   z,$04C1
     jp   $048B
+ _scr_game_1:
     ld   a,($803C)
     and  a
     jp   nz,$041D
@@ -729,6 +748,7 @@ start:
     add  hl,de
     djnz $05F5
     ret
+
     inc  e
     inc  c
     jr   $0619
@@ -767,7 +787,7 @@ start:
     nop
     nop
     nop
-    ld   hl,$8000
+    ld   hl,ram_start
     ld   de,$9840
     ld   bc,$0020
     ldir
@@ -854,7 +874,7 @@ start:
     sub  e
     ld   b,c
     sub  e
-    ld   hl,$0193
+    ld   hl,start_game
     sub  e
     pop  hl
     sub  d
@@ -1043,7 +1063,7 @@ start:
     ld   a,(watchdog)
     ld   d,$00
     ld   c,$20
-    ld   hl,$8000
+    ld   hl,ram_start
     ld   b,$08
     ld   a,c
     add  a,$2F
@@ -1053,7 +1073,7 @@ start:
     inc  a
     inc  h
     djnz $0838
-    ld   hl,$8000
+    ld   hl,ram_start
     ld   b,$08
     ld   a,(watchdog)
     ld   a,c
@@ -1150,7 +1170,7 @@ start:
     inc  hl
     dec  a
     jr   nz,$08E4
-    ld   sp,$87FE
+    ld   sp,stack_location
     push hl
     call $0933
     pop  hl
@@ -3075,7 +3095,7 @@ start:
     call $1291
     call $12BD
     ret
-    ld   ix,$8000
+    ld   ix,ram_start
     ld   iy,$801C
     ld   hl,$11B4
     exx
@@ -5850,7 +5870,7 @@ start:
     ld   (hl),$00
     inc  l
     djnz $211E
-    ld   hl,$8000
+    ld   hl,ram_start
     ld   b,$20
     ld   (hl),$00
     inc  l
@@ -6660,7 +6680,7 @@ mthing
     cp   $14
     jp   z,$2829
     jp   nc,$2723
-    ld   a,$14
+    ld   a,$14  ; min $14 x
     ld   (player_x),a
     jp   $2829
     call $251B
@@ -6691,7 +6711,7 @@ mthing
     cp   $D4
     jp   z,$2829
     jp   c,$2765
-    ld   a,$D4
+    ld   a,$D4  ; max $d4 x
     ld   (player_x),a
     jp   $2829
     call $251B
@@ -6857,7 +6877,7 @@ mthing
     and  $03
     or   b
     ld   ($8413),a
-    ld   hl,$8000
+    ld   hl,ram_start
     ld   a,(player_x)
     ld   (hl),a
     inc  hl
@@ -7501,7 +7521,7 @@ mthing
     dec  hl
     ld   a,$00
     ld   (bc),a
-    ld   a,($8000)
+    ld   a,(ram_start)
     cp   (hl)
     ex   de,hl
     jp   z,$2D46
@@ -7715,7 +7735,7 @@ mthing
     jp   c,$2EA5
     jp   $2E94
     inc  hl
-    ld   (hl),$00
+    ld   (hl),$00 ; set cat 0 (what dir is that?)
     inc  hl
     ld   a,(de)
     cp   $0C
@@ -7756,7 +7776,7 @@ mthing
     ld   hl,$0006
     jp   $304B
     inc  hl
-    ld   (hl),$80
+    ld   (hl),$80 ; set cat x80 (what's that?!)
     inc  hl
     ld   a,(de)
     cp   $E4
@@ -7797,7 +7817,7 @@ mthing
     ld   hl,$0006
     jp   $304B
     inc  hl
-    ld   (hl),$04
+    ld   (hl),$04 ; set cat down
     inc  hl
     inc  de
     ld   a,(de)
@@ -7840,7 +7860,7 @@ mthing
     ld   hl,$0006
     jp   $304B
     inc  hl
-    ld   (hl),$08
+    ld   (hl),$08 ; set cat up
     inc  hl
     inc  de
     ld   a,(de)
@@ -7985,6 +8005,8 @@ mthing
     call $308A
     call $309C
     ret
+
+
     ld   a,(hl)
     and  $03
     ld   b,a
@@ -8000,6 +8022,8 @@ mthing
     ex   de,hl
     dec  de
     ret
+
+
     ld   a,(de)
     ld   l,a
     ld   h,$80
@@ -8043,6 +8067,8 @@ mthing
     add  a,h
     ld   h,a
     ret
+
+
     add  hl,bc
     ld   a,$F4
     cp   (hl)
@@ -8053,6 +8079,8 @@ mthing
     ld   a,$01
     ld   (de),a
     ret
+
+
     ex   de,hl
     ld   hl,$FFF9
     add  hl,de
@@ -8088,6 +8116,7 @@ mthing
     ex   de,hl
     call $309C
     ret
+
     ex   de,hl
     ld   hl,$FFFA
     add  hl,de
@@ -8185,6 +8214,8 @@ mthing
     nop
     nop
     nop
+
+
     push hl
     ld   h,b
     ld   l,c
@@ -8206,6 +8237,8 @@ mthing
     inc  hl
     ld   (hl),b
     ret
+
+
     nop
     nop
     nop
@@ -8577,7 +8610,7 @@ mthing
     ld   (hl),$00
     ret
     dec  hl
-    ld   a,($8000)
+    ld   a,(ram_start)
     cp   (hl)
     ex   de,hl
     jp   z,$3448
@@ -9099,6 +9132,8 @@ mthing
     ld   a,(de)
     ld   (hl),a
     ret
+
+
     ld   a,(de)
     rrca
     rrca
@@ -9121,6 +9156,8 @@ mthing
     add  a,h
     ld   h,a
     ret
+
+
     add  hl,bc
     ld   a,$E1
     cp   (hl)
@@ -9364,7 +9401,7 @@ mthing
     ld   a,($852B)
     and  a
     ret  nz
-    ld   ix,$8000
+    ld   ix,ram_start
     ld   iy,$8004
     ld   de,$070E
     ld   hl,$070E
@@ -9375,7 +9412,7 @@ mthing
     ld   a,($856B)
     and  a
     ret  nz
-    ld   ix,$8000
+    ld   ix,ram_start
     ld   iy,$800C
     ld   de,$070E
     ld   hl,$070E
@@ -9386,7 +9423,7 @@ mthing
     ld   a,($858B)
     and  a
     ret  nz
-    ld   ix,$8000
+    ld   ix,ram_start
     ld   iy,$8010
     ld   de,$070E
     ld   hl,$070E
@@ -9397,7 +9434,7 @@ mthing
     ld   a,($862B)
     and  a
     ret  nz
-    ld   ix,$8000
+    ld   ix,ram_start
     ld   iy,$8014
     ld   de,$050A
     ld   hl,$050A
@@ -9408,7 +9445,7 @@ mthing
     ld   a,($864B)
     and  a
     ret  nz
-    ld   ix,$8000
+    ld   ix,ram_start
     ld   iy,$8018
     ld   de,$050A
     ld   hl,$050A
@@ -10400,7 +10437,7 @@ mthing
     djnz $408B
     jp   $4092
     ld   hl,$8008
-    ld   a,($80A5)
+    ld   a,(carry_x)
     ld   (hl),a
     inc  hl
     ld   a,($80A6)
@@ -10409,7 +10446,7 @@ mthing
     ld   a,($80A7)
     ld   (hl),a
     inc  hl
-    ld   a,($80A8)
+    ld   a,(carry_y)
     ld   (hl),a
     ret
     ld   a,(carrying_2)
@@ -10421,10 +10458,10 @@ mthing
     ldir
     ld   a,(player_x)
     add  a,$00
-    ld   ($80A5),a
+    ld   (carry_x),a
     ld   a,(player_y)
-    add  a,$F0
-    ld   ($80A8),a
+    add  a,$F0  ; y - 16 (on head!)
+    ld   (carry_y),a
     ld   a,($809F)
     ld   c,$00
     cp   $7A
@@ -10487,10 +10524,10 @@ mthing
     jp   $4084
     ld   a,(player_x)
     add  a,$00
-    ld   ($80A5),a
+    ld   (carry_x),a
     ld   a,(player_y)
     add  a,$F0
-    ld   ($80A8),a
+    ld   (carry_y),a
     jp   $4092
     ld   a,($80A3)
     inc  a
@@ -10500,9 +10537,9 @@ mthing
     ld   a,$03
     ld   (carrying_3),a
     jp   $4092
-    ld   a,($80A8)
+    ld   a,(carry_y)
     add  a,$02
-    ld   ($80A8),a
+    ld   (carry_y),a
     jp   $4092
     ld   hl,$809E
     ld   e,(hl)

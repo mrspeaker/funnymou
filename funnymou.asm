@@ -1,3 +1,4 @@
+                    ram_start       = $8000
 
                     credits         = $8023
                     is_playing      = $8030
@@ -13,6 +14,8 @@
                     carrying_1      = $80A0 ; carrying food
                     carrying_2      = $80A1 ; carrying food
                     carrying_3      = $80A2 ; carrying food... dropped?
+                    carry_x         = $80A5
+                    carry_y         = $80A8
 
                     lives           = $8100
                     lives_copy      = $8200 ; seems to mimic 8100?
@@ -70,6 +73,8 @@
                     bomb_set_timer  = $868A
                     bomb_exploding  = $868B
 
+                    stack_location  = $87FE
+
                     screen_ram      = $9000 ; - 0x93ff  videoram
                     start_of_tiles  = $9040 ; top right tile
                     END_OF_TILES    = $93BF ; bottom left tile
@@ -122,14 +127,16 @@
 
                 done_RAM_test:
 000E  3A00B8  	    ld   a,(watchdog)
-0011  210080  	    ld   hl,$8000
+                _clear_ram:
+0011  210080  	    ld   hl,ram_start
 0014  3E88    	    ld   a,$88
 0016  0E00    	    ld   c,$00
+                __i01:
 0018  71      	    ld   (hl),c
 0019  23      	    inc  hl
 001A  BC      	    cp   h
-001B  C21800  	    jp   nz,$0018
-001E  31FE87  	    ld   sp,$87FE
+001B  C21800  	    jp   nz,__i01
+001E  31FE87  	    ld   sp,stack_location
 0021  3A00B8  	    ld   a,(watchdog)
 0024  CD3309  	    call clear_screen
 0027  AF      	    xor  a
@@ -240,11 +247,11 @@ zeros               dc 97,0
 0145  3E03    	    ld   a,$03
 0147  320082  	    ld   (lives_copy),a
 014A  320083  	    ld   ($8300),a
-014D  C39301  	    jp   $0193
+014D  C39301  	    jp   start_game
 0150  3E05    	    ld   a,$05
 0152  320082  	    ld   (lives_copy),a
 0155  320083  	    ld   ($8300),a
-0158  C39301  	    jp   $0193
+0158  C39301  	    jp   start_game
 
                 start_game_p1:
 015B  3A2380  	    ld   a,(credits)
@@ -265,20 +272,23 @@ zeros               dc 97,0
 017E  320082  	    ld   (lives_copy),a
 0181  3E00    	    ld   a,$00
 0183  320083  	    ld   ($8300),a
-0186  C39301  	    jp   $0193
+0186  C39301  	    jp   start_game
 0189  3E05    	    ld   a,$05
 018B  320082  	    ld   (lives_copy),a
 018E  3E00    	    ld   a,$00
 0190  320083  	    ld   ($8300),a
+
+                start_game:
 0193  3E00    	    ld   a,$00
 0195  210081  	    ld   hl,lives
 0198  0603    	    ld   b,$03
+                __i02:
 019A  77      	    ld   (hl),a
 019B  2C      	    inc  l
-019C  C29A01  	    jp   nz,$019A
+019C  C29A01  	    jp   nz,__i02
 019F  24      	    inc  h
 01A0  2C      	    inc  l
-01A1  10F7    	    djnz $019A
+01A1  10F7    	    djnz __i02
 01A3  3E00    	    ld   a,$00
 01A5  323180  	    ld   ($8031),a
 01A8  323280  	    ld   ($8032),a
@@ -336,18 +346,19 @@ zeros               dc 97,0
 0212  C8      	    ret  z
 0213  3E01    	    ld   a,$01
 0215  323980  	    ld   (screen_state),a
-0218  C32902  	    jp   $0229
+0218  C32902  	    jp   _press_either
                 _press_p2:
 021B  3A3B80  	    ld   a,(cur_screen)
 021E  FE03    	    cp   SCR_PUSH_P1P2
 0220  C8      	    ret  z
 0221  3E02    	    ld   a,$02
 0223  323980  	    ld   (screen_state),a
-0226  C32902  	    jp   $0229
+0226  C32902  	    jp   _press_either
+                _press_either:
 0229  210081  	    ld   hl,lives
 022C  3E00    	    ld   a,$00
 022E  0603    	    ld   b,$03
-0230  77      	    ld   (hl),a ; set 3 lives
+0230  77      	    ld   (hl),a
 0231  2C      	    inc  l
 0232  C23002  	    jp   nz,$0230
 0235  24      	    inc  h
@@ -358,6 +369,7 @@ zeros               dc 97,0
 023E  23      	    inc  hl
 023F  10FC    	    djnz $023D
 0241  C9      	    ret
+
 0242  3A3380  	    ld   a,($8033)
 0245  A7      	    and  a
 0246  CA5E02  	    jp   z,$025E
@@ -421,7 +433,7 @@ zeros               dc 97,0
 02D5  C2E004  	    jp   nz,$04E0
 02D8  3A3B80  	    ld   a,(cur_screen)
 02DB  FE04    	    cp   SCR_GAME_OVER
-02DD  CAF502  	    jp   z,$02F5
+02DD  CAF502  	    jp   z,_scr_game_over_2
 02E0  FE05    	    cp   SCR_READY
 02E2  CA6D03  	    jp   z,$036D
 02E5  FE06    	    cp   SCR_GAME
@@ -431,6 +443,8 @@ zeros               dc 97,0
 02EF  FE08    	    cp   SCR_LUCKY
 02F1  CA5645  	    jp   z,$4556
 02F4  C9      	    ret
+
+                _scr_game_over_2:
 02F5  3A3D80  	    ld   a,($803D)
 02F8  3D      	    dec  a
 02F9  323D80  	    ld   ($803D),a
@@ -504,18 +518,21 @@ zeros               dc 97,0
 0392  CBEF    	    set  5,a
 0394  323980  	    ld   (screen_state),a
 0397  C9      	    ret
+
 0398  3A3B80  	    ld   a,(cur_screen)
 039B  FE06    	    cp   SCR_GAME
-039D  CAB503  	    jp   z,$03B5
+039D  CAB503  	    jp   z,_scr_game_1
 03A0  FE07    	    cp   SCR_GAMBLE
-03A2  CAAB03  	    jp   z,$03AB
+03A2  CAAB03  	    jp   z,_scr_gamble_1
 03A5  FE08    	    cp   SCR_LUCKY
-03A7  CAAB03  	    jp   z,$03AB
+03A7  CAAB03  	    jp   z,_scr_gamble_1
 03AA  C9      	    ret
+                _scr_gamble_1:
 03AB  3A3180  	    ld   a,($8031)
 03AE  A7      	    and  a
 03AF  CAC104  	    jp   z,$04C1
 03B2  C38B04  	    jp   $048B
+                _scr_game_1:
 03B5  3A3C80  	    ld   a,($803C)
 03B8  A7      	    and  a
 03B9  C21D04  	    jp   nz,$041D
@@ -731,6 +748,7 @@ zeros               dc   55,0
 05F6  19      	    add  hl,de
 05F7  10FC    	    djnz $05F5
 05F9  C9      	    ret
+
 05FA  1C      	    inc  e
 05FB  0C      	    inc  c
 05FC  181B    	    jr   $0619
@@ -769,7 +787,7 @@ zeros               dc   55,0
 0629  00      	    nop
 062A  00      	    nop
 062B  00      	    nop
-062C  210080  	    ld   hl,$8000
+062C  210080  	    ld   hl,ram_start
 062F  114098  	    ld   de,$9840
 0632  012000  	    ld   bc,$0020
 0635  EDB0    	    ldir
@@ -856,7 +874,7 @@ zeros               dc   55,0
 06CC  93      	    sub  e
 06CD  41      	    ld   b,c
 06CE  93      	    sub  e
-06CF  219301  	    ld   hl,$0193
+06CF  219301  	    ld   hl,start_game
 06D2  93      	    sub  e
 06D3  E1      	    pop  hl
 06D4  92      	    sub  d
@@ -1045,7 +1063,7 @@ zeros               dc   55,0
 082B  3A00B8  	    ld   a,(watchdog)
 082E  1600    	    ld   d,$00
 0830  0E20    	    ld   c,$20
-0832  210080  	    ld   hl,$8000
+0832  210080  	    ld   hl,ram_start
 0835  0608    	    ld   b,$08
 0837  79      	    ld   a,c
 0838  C62F    	    add  a,$2F
@@ -1055,7 +1073,7 @@ zeros               dc   55,0
 083E  3C      	    inc  a
 083F  24      	    inc  h
 0840  10F6    	    djnz $0838
-0842  210080  	    ld   hl,$8000
+0842  210080  	    ld   hl,ram_start
 0845  0608    	    ld   b,$08
 0847  3A00B8  	    ld   a,(watchdog)
 084A  79      	    ld   a,c
@@ -1152,7 +1170,7 @@ zeros               dc   55,0
 08E5  23      	    inc  hl
 08E6  3D      	    dec  a
 08E7  20FB    	    jr   nz,$08E4
-08E9  31FE87  	    ld   sp,$87FE
+08E9  31FE87  	    ld   sp,stack_location
 08EC  E5      	    push hl
 08ED  CD3309  	    call $0933
 08F0  E1      	    pop  hl
@@ -3077,7 +3095,7 @@ zeros               dc   55,0
 1198  CD9112  	    call $1291
 119B  CDBD12  	    call $12BD
 119E  C9      	    ret
-119F  DD210080	    ld   ix,$8000
+119F  DD210080	    ld   ix,ram_start
 11A3  FD211C80	    ld   iy,$801C
 11A7  21B411  	    ld   hl,$11B4
 11AA  D9      	    exx
@@ -5852,7 +5870,7 @@ zeros               dc   55,0
 211E  3600    	    ld   (hl),$00
 2120  2C      	    inc  l
 2121  10FB    	    djnz $211E
-2123  210080  	    ld   hl,$8000
+2123  210080  	    ld   hl,ram_start
 2126  0620    	    ld   b,$20
 2128  3600    	    ld   (hl),$00
 212A  2C      	    inc  l
@@ -6662,7 +6680,7 @@ zeros               dc   55,0
 2713  FE14    	    cp   $14
 2715  CA2928  	    jp   z,$2829
 2718  D22327  	    jp   nc,$2723
-271B  3E14    	    ld   a,$14
+271B  3E14    	    ld   a,$14  ; min $14 x
 271D  320684  	    ld   (player_x),a
 2720  C32928  	    jp   $2829
 2723  CD1B25  	    call $251B
@@ -6693,7 +6711,7 @@ zeros               dc   55,0
 2755  FED4    	    cp   $D4
 2757  CA2928  	    jp   z,$2829
 275A  DA6527  	    jp   c,$2765
-275D  3ED4    	    ld   a,$D4
+275D  3ED4    	    ld   a,$D4  ; max $d4 x
 275F  320684  	    ld   (player_x),a
 2762  C32928  	    jp   $2829
 2765  CD1B25  	    call $251B
@@ -6859,7 +6877,7 @@ zeros               dc   55,0
 28B5  E603    	    and  $03
 28B7  B0      	    or   b
 28B8  321384  	    ld   ($8413),a
-28BB  210080  	    ld   hl,$8000
+28BB  210080  	    ld   hl,ram_start
 28BE  3A0684  	    ld   a,(player_x)
 28C1  77      	    ld   (hl),a
 28C2  23      	    inc  hl
@@ -7503,7 +7521,7 @@ _
 2D31  2B      	    dec  hl
 2D32  3E00    	    ld   a,$00
 2D34  02      	    ld   (bc),a
-2D35  3A0080  	    ld   a,($8000)
+2D35  3A0080  	    ld   a,(ram_start)
 2D38  BE      	    cp   (hl)
 2D39  EB      	    ex   de,hl
 2D3A  CA462D  	    jp   z,$2D46
@@ -7717,7 +7735,7 @@ _
 2EBE  DAA52E  	    jp   c,$2EA5
 2EC1  C3942E  	    jp   $2E94
 2EC4  23      	    inc  hl
-2EC5  3600    	    ld   (hl),$00
+2EC5  3600    	    ld   (hl),$00 ; set cat 0 (what dir is that?)
 2EC7  23      	    inc  hl
 2EC8  1A      	    ld   a,(de)
 2EC9  FE0C    	    cp   $0C
@@ -7758,7 +7776,7 @@ _
 2F0A  210600  	    ld   hl,$0006
 2F0D  C34B30  	    jp   $304B
 2F10  23      	    inc  hl
-2F11  3680    	    ld   (hl),$80
+2F11  3680    	    ld   (hl),$80 ; set cat x80 (what's that?!)
 2F13  23      	    inc  hl
 2F14  1A      	    ld   a,(de)
 2F15  FEE4    	    cp   $E4
@@ -7799,7 +7817,7 @@ _
 2F56  210600  	    ld   hl,$0006
 2F59  C34B30  	    jp   $304B
 2F5C  23      	    inc  hl
-2F5D  3604    	    ld   (hl),$04
+2F5D  3604    	    ld   (hl),$04 ; set cat down
 2F5F  23      	    inc  hl
 2F60  13      	    inc  de
 2F61  1A      	    ld   a,(de)
@@ -7842,7 +7860,7 @@ _
 2FA4  210600  	    ld   hl,$0006
 2FA7  C34B30  	    jp   $304B
 2FAA  23      	    inc  hl
-2FAB  3608    	    ld   (hl),$08
+2FAB  3608    	    ld   (hl),$08 ; set cat up
 2FAD  23      	    inc  hl
 2FAE  13      	    inc  de
 2FAF  1A      	    ld   a,(de)
@@ -7987,6 +8005,8 @@ _
 3083  CD8A30  	    call $308A
 3086  CD9C30  	    call $309C
 3089  C9      	    ret
+
+
 308A  7E      	    ld   a,(hl)
 308B  E603    	    and  $03
 308D  47      	    ld   b,a
@@ -8002,6 +8022,8 @@ _
 3099  EB      	    ex   de,hl
 309A  1B      	    dec  de
 309B  C9      	    ret
+
+
 309C  1A      	    ld   a,(de)
 309D  6F      	    ld   l,a
 309E  2680    	    ld   h,$80
@@ -8045,6 +8067,8 @@ _
 30CB  84      	    add  a,h
 30CC  67      	    ld   h,a
 30CD  C9      	    ret
+
+
 30CE  09      	    add  hl,bc
 30CF  3EF4    	    ld   a,$F4
 30D1  BE      	    cp   (hl)
@@ -8055,6 +8079,8 @@ _
 30D9  3E01    	    ld   a,$01
 30DB  12      	    ld   (de),a
 30DC  C9      	    ret
+
+
 30DD  EB      	    ex   de,hl
 30DE  21F9FF  	    ld   hl,$FFF9
 30E1  19      	    add  hl,de
@@ -8090,6 +8116,7 @@ _
 3117  EB      	    ex   de,hl
 3118  CD9C30  	    call $309C
 311B  C9      	    ret
+
 311C  EB      	    ex   de,hl
 311D  21FAFF  	    ld   hl,$FFFA
 3120  19      	    add  hl,de
@@ -8187,6 +8214,8 @@ _
 31CC  00      	    nop
 31CD  00      	    nop
 31CE  00      	    nop
+
+
 31CF  E5      	    push hl
 31D0  60      	    ld   h,b
 31D1  69      	    ld   l,c
@@ -8208,6 +8237,8 @@ _
 31EA  23      	    inc  hl
 31EB  70      	    ld   (hl),b
 31EC  C9      	    ret
+
+
 31ED  00      	    nop
 31EE  00      	    nop
 31EF  00      	    nop
@@ -8579,7 +8610,7 @@ _
 3433  3600    	    ld   (hl),$00
 3435  C9      	    ret
 3436  2B      	    dec  hl
-3437  3A0080  	    ld   a,($8000)
+3437  3A0080  	    ld   a,(ram_start)
 343A  BE      	    cp   (hl)
 343B  EB      	    ex   de,hl
 343C  CA4834  	    jp   z,$3448
@@ -9101,6 +9132,8 @@ _
 37C7  1A      	    ld   a,(de)
 37C8  77      	    ld   (hl),a
 37C9  C9      	    ret
+
+
 37CA  1A      	    ld   a,(de)
 37CB  0F      	    rrca
 37CC  0F      	    rrca
@@ -9123,6 +9156,8 @@ _
 37E2  84      	    add  a,h
 37E3  67      	    ld   h,a
 37E4  C9      	    ret
+
+
 37E5  09      	    add  hl,bc
 37E6  3EE1    	    ld   a,$E1
 37E8  BE      	    cp   (hl)
@@ -9366,7 +9401,7 @@ _
 3986  3A2B85  	    ld   a,($852B)
 3989  A7      	    and  a
 398A  C0      	    ret  nz
-398B  DD210080	    ld   ix,$8000
+398B  DD210080	    ld   ix,ram_start
 398F  FD210480	    ld   iy,$8004
 3993  110E07  	    ld   de,$070E
 3996  210E07  	    ld   hl,$070E
@@ -9377,7 +9412,7 @@ _
 39A1  3A6B85  	    ld   a,($856B)
 39A4  A7      	    and  a
 39A5  C0      	    ret  nz
-39A6  DD210080	    ld   ix,$8000
+39A6  DD210080	    ld   ix,ram_start
 39AA  FD210C80	    ld   iy,$800C
 39AE  110E07  	    ld   de,$070E
 39B1  210E07  	    ld   hl,$070E
@@ -9388,7 +9423,7 @@ _
 39BC  3A8B85  	    ld   a,($858B)
 39BF  A7      	    and  a
 39C0  C0      	    ret  nz
-39C1  DD210080	    ld   ix,$8000
+39C1  DD210080	    ld   ix,ram_start
 39C5  FD211080	    ld   iy,$8010
 39C9  110E07  	    ld   de,$070E
 39CC  210E07  	    ld   hl,$070E
@@ -9399,7 +9434,7 @@ _
 39D7  3A2B86  	    ld   a,($862B)
 39DA  A7      	    and  a
 39DB  C0      	    ret  nz
-39DC  DD210080	    ld   ix,$8000
+39DC  DD210080	    ld   ix,ram_start
 39E0  FD211480	    ld   iy,$8014
 39E4  110A05  	    ld   de,$050A
 39E7  210A05  	    ld   hl,$050A
@@ -9410,7 +9445,7 @@ _
 39F2  3A4B86  	    ld   a,($864B)
 39F5  A7      	    and  a
 39F6  C0      	    ret  nz
-39F7  DD210080	    ld   ix,$8000
+39F7  DD210080	    ld   ix,ram_start
 39FB  FD211880	    ld   iy,$8018
 39FF  110A05  	    ld   de,$050A
 3A02  210A05  	    ld   hl,$050A
@@ -10402,7 +10437,7 @@ _
 408D  10FC    	    djnz $408B
 408F  C39240  	    jp   $4092
 4092  210880  	    ld   hl,$8008
-4095  3AA580  	    ld   a,($80A5)
+4095  3AA580  	    ld   a,(carry_x)
 4098  77      	    ld   (hl),a
 4099  23      	    inc  hl
 409A  3AA680  	    ld   a,($80A6)
@@ -10411,7 +10446,7 @@ _
 409F  3AA780  	    ld   a,($80A7)
 40A2  77      	    ld   (hl),a
 40A3  23      	    inc  hl
-40A4  3AA880  	    ld   a,($80A8)
+40A4  3AA880  	    ld   a,(carry_y)
 40A7  77      	    ld   (hl),a
 40A8  C9      	    ret
 40A9  3AA180  	    ld   a,(carrying_2)
@@ -10423,10 +10458,10 @@ _
 40B9  EDB0    	    ldir
 40BB  3A0684  	    ld   a,(player_x)
 40BE  C600    	    add  a,$00
-40C0  32A580  	    ld   ($80A5),a
+40C0  32A580  	    ld   (carry_x),a
 40C3  3A0784  	    ld   a,(player_y)
-40C6  C6F0    	    add  a,$F0
-40C8  32A880  	    ld   ($80A8),a
+40C6  C6F0    	    add  a,$F0  ; y - 16 (on head!)
+40C8  32A880  	    ld   (carry_y),a
 40CB  3A9F80  	    ld   a,($809F)
 40CE  0E00    	    ld   c,$00
 40D0  FE7A    	    cp   $7A
@@ -10489,10 +10524,10 @@ _
 4132  C38440  	    jp   $4084
 4135  3A0684  	    ld   a,(player_x)
 4138  C600    	    add  a,$00
-413A  32A580  	    ld   ($80A5),a
+413A  32A580  	    ld   (carry_x),a
 413D  3A0784  	    ld   a,(player_y)
 4140  C6F0    	    add  a,$F0
-4142  32A880  	    ld   ($80A8),a
+4142  32A880  	    ld   (carry_y),a
 4145  C39240  	    jp   $4092
 4148  3AA380  	    ld   a,($80A3)
 414B  3C      	    inc  a
@@ -10502,9 +10537,9 @@ _
 4154  3E03    	    ld   a,$03
 4156  32A280  	    ld   (carrying_3),a
 4159  C39240  	    jp   $4092
-415C  3AA880  	    ld   a,($80A8)
+415C  3AA880  	    ld   a,(carry_y)
 415F  C602    	    add  a,$02
-4161  32A880  	    ld   ($80A8),a
+4161  32A880  	    ld   (carry_y),a
 4164  C39240  	    jp   $4092
 4167  219E80  	    ld   hl,$809E
 416A  5E      	    ld   e,(hl)
