@@ -15,11 +15,19 @@
      lives           = $8100
      lives_copy      = $8200 ; seems to mimic 8100?
 
+     player_bytes    = $8400 ;
      controls        = $8401 ; 1=L, 2=R, 4=D, 8=U, 10=fire
      player_x        = $8406
      player_y        = $8407
      player_sp_x     = $8408 ; fe = -2 left, 02 = 2 right
      player_sp_y     = $8409 ; fe = -2 up, 02 = 2 down
+
+     cat1_enable     = $8500 ; not sure why enable+active
+     cat1_active     = $8501 ;
+     cat2_enable     = $8504
+     cat2_active     = $8505
+     cat3_enable     = $8506
+     cat3_active     = $8507
 
      cat1_bytes      = $8510
      cat1_x          = $8518
@@ -36,6 +44,8 @@
      cat3_y          = $8579
      cat3_fr         = $857A
 
+     snake1_enable   = $8600
+     snake1_active   = $8601
      snake1_bytes    = $8610 ; tee hee, snake bytes
      snake1_x        = $8618
      snake1_y        = $8619
@@ -5654,20 +5664,20 @@ start:
     ld   ($8039),a
     jp   $1FD1
     call $20EC
-    ld   hl,$8500
-    ld   b,$10
+    ld   hl,cat1_enable ; clear cat enable data
+    ld   b,$10          ; 16 bytes
     ld   a,$00
     ld   (hl),a
     inc  hl
     djnz $2014
-    ld   hl,$8600
-    ld   b,$10
+    ld   hl,snake1_enable ; clear snake enable data
+    ld   b,$10            ; 16 bytes
     ld   (hl),a
     inc  hl
     djnz $201D
-    ld   ($8400),a
+    ld   (player_bytes),a
     ld   hl,$809C
-    ld   b,$60
+    ld   b,$60  ; 96 bytes cleared
     ld   (hl),a
     inc  hl
     djnz $2029
@@ -7011,7 +7021,7 @@ mthing
     call $31CF
     call $2B1F
     ld   hl,$8529
-    ld   de,$8500
+    ld   de,cat1_enable
     ld   bc,$FFEF
     ld   a,(de)
     and  a
@@ -7029,8 +7039,8 @@ mthing
     call $31CF
     call $2B1F
     ld   hl,$8569
-    ld   de,$8504
-    ld   bc,$FFEF
+    ld   de,cat2_enable
+    ld   bc,$FFEF ; - 16
     ld   a,(de)
     and  a
     call z,$2AF1
@@ -7047,24 +7057,25 @@ mthing
     call $31CF
     call $2B1F
     ld   hl,$8589
-    ld   de,$8506
-    ld   bc,$FFEF
+    ld   de,cat3_enable
+    ld   bc,$FFEF ; -16
     ld   a,(de)
     and  a
     call z,$2AF1
-    ld   hl,$8500
+    ld   hl,cat1_enable
     ld   a,(hl)
     and  a
     call nz,setup_cat_1
-    ld   hl,$8504
+    ld   hl,cat2_enable
     ld   a,(hl)
     and  a
     call nz,setup_cat_2
-    ld   hl,$8506
+    ld   hl,cat3_enable
     ld   a,(hl)
     and  a
     call nz,setup_cat_3
     ret
+
     push bc
     ld   b,(hl)
     dec  hl
@@ -7125,7 +7136,7 @@ mthing
 
  setup_cat_1:
     inc  hl
-    ld   a,(hl)
+    ld   a,(hl) ; 8501: cat1_active
     and  a
     jp   nz,$2B6E
     ld   a,($803E)
@@ -7291,7 +7302,9 @@ mthing
     nop
     nop
     nop
-    ld   bc,$E500
+     byte 01,00
+
+    push hl
     ex   de,hl
     ld   hl,$0018
     add  hl,de
@@ -8179,7 +8192,7 @@ mthing
     ld   hl,$8628
     ld   bc,$3315
     call $32F7
-    ld   de,$8600
+    ld   de,snake1_enable
     ld   hl,$8629
     ld   a,(de)
     and  a
@@ -8197,7 +8210,7 @@ mthing
     ld   a,(de)
     and  a
     call z,$3256
-    ld   hl,$8600
+    ld   hl,snake1_enable
     ld   a,(hl)
     and  a
     call nz,setup_snake1

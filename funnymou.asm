@@ -15,11 +15,19 @@
                     lives           = $8100
                     lives_copy      = $8200 ; seems to mimic 8100?
 
+                    player_bytes    = $8400 ;
                     controls        = $8401 ; 1=L, 2=R, 4=D, 8=U, 10=fire
                     player_x        = $8406
                     player_y        = $8407
                     player_sp_x     = $8408 ; fe = -2 left, 02 = 2 right
                     player_sp_y     = $8409 ; fe = -2 up, 02 = 2 down
+
+                    cat1_enable     = $8500 ; not sure why enable+active
+                    cat1_active     = $8501 ;
+                    cat2_enable     = $8504
+                    cat2_active     = $8505
+                    cat3_enable     = $8506
+                    cat3_active     = $8507
 
                     cat1_bytes      = $8510
                     cat1_x          = $8518
@@ -36,6 +44,8 @@
                     cat3_y          = $8579
                     cat3_fr         = $857A
 
+                    snake1_enable   = $8600
+                    snake1_active   = $8601
                     snake1_bytes    = $8610 ; tee hee, snake bytes
                     snake1_x        = $8618
                     snake1_y        = $8619
@@ -5654,20 +5664,20 @@ zeros               dc   55,0
 2004  323980  	    ld   ($8039),a
 2007  C3D11F  	    jp   $1FD1
 200A  CDEC20  	    call $20EC
-200D  210085  	    ld   hl,$8500
-2010  0610    	    ld   b,$10
+200D  210085  	    ld   hl,cat1_enable ; clear cat enable data
+2010  0610    	    ld   b,$10          ; 16 bytes
 2012  3E00    	    ld   a,$00
 2014  77      	    ld   (hl),a
 2015  23      	    inc  hl
 2016  10FC    	    djnz $2014
-2018  210086  	    ld   hl,$8600
-201B  0610    	    ld   b,$10
+2018  210086  	    ld   hl,snake1_enable ; clear snake enable data
+201B  0610    	    ld   b,$10            ; 16 bytes
 201D  77      	    ld   (hl),a
 201E  23      	    inc  hl
 201F  10FC    	    djnz $201D
-2021  320084  	    ld   ($8400),a
+2021  320084  	    ld   (player_bytes),a
 2024  219C80  	    ld   hl,$809C
-2027  0660    	    ld   b,$60
+2027  0660    	    ld   b,$60  ; 96 bytes cleared
 2029  77      	    ld   (hl),a
 202A  23      	    inc  hl
 202B  10FC    	    djnz $2029
@@ -7011,7 +7021,7 @@ zeros               dc   55,0
 2A6A  CDCF31  	    call $31CF
 2A6D  CD1F2B  	    call $2B1F
 2A70  212985  	    ld   hl,$8529
-2A73  110085  	    ld   de,$8500
+2A73  110085  	    ld   de,cat1_enable
 2A76  01EFFF  	    ld   bc,$FFEF
 2A79  1A      	    ld   a,(de)
 2A7A  A7      	    and  a
@@ -7029,8 +7039,8 @@ zeros               dc   55,0
 2A97  CDCF31  	    call $31CF
 2A9A  CD1F2B  	    call $2B1F
 2A9D  216985  	    ld   hl,$8569
-2AA0  110485  	    ld   de,$8504
-2AA3  01EFFF  	    ld   bc,$FFEF
+2AA0  110485  	    ld   de,cat2_enable
+2AA3  01EFFF  	    ld   bc,$FFEF ; - 16
 2AA6  1A      	    ld   a,(de)
 2AA7  A7      	    and  a
 2AA8  CCF12A  	    call z,$2AF1
@@ -7047,24 +7057,25 @@ zeros               dc   55,0
 2AC4  CDCF31  	    call $31CF
 2AC7  CD1F2B  	    call $2B1F
 2ACA  218985  	    ld   hl,$8589
-2ACD  110685  	    ld   de,$8506
-2AD0  01EFFF  	    ld   bc,$FFEF
+2ACD  110685  	    ld   de,cat3_enable
+2AD0  01EFFF  	    ld   bc,$FFEF ; -16
 2AD3  1A      	    ld   a,(de)
 2AD4  A7      	    and  a
 2AD5  CCF12A  	    call z,$2AF1
-2AD8  210085  	    ld   hl,$8500
+2AD8  210085  	    ld   hl,cat1_enable
 2ADB  7E      	    ld   a,(hl)
 2ADC  A7      	    and  a
 2ADD  C43C2B  	    call nz,setup_cat_1
-2AE0  210485  	    ld   hl,$8504
+2AE0  210485  	    ld   hl,cat2_enable
 2AE3  7E      	    ld   a,(hl)
 2AE4  A7      	    and  a
 2AE5  C4922B  	    call nz,setup_cat_2
-2AE8  210685  	    ld   hl,$8506
+2AE8  210685  	    ld   hl,cat3_enable
 2AEB  7E      	    ld   a,(hl)
 2AEC  A7      	    and  a
 2AED  C4E82B  	    call nz,setup_cat_3
 2AF0  C9      	    ret
+
 2AF1  C5      	    push bc
 2AF2  46      	    ld   b,(hl)
 2AF3  2B      	    dec  hl
@@ -7125,7 +7136,7 @@ zeros               dc   55,0
 
                 setup_cat_1:
 2B3C  23      	    inc  hl
-2B3D  7E      	    ld   a,(hl)
+2B3D  7E      	    ld   a,(hl) ; 8501: cat1_active
 2B3E  A7      	    and  a
 2B3F  C26E2B  	    jp   nz,$2B6E
 2B42  3A3E80  	    ld   a,($803E)
@@ -7291,7 +7302,9 @@ zeros               dc   55,0
 2C39  00      	    nop
 2C3A  00      	    nop
 2C3B  00      	    nop
-2C3C  0100E5  	    ld   bc,$E500
+2C3C  0100          byte 01,00
+
+2C3E  E5  	        push hl
 2C3F  EB      	    ex   de,hl
 2C40  211800  	    ld   hl,$0018
 2C43  19      	    add  hl,de
@@ -8179,7 +8192,7 @@ zeros               dc   55,0
 3213  212886  	    ld   hl,$8628
 3216  011533  	    ld   bc,$3315
 3219  CDF732  	    call $32F7
-321C  110086  	    ld   de,$8600
+321C  110086  	    ld   de,snake1_enable
 321F  212986  	    ld   hl,$8629
 3222  1A      	    ld   a,(de)
 3223  A7      	    and  a
@@ -8197,7 +8210,7 @@ zeros               dc   55,0
 3240  1A      	    ld   a,(de)
 3241  A7      	    and  a
 3242  CC5632  	    call z,$3256
-3245  210086  	    ld   hl,$8600
+3245  210086  	    ld   hl,snake1_enable
 3248  7E      	    ld   a,(hl)
 3249  A7      	    and  a
 324A  C46D32  	    call nz,setup_snake1
