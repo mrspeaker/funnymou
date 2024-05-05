@@ -8200,11 +8200,11 @@ mthing
     ld   hl,$8600
     ld   a,(hl)
     and  a
-    call nz,$326D
+    call nz,setup_snake1
     ld   hl,$8602
     ld   a,(hl)
     and  a
-    call nz,$32B2
+    call nz,setup_snake2
     ret
     ld   b,(hl)
     dec  hl
@@ -8223,6 +8223,8 @@ mthing
     inc  hl
     dec  (hl)
     ret
+
+ setup_snake1:
     inc  hl
     ld   a,(hl)
     and  a
@@ -8231,7 +8233,7 @@ mthing
     and  a
     ret  nz
     ld   (hl),$01
-    ld   de,$8610
+    ld   de,snake1_bytes
     ld   hl,$3292
     ld   bc,$0020
     ldir
@@ -8241,6 +8243,7 @@ mthing
     ld   hl,$8617
     call $333F
     ret
+
     nop
     nop
     nop
@@ -8267,6 +8270,8 @@ mthing
     ld   bc,$0000
     nop
     nop
+
+ setup_snake2:
     inc  hl
     ld   a,(hl)
     and  a
@@ -8275,7 +8280,7 @@ mthing
     and  a
     ret  nz
     ld   (hl),$01
-    ld   de,$8630
+    ld   de,snake2_bytes
     ld   hl,$32D7
     ld   bc,$0020
     ldir

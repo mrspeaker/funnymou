@@ -8200,11 +8200,11 @@ zeros               dc   55,0
 3245  210086  	    ld   hl,$8600
 3248  7E      	    ld   a,(hl)
 3249  A7      	    and  a
-324A  C46D32  	    call nz,$326D
+324A  C46D32  	    call nz,setup_snake1
 324D  210286  	    ld   hl,$8602
 3250  7E      	    ld   a,(hl)
 3251  A7      	    and  a
-3252  C4B232  	    call nz,$32B2
+3252  C4B232  	    call nz,setup_snake2
 3255  C9      	    ret
 3256  46      	    ld   b,(hl)
 3257  2B      	    dec  hl
@@ -8223,6 +8223,8 @@ zeros               dc   55,0
 326A  23      	    inc  hl
 326B  35      	    dec  (hl)
 326C  C9      	    ret
+
+                setup_snake1:
 326D  23      	    inc  hl
 326E  7E      	    ld   a,(hl)
 326F  A7      	    and  a
@@ -8231,7 +8233,7 @@ zeros               dc   55,0
 3276  A7      	    and  a
 3277  C0      	    ret  nz
 3278  3601    	    ld   (hl),$01
-327A  111086  	    ld   de,$8610
+327A  111086  	    ld   de,snake1_bytes
 327D  219232  	    ld   hl,$3292
 3280  012000  	    ld   bc,$0020
 3283  EDB0    	    ldir
@@ -8241,6 +8243,7 @@ zeros               dc   55,0
 328B  211786  	    ld   hl,$8617
 328E  CD3F33  	    call $333F
 3291  C9      	    ret
+    ;;
 3292  00      	    nop
 3293  00      	    nop
 3294  00      	    nop
@@ -8267,6 +8270,8 @@ zeros               dc   55,0
 32AD  010000  	    ld   bc,$0000
 32B0  00      	    nop
 32B1  00      	    nop
+
+                setup_snake2:
 32B2  23      	    inc  hl
 32B3  7E      	    ld   a,(hl)
 32B4  A7      	    and  a
@@ -8275,7 +8280,7 @@ zeros               dc   55,0
 32BB  A7      	    and  a
 32BC  C0      	    ret  nz
 32BD  3601    	    ld   (hl),$01
-32BF  113086  	    ld   de,$8630
+32BF  113086  	    ld   de,snake2_bytes
 32C2  21D732  	    ld   hl,$32D7
 32C5  012000  	    ld   bc,$0020
 32C8  EDB0    	    ldir
