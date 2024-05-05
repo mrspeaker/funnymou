@@ -1,6 +1,7 @@
 
      credits         = $8023
      is_playing      = $8030
+     cur_screen      = $803B ; 1=splash;6=game etc
      score_lo        = $8044
      score_mid       = $8045
      score_hi        = $8046
@@ -29,23 +30,24 @@
      cat3_enable     = $8506
      cat3_active     = $8507
 
-     cat1_bytes      = $8510
+     cat1_bytes      = $8510 ; 29 bytes
      cat1_x          = $8518
      cat1_y          = $8519
      cat1_fr         = $851A
 
-     cat2_bytes      = $8550
+     cat2_bytes      = $8550 ; 29 bytes: to 856D
      cat2_x          = $8558
      cat2_y          = $8559
      cat2_fr         = $855A
 
-     cat3_bytes      = $8570
+     cat3_bytes      = $8570 ; 29 bytes
      cat3_x          = $8578
      cat3_y          = $8579
      cat3_fr         = $857A
 
      snake1_enable   = $8600
      snake1_active   = $8601
+
      snake1_bytes    = $8610 ; tee hee, snake bytes
      snake1_x        = $8618
      snake1_y        = $8619
@@ -85,6 +87,18 @@
      hw_in_0         = $A000 ; 1 = L, 2 = R, 4 = down, 8 = up
      hw_in_1         = $A800 ; 0x4 = P1, 0x8 = P2
 
+ ;;; ============ constants ========
+
+     ;; cur_screen enum
+     SCR_NONE        = $00
+     SCR_SPLASH      = $01
+     SCR_PUSH_P1     = $02
+     SCR_PUSH_P1P2   = $03
+     SCR_GAME_OVER   = $04
+     SCR_READY       = $05
+     SCR_GAME        = $06
+     SCR_GAMBLE      = $07
+     SCR_LUCKY       = $08
 
  ;;; ============ start of suprmous.x1 =============
 
@@ -297,24 +311,27 @@ start:
     ret  nz
     ld   a,(is_playing)
     and  a
-    jp   nz,$02C7
+    jp   nz,game_in_progress
     ld   a,(credits)
     and  a
-    jp   nz,$0208
-    ld   a,($803B)
+    jp   nz,show_credits_screen
+    ld   a,(cur_screen)
     and  a
     jp   nz,$0242
     jp   $0288
+ show_credits_screen:
     cp   $02
     jp   nc,$021B
-    ld   a,($803B)
-    cp   $02
+ _press_p1:
+    ld   a,(cur_screen)
+    cp   SCR_PUSH_P1
     ret  z
     ld   a,$01
     ld   ($8039),a
     jp   $0229
-    ld   a,($803B)
-    cp   $03
+ _press_p2:
+    ld   a,(cur_screen)
+    cp   SCR_PUSH_P1P2
     ret  z
     ld   a,$02
     ld   ($8039),a
@@ -336,21 +353,21 @@ start:
     ld   a,($8033)
     and  a
     jp   z,$025E
-    ld   a,($803B)
-    cp   $01
+    ld   a,(cur_screen)
+    cp   SCR_SPLASH
     jp   z,$0275
-    cp   $06
+    cp   SCR_GAME
     jp   z,$0299
-    cp   $07
+    cp   SCR_GAMBLE
     jp   z,$0288
     jp   $0288
     ld   a,($8032)
     and  a
     jp   z,$02AA
-    ld   a,($803B)
-    cp   $06
+    ld   a,(cur_screen)
+    cp   SCR_GAME
     jp   z,$0299
-    cp   $07
+    cp   SCR_GAMBLE
     jp   z,$0288
     jp   $0288
     ld   a,$00
@@ -374,18 +391,19 @@ start:
     set  6,a
     ld   ($8039),a
     ret
-    ld   a,($803B)
-    cp   $01
+    ld   a,(cur_screen)
+    cp   SCR_SPLASH
     jp   z,$4694
-    cp   $06
+    cp   SCR_GAME
     jp   z,$02BF
-    cp   $07
+    cp   SCR_GAMBLE
     jp   z,$02C3
     jp   $0288
     call $2391
     ret
     call $2468
     ret
+ game_in_progress:
     call $0638
     ld   a,($8033)
     and  a
@@ -393,16 +411,16 @@ start:
     ld   a,($8032)
     and  a
     jp   nz,$04E0
-    ld   a,($803B)
-    cp   $04
+    ld   a,(cur_screen)
+    cp   SCR_GAME_OVER
     jp   z,$02F5
-    cp   $05
+    cp   SCR_READY
     jp   z,$036D
-    cp   $06
+    cp   SCR_GAME
     jp   z,$2391
-    cp   $07
+    cp   SCR_GAMBLE
     jp   z,$2468
-    cp   $08
+    cp   SCR_LUCKY
     jp   z,$4556
     ret
     ld   a,($803D)
@@ -428,7 +446,7 @@ start:
     jp   z,$0332
     ld   a,$00
     ld   (is_playing),a
-    ld   ($803B),a
+    ld   (cur_screen),a ; SCR_NONE
     ld   a,($8039)
     set  2,a
     ld   ($8039),a
@@ -478,12 +496,12 @@ start:
     set  5,a
     ld   ($8039),a
     ret
-    ld   a,($803B)
-    cp   $06
+    ld   a,(cur_screen)
+    cp   SCR_GAME
     jp   z,$03B5
-    cp   $07
+    cp   SCR_GAMBLE
     jp   z,$03AB
-    cp   $08
+    cp   SCR_LUCKY
     jp   z,$03AB
     ret
     ld   a,($8031)
@@ -615,7 +633,7 @@ start:
     set  4,a
     ld   ($8039),a
     ret
-    ld   a,($803B)
+    ld   a,(cur_screen)
     cp   $06
     jp   z,$0504
     cp   $07
@@ -625,7 +643,7 @@ start:
     ld   ($8032),a
     ld   ($8033),a
     ld   a,$08
-    ld   ($803B),a
+    ld   (cur_screen),a
     ld   a,($8039)
     set  2,a
     ld   ($8039),a
@@ -5637,7 +5655,7 @@ start:
     ld   a,($8039)
     and  a
     jp   nz,$1FE3
-    ld   a,($803B)
+    ld   a,(cur_screen)
     cp   $06
     jp   nz,$1FE0
     jp   $1FD1
@@ -5663,6 +5681,7 @@ start:
     xor  a
     ld   ($8039),a
     jp   $1FD1
+
     call $20EC
     ld   hl,cat1_enable ; clear cat enable data
     ld   b,$10          ; 16 bytes
@@ -5709,7 +5728,7 @@ start:
     ld   (bombs),a
     call $106C
     ld   a,$06
-    ld   ($803B),a
+    ld   (cur_screen),a
     ld   a,($8039)
     res  5,a
     ld   ($8039),a
@@ -5747,7 +5766,7 @@ start:
     call $209D
     call $09BB
     ld   a,$07
-    ld   ($803B),a
+    ld   (cur_screen),a
     ld   a,$E0
     ld   (watchdog),a
     ld   a,$00
@@ -5758,11 +5777,12 @@ start:
     jp   $1FD1
     call $20EC
     ld   a,$01
-    ld   ($803B),a
+    ld   (cur_screen),a
     ld   a,($8039)
     res  7,a
     ld   ($8039),a
     jp   $1FD1
+
     ld   hl,$9002
     ld   de,$0020
     ld   b,$20
@@ -5880,7 +5900,7 @@ start:
     ld   ($8033),a
     ld   ($8032),a
     ld   a,$02
-    ld   ($803B),a
+    ld   (cur_screen),a
     ld   a,($8039)
     res  0,a
     ld   ($8039),a
@@ -5896,7 +5916,7 @@ start:
     ld   ($8033),a
     ld   ($8032),a
     ld   a,$03
-    ld   ($803B),a
+    ld   (cur_screen),a
     ld   a,($8039)
     res  1,a
     ld   ($8039),a
@@ -5949,7 +5969,7 @@ start:
     ld   a,$80
     ld   ($803D),a
     ld   a,$04
-    ld   ($803B),a
+    ld   (cur_screen),a
     ld   a,($8039)
     res  3,a
     ld   ($8039),a
@@ -6015,7 +6035,7 @@ start:
     call $216A
     call $2307
     ld   a,$05
-    ld   ($803B),a
+    ld   (cur_screen),a
     ld   a,$40
     ld   ($803D),a
     ld   a,($8039)
@@ -7020,6 +7040,7 @@ mthing
     ld   bc,$2B28
     call $31CF
     call $2B1F
+
     ld   hl,$8529
     ld   de,cat1_enable
     ld   bc,$FFEF
@@ -7144,9 +7165,9 @@ mthing
     ret  nz
     ld   (hl),$01
     ld   de,cat1_bytes
-    ld   hl,$2B75
-    ld   bc,$001D
-    ldir
+    ld   hl,cat1_init_data
+    ld   bc,$001D ; 29 bytes
+    ldir          ; copy them
     ld   a,$87
     ld   (watchdog),a
     ret
@@ -7164,31 +7185,12 @@ mthing
     ld   hl,$8517
     call $2C3E
     ret
-    nop
-    nop
-    nop
-    dec  b
-    inc  e
-    nop
-    nop
-    ld   bc,$42B4
-    nop
-    nop
-    nop
-    rst  $38
-    ld   bc,$0100
-    rst  $38
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-     byte 01     ; what?
-     nop
+
+ cat1_init_data:
+     db $00, $00, $00, $05, $1C, $00, $00, $01
+     db $B4, $42, $00, $00, $00, $FF, $01, $00
+     db $01, $FF, $00, $00, $00, $00, $00, $00
+     db $00, $00, $00, $01, $00
 
  setup_cat_2:
 	    inc  hl
@@ -7200,8 +7202,8 @@ mthing
     ret  nz
     ld   (hl),$01
     ld   de,cat2_bytes
-    ld   hl,$2BCB
-    ld   bc,$001D
+    ld   hl,cat2_init_data
+    ld   bc,$001D ; 29 bytes
     ldir
     ld   a,$87
     ld   (watchdog),a
@@ -7224,6 +7226,8 @@ mthing
     ld   hl,$8557
     call $2C3E
     ret
+
+ cat2_init_data:
     nop
     nop
     nop
@@ -7260,7 +7264,7 @@ mthing
     ret  nz
     ld   (hl),$01
     ld   de,$8570
-    ld   hl,$2C21
+    ld   hl,cat3_init_data
     ld   bc,$001D
     ldir
     ld   a,$87
@@ -7281,6 +7285,8 @@ mthing
     ld   hl,$8577
     call $2C3E
     ret
+
+ cat3_init_data:
     nop
     nop
     nop
@@ -8219,6 +8225,7 @@ mthing
     and  a
     call nz,setup_snake2
     ret
+
     ld   b,(hl)
     dec  hl
     ld   a,(hl)
@@ -8247,7 +8254,7 @@ mthing
     ret  nz
     ld   (hl),$01
     ld   de,snake1_bytes
-    ld   hl,$3292
+    ld   hl,snake1_init_data
     ld   bc,$0020
     ldir
     ld   a,$86
@@ -8257,6 +8264,7 @@ mthing
     call $333F
     ret
 
+ snake1_init_data:
     nop
     nop
     nop
@@ -8294,8 +8302,8 @@ mthing
     ret  nz
     ld   (hl),$01
     ld   de,snake2_bytes
-    ld   hl,$32D7
-    ld   bc,$0020
+    ld   hl,snake2_init_data
+    ld   bc,$0020 ; 32 bytes
     ldir
     ld   a,$86
     ld   (watchdog),a
@@ -8303,6 +8311,8 @@ mthing
     ld   hl,$8637
     call $333F
     ret
+
+ snake2_init_data:
     nop
     nop
     nop
@@ -8329,6 +8339,7 @@ mthing
     ld   bc,$0000
     nop
     nop
+
     push hl
     ld   h,b
     ld   l,c

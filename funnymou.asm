@@ -1,6 +1,7 @@
 
                     credits         = $8023
                     is_playing      = $8030
+                    cur_screen      = $803B ; 1=splash;6=game etc
                     score_lo        = $8044
                     score_mid       = $8045
                     score_hi        = $8046
@@ -29,23 +30,24 @@
                     cat3_enable     = $8506
                     cat3_active     = $8507
 
-                    cat1_bytes      = $8510
+                    cat1_bytes      = $8510 ; 29 bytes
                     cat1_x          = $8518
                     cat1_y          = $8519
                     cat1_fr         = $851A
 
-                    cat2_bytes      = $8550
+                    cat2_bytes      = $8550 ; 29 bytes: to 856D
                     cat2_x          = $8558
                     cat2_y          = $8559
                     cat2_fr         = $855A
 
-                    cat3_bytes      = $8570
+                    cat3_bytes      = $8570 ; 29 bytes
                     cat3_x          = $8578
                     cat3_y          = $8579
                     cat3_fr         = $857A
 
                     snake1_enable   = $8600
                     snake1_active   = $8601
+
                     snake1_bytes    = $8610 ; tee hee, snake bytes
                     snake1_x        = $8618
                     snake1_y        = $8619
@@ -85,6 +87,18 @@
                     hw_in_0         = $A000 ; 1 = L, 2 = R, 4 = down, 8 = up
                     hw_in_1         = $A800 ; 0x4 = P1, 0x8 = P2
 
+                ;;; ============ constants ========
+
+                    ;; cur_screen enum
+                    SCR_NONE        = $00
+                    SCR_SPLASH      = $01
+                    SCR_PUSH_P1     = $02
+                    SCR_PUSH_P1P2   = $03
+                    SCR_GAME_OVER   = $04
+                    SCR_READY       = $05
+                    SCR_GAME        = $06
+                    SCR_GAMBLE      = $07
+                    SCR_LUCKY       = $08
 
                 ;;; ============ start of suprmous.x1 =============
 
@@ -297,24 +311,27 @@ zeros               dc 97,0
 01EF  C0      	    ret  nz
 01F0  3A3080  	    ld   a,(is_playing)
 01F3  A7      	    and  a
-01F4  C2C702  	    jp   nz,$02C7
+01F4  C2C702  	    jp   nz,game_in_progress
 01F7  3A2380  	    ld   a,(credits)
 01FA  A7      	    and  a
-01FB  C20802  	    jp   nz,$0208
-01FE  3A3B80  	    ld   a,($803B)
+01FB  C20802  	    jp   nz,show_credits_screen
+01FE  3A3B80  	    ld   a,(cur_screen)
 0201  A7      	    and  a
 0202  C24202  	    jp   nz,$0242
 0205  C38802  	    jp   $0288
+                show_credits_screen:
 0208  FE02    	    cp   $02
 020A  D21B02  	    jp   nc,$021B
-020D  3A3B80  	    ld   a,($803B)
-0210  FE02    	    cp   $02
+                _press_p1:
+020D  3A3B80  	    ld   a,(cur_screen)
+0210  FE02    	    cp   SCR_PUSH_P1
 0212  C8      	    ret  z
 0213  3E01    	    ld   a,$01
 0215  323980  	    ld   ($8039),a
 0218  C32902  	    jp   $0229
-021B  3A3B80  	    ld   a,($803B)
-021E  FE03    	    cp   $03
+                _press_p2:
+021B  3A3B80  	    ld   a,(cur_screen)
+021E  FE03    	    cp   SCR_PUSH_P1P2
 0220  C8      	    ret  z
 0221  3E02    	    ld   a,$02
 0223  323980  	    ld   ($8039),a
@@ -336,21 +353,21 @@ zeros               dc 97,0
 0242  3A3380  	    ld   a,($8033)
 0245  A7      	    and  a
 0246  CA5E02  	    jp   z,$025E
-0249  3A3B80  	    ld   a,($803B)
-024C  FE01    	    cp   $01
+0249  3A3B80  	    ld   a,(cur_screen)
+024C  FE01    	    cp   SCR_SPLASH
 024E  CA7502  	    jp   z,$0275
-0251  FE06    	    cp   $06
+0251  FE06    	    cp   SCR_GAME
 0253  CA9902  	    jp   z,$0299
-0256  FE07    	    cp   $07
+0256  FE07    	    cp   SCR_GAMBLE
 0258  CA8802  	    jp   z,$0288
 025B  C38802  	    jp   $0288
 025E  3A3280  	    ld   a,($8032)
 0261  A7      	    and  a
 0262  CAAA02  	    jp   z,$02AA
-0265  3A3B80  	    ld   a,($803B)
-0268  FE06    	    cp   $06
+0265  3A3B80  	    ld   a,(cur_screen)
+0268  FE06    	    cp   SCR_GAME
 026A  CA9902  	    jp   z,$0299
-026D  FE07    	    cp   $07
+026D  FE07    	    cp   SCR_GAMBLE
 026F  CA8802  	    jp   z,$0288
 0272  C38802  	    jp   $0288
 0275  3E00    	    ld   a,$00
@@ -374,18 +391,19 @@ zeros               dc 97,0
 02A4  CBF7    	    set  6,a
 02A6  323980  	    ld   ($8039),a
 02A9  C9      	    ret
-02AA  3A3B80  	    ld   a,($803B)
-02AD  FE01    	    cp   $01
+02AA  3A3B80  	    ld   a,(cur_screen)
+02AD  FE01    	    cp   SCR_SPLASH
 02AF  CA9446  	    jp   z,$4694
-02B2  FE06    	    cp   $06
+02B2  FE06    	    cp   SCR_GAME
 02B4  CABF02  	    jp   z,$02BF
-02B7  FE07    	    cp   $07
+02B7  FE07    	    cp   SCR_GAMBLE
 02B9  CAC302  	    jp   z,$02C3
 02BC  C38802  	    jp   $0288
 02BF  CD9123  	    call $2391
 02C2  C9      	    ret
 02C3  CD6824  	    call $2468
 02C6  C9      	    ret
+                game_in_progress:
 02C7  CD3806  	    call $0638
 02CA  3A3380  	    ld   a,($8033)
 02CD  A7      	    and  a
@@ -393,16 +411,16 @@ zeros               dc 97,0
 02D1  3A3280  	    ld   a,($8032)
 02D4  A7      	    and  a
 02D5  C2E004  	    jp   nz,$04E0
-02D8  3A3B80  	    ld   a,($803B)
-02DB  FE04    	    cp   $04
+02D8  3A3B80  	    ld   a,(cur_screen)
+02DB  FE04    	    cp   SCR_GAME_OVER
 02DD  CAF502  	    jp   z,$02F5
-02E0  FE05    	    cp   $05
+02E0  FE05    	    cp   SCR_READY
 02E2  CA6D03  	    jp   z,$036D
-02E5  FE06    	    cp   $06
+02E5  FE06    	    cp   SCR_GAME
 02E7  CA9123  	    jp   z,$2391
-02EA  FE07    	    cp   $07
+02EA  FE07    	    cp   SCR_GAMBLE
 02EC  CA6824  	    jp   z,$2468
-02EF  FE08    	    cp   $08
+02EF  FE08    	    cp   SCR_LUCKY
 02F1  CA5645  	    jp   z,$4556
 02F4  C9      	    ret
 02F5  3A3D80  	    ld   a,($803D)
@@ -428,7 +446,7 @@ zeros               dc 97,0
 031E  CA3203  	    jp   z,$0332
 0321  3E00    	    ld   a,$00
 0323  323080  	    ld   (is_playing),a
-0326  323B80  	    ld   ($803B),a
+0326  323B80  	    ld   (cur_screen),a ; SCR_NONE
 0329  3A3980  	    ld   a,($8039)
 032C  CBD7    	    set  2,a
 032E  323980  	    ld   ($8039),a
@@ -478,12 +496,12 @@ zeros               dc 97,0
 0392  CBEF    	    set  5,a
 0394  323980  	    ld   ($8039),a
 0397  C9      	    ret
-0398  3A3B80  	    ld   a,($803B)
-039B  FE06    	    cp   $06
+0398  3A3B80  	    ld   a,(cur_screen)
+039B  FE06    	    cp   SCR_GAME
 039D  CAB503  	    jp   z,$03B5
-03A0  FE07    	    cp   $07
+03A0  FE07    	    cp   SCR_GAMBLE
 03A2  CAAB03  	    jp   z,$03AB
-03A5  FE08    	    cp   $08
+03A5  FE08    	    cp   SCR_LUCKY
 03A7  CAAB03  	    jp   z,$03AB
 03AA  C9      	    ret
 03AB  3A3180  	    ld   a,($8031)
@@ -615,7 +633,7 @@ zeros               dc 97,0
 04DA  CBE7    	    set  4,a
 04DC  323980  	    ld   ($8039),a
 04DF  C9      	    ret
-04E0  3A3B80  	    ld   a,($803B)
+04E0  3A3B80  	    ld   a,(cur_screen)
 04E3  FE06    	    cp   $06
 04E5  CA0405  	    jp   z,$0504
 04E8  FE07    	    cp   $07
@@ -625,7 +643,7 @@ zeros               dc 97,0
 04F0  323280  	    ld   ($8032),a
 04F3  323380  	    ld   ($8033),a
 04F6  3E08    	    ld   a,$08
-04F8  323B80  	    ld   ($803B),a
+04F8  323B80  	    ld   (cur_screen),a
 04FB  3A3980  	    ld   a,($8039)
 04FE  CBD7    	    set  2,a
 0500  323980  	    ld   ($8039),a
@@ -5637,7 +5655,7 @@ zeros               dc   55,0
 1FD1  3A3980  	    ld   a,($8039)
 1FD4  A7      	    and  a
 1FD5  C2E31F  	    jp   nz,$1FE3
-1FD8  3A3B80  	    ld   a,($803B)
+1FD8  3A3B80  	    ld   a,(cur_screen)
 1FDB  FE06    	    cp   $06
 1FDD  C2E01F  	    jp   nz,$1FE0
 1FE0  C3D11F  	    jp   $1FD1
@@ -5663,6 +5681,7 @@ zeros               dc   55,0
 2003  AF      	    xor  a
 2004  323980  	    ld   ($8039),a
 2007  C3D11F  	    jp   $1FD1
+
 200A  CDEC20  	    call $20EC
 200D  210085  	    ld   hl,cat1_enable ; clear cat enable data
 2010  0610    	    ld   b,$10          ; 16 bytes
@@ -5709,7 +5728,7 @@ zeros               dc   55,0
 206C  327F86  	    ld   (bombs),a
 206F  CD6C10  	    call $106C
 2072  3E06    	    ld   a,$06
-2074  323B80  	    ld   ($803B),a
+2074  323B80  	    ld   (cur_screen),a
 2077  3A3980  	    ld   a,($8039)
 207A  CBAF    	    res  5,a
 207C  323980  	    ld   ($8039),a
@@ -5747,7 +5766,7 @@ zeros               dc   55,0
 20B9  CD9D20  	    call $209D
 20BC  CDBB09  	    call $09BB
 20BF  3E07    	    ld   a,$07
-20C1  323B80  	    ld   ($803B),a
+20C1  323B80  	    ld   (cur_screen),a
 20C4  3EE0    	    ld   a,$E0
 20C6  3200B8  	    ld   (watchdog),a
 20C9  3E00    	    ld   a,$00
@@ -5758,11 +5777,12 @@ zeros               dc   55,0
 20D6  C3D11F  	    jp   $1FD1
 20D9  CDEC20  	    call $20EC
 20DC  3E01    	    ld   a,$01
-20DE  323B80  	    ld   ($803B),a
+20DE  323B80  	    ld   (cur_screen),a
 20E1  3A3980  	    ld   a,($8039)
 20E4  CBBF    	    res  7,a
 20E6  323980  	    ld   ($8039),a
 20E9  C3D11F  	    jp   $1FD1
+
 20EC  210290  	    ld   hl,$9002
 20EF  112000  	    ld   de,$0020
 20F2  0620    	    ld   b,$20
@@ -5880,7 +5900,7 @@ zeros               dc   55,0
 21B4  323380  	    ld   ($8033),a
 21B7  323280  	    ld   ($8032),a
 21BA  3E02    	    ld   a,$02
-21BC  323B80  	    ld   ($803B),a
+21BC  323B80  	    ld   (cur_screen),a
 21BF  3A3980  	    ld   a,($8039)
 21C2  CB87    	    res  0,a
 21C4  323980  	    ld   ($8039),a
@@ -5896,7 +5916,7 @@ zeros               dc   55,0
 21E0  323380  	    ld   ($8033),a
 21E3  323280  	    ld   ($8032),a
 21E6  3E03    	    ld   a,$03
-21E8  323B80  	    ld   ($803B),a
+21E8  323B80  	    ld   (cur_screen),a
 21EB  3A3980  	    ld   a,($8039)
 21EE  CB8F    	    res  1,a
 21F0  323980  	    ld   ($8039),a
@@ -5949,7 +5969,7 @@ zeros               dc   55,0
 225C  3E80    	    ld   a,$80
 225E  323D80  	    ld   ($803D),a
 2261  3E04    	    ld   a,$04
-2263  323B80  	    ld   ($803B),a
+2263  323B80  	    ld   (cur_screen),a
 2266  3A3980  	    ld   a,($8039)
 2269  CB9F    	    res  3,a
 226B  323980  	    ld   ($8039),a
@@ -6015,7 +6035,7 @@ zeros               dc   55,0
 22EC  CD6A21  	    call $216A
 22EF  CD0723  	    call $2307
 22F2  3E05    	    ld   a,$05
-22F4  323B80  	    ld   ($803B),a
+22F4  323B80  	    ld   (cur_screen),a
 22F7  3E40    	    ld   a,$40
 22F9  323D80  	    ld   ($803D),a
 22FC  3A3980  	    ld   a,($8039)
@@ -7020,6 +7040,7 @@ zeros               dc   55,0
 2A67  01282B  	    ld   bc,$2B28
 2A6A  CDCF31  	    call $31CF
 2A6D  CD1F2B  	    call $2B1F
+_
 2A70  212985  	    ld   hl,$8529
 2A73  110085  	    ld   de,cat1_enable
 2A76  01EFFF  	    ld   bc,$FFEF
@@ -7144,9 +7165,9 @@ zeros               dc   55,0
 2B46  C0      	    ret  nz
 2B47  3601    	    ld   (hl),$01
 2B49  111085  	    ld   de,cat1_bytes
-2B4C  21752B  	    ld   hl,$2B75
-2B4F  011D00  	    ld   bc,$001D
-2B52  EDB0    	    ldir
+2B4C  21752B  	    ld   hl,cat1_init_data
+2B4F  011D00  	    ld   bc,$001D ; 29 bytes
+2B52  EDB0    	    ldir          ; copy them
 2B54  3E87    	    ld   a,$87
 2B56  3200B8  	    ld   (watchdog),a
 2B59  C9      	    ret
@@ -7164,31 +7185,12 @@ zeros               dc   55,0
 2B6E  211785  	    ld   hl,$8517
 2B71  CD3E2C  	    call $2C3E
 2B74  C9      	    ret
-2B75  00      	    nop
-2B76  00      	    nop
-2B77  00      	    nop
-2B78  05      	    dec  b
-2B79  1C      	    inc  e
-2B7A  00      	    nop
-2B7B  00      	    nop
-2B7C  01B442  	    ld   bc,$42B4
-2B7F  00      	    nop
-2B80  00      	    nop
-2B81  00      	    nop
-2B82  FF      	    rst  $38
-2B83  010001  	    ld   bc,$0100
-2B86  FF      	    rst  $38
-2B87  00      	    nop
-2B88  00      	    nop
-2B89  00      	    nop
-2B8A  00      	    nop
-2B8B  00      	    nop
-2B8C  00      	    nop
-2B8D  00      	    nop
-2B8E  00      	    nop
-2B8F  00      	    nop
-2B90  01            byte 01     ; what?
-2B91  00            nop
+
+                cat1_init_data:
+2B75                db $00, $00, $00, $05, $1C, $00, $00, $01
+2B7D                db $B4, $42, $00, $00, $00, $FF, $01, $00
+2B85                db $01, $FF, $00, $00, $00, $00, $00, $00
+2B8D                db $00, $00, $00, $01, $00
 
                 setup_cat_2:
 2B92  23       	    inc  hl
@@ -7200,8 +7202,8 @@ zeros               dc   55,0
 2B9C  C0      	    ret  nz
 2B9D  3601    	    ld   (hl),$01
 2B9F  115085  	    ld   de,cat2_bytes
-2BA2  21CB2B  	    ld   hl,$2BCB
-2BA5  011D00  	    ld   bc,$001D
+2BA2  21CB2B  	    ld   hl,cat2_init_data
+2BA5  011D00  	    ld   bc,$001D ; 29 bytes
 2BA8  EDB0    	    ldir
 2BAA  3E87    	    ld   a,$87
 2BAC  3200B8  	    ld   (watchdog),a
@@ -7224,6 +7226,8 @@ zeros               dc   55,0
 2BC4  215785  	    ld   hl,$8557
 2BC7  CD3E2C  	    call $2C3E
 2BCA  C9      	    ret
+
+                cat2_init_data:
 2BCB  00      	    nop
 2BCC  00      	    nop
 2BCD  00      	    nop
@@ -7260,7 +7264,7 @@ zeros               dc   55,0
 2BF2  C0      	    ret  nz
 2BF3  3601    	    ld   (hl),$01
 2BF5  117085  	    ld   de,$8570
-2BF8  21212C  	    ld   hl,$2C21
+2BF8  21212C  	    ld   hl,cat3_init_data
 2BFB  011D00  	    ld   bc,$001D
 2BFE  EDB0    	    ldir
 2C00  3E87    	    ld   a,$87
@@ -7281,6 +7285,8 @@ zeros               dc   55,0
 2C1A  217785  	    ld   hl,$8577
 2C1D  CD3E2C  	    call $2C3E
 2C20  C9      	    ret
+
+                cat3_init_data:
 2C21  00      	    nop
 2C22  00      	    nop
 2C23  00      	    nop
@@ -8219,6 +8225,7 @@ zeros               dc   55,0
 3251  A7      	    and  a
 3252  C4B232  	    call nz,setup_snake2
 3255  C9      	    ret
+
 3256  46      	    ld   b,(hl)
 3257  2B      	    dec  hl
 3258  7E      	    ld   a,(hl)
@@ -8247,7 +8254,7 @@ zeros               dc   55,0
 3277  C0      	    ret  nz
 3278  3601    	    ld   (hl),$01
 327A  111086  	    ld   de,snake1_bytes
-327D  219232  	    ld   hl,$3292
+327D  219232  	    ld   hl,snake1_init_data
 3280  012000  	    ld   bc,$0020
 3283  EDB0    	    ldir
 3285  3E86    	    ld   a,$86
@@ -8257,6 +8264,7 @@ zeros               dc   55,0
 328E  CD3F33  	    call $333F
 3291  C9      	    ret
     ;;
+                snake1_init_data:
 3292  00      	    nop
 3293  00      	    nop
 3294  00      	    nop
@@ -8294,8 +8302,8 @@ zeros               dc   55,0
 32BC  C0      	    ret  nz
 32BD  3601    	    ld   (hl),$01
 32BF  113086  	    ld   de,snake2_bytes
-32C2  21D732  	    ld   hl,$32D7
-32C5  012000  	    ld   bc,$0020
+32C2  21D732  	    ld   hl,snake2_init_data
+32C5  012000  	    ld   bc,$0020 ; 32 bytes
 32C8  EDB0    	    ldir
 32CA  3E86    	    ld   a,$86
 32CC  3200B8  	    ld   (watchdog),a
@@ -8303,6 +8311,8 @@ zeros               dc   55,0
 32D0  213786  	    ld   hl,$8637
 32D3  CD3F33  	    call $333F
 32D6  C9      	    ret
+
+                snake2_init_data:
 32D7  00      	    nop
 32D8  00      	    nop
 32D9  00      	    nop
@@ -8329,6 +8339,7 @@ zeros               dc   55,0
 32F2  010000  	    ld   bc,$0000
 32F5  00      	    nop
 32F6  00      	    nop
+
 32F7  E5      	    push hl
 32F8  60      	    ld   h,b
 32F9  69      	    ld   l,c
