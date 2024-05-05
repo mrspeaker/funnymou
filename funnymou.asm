@@ -70,9 +70,9 @@
                     sound_enable    = $b003
                     flip_scr_x      = $b006
                     flip_scr_y      = $b007
-                    watchdog        = $B800 ;  or is it "sound command"?
+                    watchdog        = $B800 ;
 
-                    hw_in_0         = $A000 ;
+                    hw_in_0         = $A000 ; 1 = L, 2 = R, 4 = down, 8 = up
                     hw_in_1         = $A800 ; 0x4 = P1, 0x8 = P2
 
 
@@ -7055,7 +7055,7 @@ zeros               dc   55,0
 2AD8  210085  	    ld   hl,$8500
 2ADB  7E      	    ld   a,(hl)
 2ADC  A7      	    and  a
-2ADD  C43C2B  	    call nz,$2B3C
+2ADD  C43C2B  	    call nz,setup_cat_1
 2AE0  210485  	    ld   hl,$8504
 2AE3  7E      	    ld   a,(hl)
 2AE4  A7      	    and  a
@@ -7063,7 +7063,7 @@ zeros               dc   55,0
 2AE8  210685  	    ld   hl,$8506
 2AEB  7E      	    ld   a,(hl)
 2AEC  A7      	    and  a
-2AED  C4E82B  	    call nz,$2BE8
+2AED  C4E82B  	    call nz,setup_cat_3
 2AF0  C9      	    ret
 2AF1  C5      	    push bc
 2AF2  46      	    ld   b,(hl)
@@ -7122,6 +7122,8 @@ zeros               dc   55,0
 2B39  14      	    inc  d
 2B3A  3C      	    inc  a
 2B3B  00      	    nop
+
+                setup_cat_1:
 2B3C  23      	    inc  hl
 2B3D  7E      	    ld   a,(hl)
 2B3E  A7      	    and  a
@@ -7130,14 +7132,14 @@ zeros               dc   55,0
 2B45  A7      	    and  a
 2B46  C0      	    ret  nz
 2B47  3601    	    ld   (hl),$01
-2B49  111085  	    ld   de,$8510
+2B49  111085  	    ld   de,cat1_bytes
 2B4C  21752B  	    ld   hl,$2B75
 2B4F  011D00  	    ld   bc,$001D
 2B52  EDB0    	    ldir
 2B54  3E87    	    ld   a,$87
 2B56  3200B8  	    ld   (watchdog),a
 2B59  C9      	    ret
-
+    ;; data?
 2B5A  3002    	    jr   nc,$2B5E
 2B5C  3002    	    jr   nc,$2B60
 2B5E  3002    	    jr   nc,$2B62
@@ -7234,7 +7236,11 @@ zeros               dc   55,0
 2BE3  00      	    nop
 2BE4  00      	    nop
 2BE5  00      	    nop
-2BE6  010023  	    ld   bc,$2300
+2BE6  01            byte 01
+2BE7  00            nop
+
+                setup_cat_3:
+2BE8  23  	        inc  hl
 2BE9  7E      	    ld   a,(hl)
 2BEA  A7      	    and  a
 2BEB  C21A2C  	    jp   nz,$2C1A

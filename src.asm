@@ -70,9 +70,9 @@
      sound_enable    = $b003
      flip_scr_x      = $b006
      flip_scr_y      = $b007
-     watchdog        = $B800 ;  or is it "sound command"?
+     watchdog        = $B800 ;
 
-     hw_in_0         = $A000 ;
+     hw_in_0         = $A000 ; 1 = L, 2 = R, 4 = down, 8 = up
      hw_in_1         = $A800 ; 0x4 = P1, 0x8 = P2
 
 
@@ -7055,7 +7055,7 @@ mthing
     ld   hl,$8500
     ld   a,(hl)
     and  a
-    call nz,$2B3C
+    call nz,setup_cat_1
     ld   hl,$8504
     ld   a,(hl)
     and  a
@@ -7063,7 +7063,7 @@ mthing
     ld   hl,$8506
     ld   a,(hl)
     and  a
-    call nz,$2BE8
+    call nz,setup_cat_3
     ret
     push bc
     ld   b,(hl)
@@ -7122,6 +7122,8 @@ mthing
     inc  d
     inc  a
     nop
+
+ setup_cat_1:
     inc  hl
     ld   a,(hl)
     and  a
@@ -7130,7 +7132,7 @@ mthing
     and  a
     ret  nz
     ld   (hl),$01
-    ld   de,$8510
+    ld   de,cat1_bytes
     ld   hl,$2B75
     ld   bc,$001D
     ldir
@@ -7174,7 +7176,7 @@ mthing
     nop
     nop
     nop
-     byte 01
+     byte 01     ; what?
      nop
 
  setup_cat_2:
@@ -7234,7 +7236,11 @@ mthing
     nop
     nop
     nop
-    ld   bc,$2300
+     byte 01
+     nop
+
+ setup_cat_3:
+    inc  hl
     ld   a,(hl)
     and  a
     jp   nz,$2C1A
