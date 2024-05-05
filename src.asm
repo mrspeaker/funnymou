@@ -10114,7 +10114,7 @@ mthing
     ld   (hl),d
     inc  hl
     ld   (hl),e
-    ld   ix,$3FB4
+    ld   ix,very_chunk_data_3
     add  ix,bc
     ld   l,(ix+$00)
     ld   h,(ix+$01)
@@ -10157,11 +10157,13 @@ mthing
     dec  a
     jp   nz,$3F3C
     ret
+
+
     push hl
     ld   d,(hl)
     inc  hl
     ld   e,(hl)
-    ld   ix,$3FB4
+    ld   ix,very_chunk_data_3
     add  ix,bc
     ld   l,(ix+$00)
     ld   h,(ix+$01)
@@ -10170,6 +10172,8 @@ mthing
     ld   (hl),e
     pop  hl
     ret
+
+
     ld   hl,$8120
     ld   ix,$3FC6
     ld   de,$0012
@@ -10209,6 +10213,8 @@ mthing
     pop  hl
     pop  bc
     jp   $3F83
+
+ very_chunk_data_3:
     db   $fd
     sub  c
     cp   l

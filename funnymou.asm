@@ -35,7 +35,7 @@
                     cat1_x          = $8518
                     cat1_y          = $8519
                     cat1_fr         = $851A
-
+                    cat1_dir        = $851B ; 1 = L, 2 = R, 4 = U, 5 = d
                     cat2_bytes      = $8550 ; 29 bytes: to 856D
                     cat2_x          = $8558
                     cat2_y          = $8559
@@ -48,6 +48,8 @@
 
                     snake1_enable   = $8600
                     snake1_active   = $8601
+                    snake2_enable   = $8602
+                    snake2_active   = $8603
 
                     snake1_bytes    = $8610 ; tee hee, snake bytes
                     snake1_x        = $8618
@@ -10114,7 +10116,7 @@ _
 3F04  72      	    ld   (hl),d
 3F05  23      	    inc  hl
 3F06  73      	    ld   (hl),e
-3F07  DD21B43F	    ld   ix,$3FB4
+3F07  DD21B43F	    ld   ix,very_chunk_data_3
 3F0B  DD09    	    add  ix,bc
 3F0D  DD6E00  	    ld   l,(ix+$00)
 3F10  DD6601  	    ld   h,(ix+$01)
@@ -10157,11 +10159,13 @@ _
 3F47  3D      	    dec  a
 3F48  C23C3F  	    jp   nz,$3F3C
 3F4B  C9      	    ret
+
+
 3F4C  E5      	    push hl
 3F4D  56      	    ld   d,(hl)
 3F4E  23      	    inc  hl
 3F4F  5E      	    ld   e,(hl)
-3F50  DD21B43F	    ld   ix,$3FB4
+3F50  DD21B43F	    ld   ix,very_chunk_data_3
 3F54  DD09    	    add  ix,bc
 3F56  DD6E00  	    ld   l,(ix+$00)
 3F59  DD6601  	    ld   h,(ix+$01)
@@ -10170,6 +10174,8 @@ _
 3F5F  73      	    ld   (hl),e
 3F60  E1      	    pop  hl
 3F61  C9      	    ret
+
+
 3F62  212081  	    ld   hl,$8120
 3F65  DD21C63F	    ld   ix,$3FC6
 3F69  111200  	    ld   de,$0012
@@ -10209,6 +10215,8 @@ _
 3FAF  E1      	    pop  hl
 3FB0  C1      	    pop  bc
 3FB1  C3833F  	    jp   $3F83
+
+                very_chunk_data_3:
 3FB4  FD      	    db   $fd
 3FB5  91      	    sub  c
 3FB6  BD      	    cp   l
