@@ -7,10 +7,53 @@
                     hiscore_lo      = $804A
                     hiscore_mid     = $804B
                     hiscore_hi      = $804C
+
+                    carrying_1      = $80A0 ; carrying food
+                    carrying_2      = $80A1 ; carrying food
+                    carrying_3      = $80A2 ; carrying food... dropped?
+
                     lives           = $8100
                     lives_copy      = $8200 ; seems to mimic 8100?
 
+                    controls        = $8401 ; 1=L, 2=R, 4=D, 8=U, 10=fire
+                    player_x        = $8406
+                    player_y        = $8407
+                    player_sp_x     = $8408 ; fe = -2 left, 02 = 2 right
+                    player_sp_y     = $8409 ; fe = -2 up, 02 = 2 down
+
+                    cat1_bytes      = $8510
+                    cat1_x          = $8518
+                    cat1_y          = $8519
+                    cat1_fr         = $851A
+
+                    cat2_bytes      = $8550
+                    cat2_x          = $8558
+                    cat2_y          = $8559
+                    cat2_fr         = $855A
+
+                    cat3_bytes      = $8570
+                    cat3_x          = $8578
+                    cat3_y          = $8579
+                    cat3_fr         = $857A
+
+                    snake1_bytes    = $8610 ; tee hee, snake bytes
+                    snake1_x        = $8618
+                    snake1_y        = $8619
+                    snake1_fr       = $861A
+
+                    snake2_bytes    = $8630
+                    snake2_x        = $8638
+                    snake2_y        = $8639
+                    snake2_fr       = $863A
+
                     bombs           = $867f
+                    bomb_placed     = $8680
+                    bomb_x          = $8684
+                    bomb_y          = $8685
+                    bomb_um1        = $8686 ; anim frames or something
+                    bomb_um2        = $8687
+                    bomb_set_timer  = $868A
+                    bomb_exploding  = $868B
 
                     screen_ram      = $9000 ; - 0x93ff  videoram
                     start_of_tiles  = $9040 ; top right tile
@@ -21,14 +64,19 @@
                     x_offset        = $9800
                     sprite_ram      = $9840
 
-                    int_enable      = $b000 ; interrupt enable
+                    int_enable      = $b000 ; interrupt enable w, DIP read
+                    dip_switch      = $b000 ; interrupt enable w, DIP read
                     coin_lockout    = $b002 ; dunno
                     sound_enable    = $b003
                     flip_scr_x      = $b006
                     flip_scr_y      = $b007
                     watchdog        = $B800 ;  or is it "sound command"?
 
-                    hw_in_1         = $A800 ; 0x4 = P1
+                    hw_in_0         = $A000 ;
+                    hw_in_1         = $A800 ; 0x4 = P1, 0x8 = P2
+
+
+                ;;; ============ start of suprmous.x1 =============
 
 0000          	start:
 0000  00      	    nop
@@ -54,11 +102,11 @@
 0024  CD3309  	    call $0933
 0027  AF      	    xor  a
 0028  0608    	    ld   b,$08
-002A  2100B0  	    ld   hl,int_enable
+002A  2100B0  	    ld   hl,dip_switch
 002D  77      	    ld   (hl),a
 002E  23      	    inc  hl
 002F  10FC    	    djnz $002D
-0031  3A00B0  	    ld   a,(int_enable)
+0031  3A00B0  	    ld   a,(dip_switch)
 0034  322080  	    ld   ($8020),a
 0037  47      	    ld   b,a
 0038  E607    	    and  $07
@@ -845,7 +893,7 @@ zeros               dc   55,0
 0741  12      	    ld   (de),a
 0742  C9      	    ret
 0743  FD212080	    ld   iy,$8020
-0747  3A00A8  	    ld   a,($A800)
+0747  3A00A8  	    ld   a,(hw_in_1)
 074A  FD7701  	    ld   (iy+$01),a
 074D  4F      	    ld   c,a
 074E  0600    	    ld   b,$00
@@ -947,7 +995,7 @@ zeros               dc   55,0
 081B  3600    	    ld   (hl),$00
 081D  2C      	    inc  l
 081E  C21B08  	    jp   nz,$081B
-0821  2100B0  	    ld   hl,int_enable
+0821  2100B0  	    ld   hl,dip_switch
 0824  0608    	    ld   b,$08
 0826  3600    	    ld   (hl),$00
 0828  2C      	    inc  l
@@ -2761,6 +2809,9 @@ zeros               dc   55,0
 0FFD  81      	    add  a,c
 0FFE  81      	    add  a,c
 0FFF  81      	    add  a,c
+
+                ;;; ============ start of suprmous.x2 =============
+
 1000  84      	    add  a,h
 1001  84      	    add  a,h
 1002  84      	    add  a,h
@@ -2785,7 +2836,7 @@ zeros               dc   55,0
 101E  3A1F84  	    ld   a,($841F)
 1021  FE00    	    cp   $00
 1023  CA3810  	    jp   z,$1038
-1026  3A8086  	    ld   a,($8680)
+1026  3A8086  	    ld   a,(bomb_placed)
 1029  A7      	    and  a
 102A  C2ED10  	    jp   nz,$10ED
 102D  328386  	    ld   ($8683),a
@@ -2793,7 +2844,7 @@ zeros               dc   55,0
 1033  A7      	    and  a
 1034  C8      	    ret  z
 1035  C34610  	    jp   $1046
-1038  218086  	    ld   hl,$8680
+1038  218086  	    ld   hl,bomb_placed
 103B  3E00    	    ld   a,$00
 103D  0610    	    ld   b,$10
 103F  77      	    ld   (hl),a
@@ -2803,14 +2854,14 @@ zeros               dc   55,0
 1046  3AC185  	    ld   a,($85C1)
 1049  A7      	    and  a
 104A  C0      	    ret  nz
-104B  3A0184  	    ld   a,($8401)
-104E  E610    	    and  $10
+104B  3A0184  	    ld   a,(controls)
+104E  E610    	    and  $10    ; fire pressed?
 1050  C8      	    ret  z
 1051  CD1B25  	    call $251B
-1054  11E2FF  	    ld   de,$FFE2 ; controls?
+1054  11E2FF  	    ld   de,$FFE2
 1057  19      	    add  hl,de
 1058  7E      	    ld   a,(hl)
-1059  FEF0    	    cp   $F0    ; fire?
+1059  FEF0    	    cp   $F0
 105B  D8      	    ret  c
 105C  3A7F86  	    ld   a,(bombs) ;(only here when holding a bomb
 105F  A7      	    and  a
@@ -2853,62 +2904,64 @@ zeros               dc   55,0
 109C  E1      	    pop  hl
 109D  C9      	    ret
 
-                ;; (after?) Drop bomb?
+                ;; (after?) set bomb?
 109E  3E00    	    ld   a,$00
 10A0  328386  	    ld   ($8683),a
 10A3  328186  	    ld   ($8681),a
 10A6  328286  	    ld   ($8682),a
 10A9  328886  	    ld   ($8688),a
 10AC  328986  	    ld   ($8689),a
-10AF  328A86  	    ld   ($868A),a
-10B2  328B86  	    ld   ($868B),a
+10AF  328A86  	    ld   (bomb_set_timer),a
+10B2  328B86  	    ld   (bomb_exploding),a
 10B5  3E01    	    ld   a,$01
-10B7  328086  	    ld   ($8680),a
-10BA  218486  	    ld   hl,$8684
-10BD  3A0684  	    ld   a,($8406)
+10B7  328086  	    ld   (bomb_placed),a
+10BA  218486  	    ld   hl,bomb_x
+10BD  3A0684  	    ld   a,(player_x) ; set bomb pos to player pos
 10C0  77      	    ld   (hl),a
 10C1  23      	    inc  hl
-10C2  3A0784  	    ld   a,($8407)
+10C2  3A0784  	    ld   a,(player_y)
 10C5  77      	    ld   (hl),a
 10C6  23      	    inc  hl
-10C7  3E3C    	    ld   a,$3C
+10C7  3E3C    	    ld   a,$3C  ; ?
 10C9  77      	    ld   (hl),a
 10CA  23      	    inc  hl
-10CB  3E86    	    ld   a,$86
+10CB  3E86    	    ld   a,$86  ;
 10CD  77      	    ld   (hl),a
 10CE  3E85    	    ld   a,$85
 10D0  3200B8  	    ld   (watchdog),a
 10D3  C3D610  	    jp   $10D6
 10D6  211C80  	    ld   hl,$801C
-10D9  3A8486  	    ld   a,($8684)
+10D9  3A8486  	    ld   a,(bomb_x)
 10DC  77      	    ld   (hl),a
 10DD  23      	    inc  hl
-10DE  3A8686  	    ld   a,($8686)
+10DE  3A8686  	    ld   a,(bomb_um1)
 10E1  77      	    ld   (hl),a
 10E2  23      	    inc  hl
-10E3  3A8786  	    ld   a,($8687)
+10E3  3A8786  	    ld   a,(bomb_um2)
 10E6  77      	    ld   (hl),a
 10E7  23      	    inc  hl
-10E8  3A8586  	    ld   a,($8685)
+10E8  3A8586  	    ld   a,(bomb_y)
 10EB  77      	    ld   (hl),a
 10EC  C9      	    ret
 
-
-10ED  3A8B86  	    ld   a,($868B)
+    ;;
+10ED  3A8B86  	    ld   a,(bomb_exploding)
 10F0  A7      	    and  a
 10F1  C20D11  	    jp   nz,$110D
-10F4  3A8A86  	    ld   a,($868A)
+10F4  3A8A86  	    ld   a,(bomb_set_timer)
 10F7  FE14    	    cp   $14
 10F9  CA0111  	    jp   z,$1101
-10FC  3C      	    inc  a
-10FD  328A86  	    ld   ($868A),a
+10FC  3C      	    inc  a      ; too soon to detonate
+10FD  328A86  	    ld   (bomb_set_timer),a
 1100  C9      	    ret
-1101  3A0184  	    ld   a,($8401)
-1104  E610    	    and  $10
+1101  3A0184  	    ld   a,(controls)
+1104  E610    	    and  $10    ; fire pressed?
 1106  C8      	    ret  z
-1107  3E01    	    ld   a,$01
-1109  328B86  	    ld   ($868B),a
+                _detonate_bomb:
+1107  3E01    	    ld   a,$01  ; yep... explode bomb
+1109  328B86  	    ld   (bomb_exploding),a
 110C  C9      	    ret
+
 110D  218886  	    ld   hl,$8688
 1110  34      	    inc  (hl)
 1111  7E      	    ld   a,(hl)
@@ -5593,6 +5646,9 @@ zeros               dc   55,0
 1FFB  0F      	    rrca
 1FFC  DAB320  	    jp   c,$20B3
 1FFF  0F      	    rrca
+
+                ;;; ============ start of suprmous.x3 =============
+
 2000  DAD920  	    jp   c,$20D9
 2003  AF      	    xor  a
 2004  323980  	    ld   ($8039),a
@@ -6280,13 +6336,13 @@ zeros               dc   55,0
 2516  77      	    ld   (hl),a
 2517  08      	    ex   af,af'
 2518  C37425  	    jp   $2574
-251B  3A0784  	    ld   a,($8407)
+251B  3A0784  	    ld   a,(player_y)
 251E  0F      	    rrca
 251F  0F      	    rrca
 2520  0F      	    rrca
 2521  E61F    	    and  $1F
 2523  5F      	    ld   e,a
-2524  3A0684  	    ld   a,($8406)
+2524  3A0684  	    ld   a,(player_x)
 2527  ED44    	    neg
 2529  07      	    rlca
 252A  07      	    rlca
@@ -6325,22 +6381,23 @@ zeros               dc   55,0
 256A  CAFD24  	    jp   z,$24FD
 256D  AF      	    xor  a
 256E  C37425  	    jp   $2574
-2571  3A00A0  	    ld   a,($A000)
-2574  320184  	    ld   ($8401),a
+2571  3A00A0  	    ld   a,(hw_in_0)
+2574  320184  	    ld   (controls),a
 2577  CD9825  	    call $2598
 257A  3A2284  	    ld   a,($8422)
 257D  A7      	    and  a
 257E  C29425  	    jp   nz,$2594
-2581  CDB626  	    call $26B6
-2584  3A0884  	    ld   a,($8408)
+2581  CDB626  	    call move_player
+2584  3A0884  	    ld   a,(player_sp_x)
 2587  47      	    ld   b,a
-2588  3A0984  	    ld   a,($8409)
+2588  3A0984  	    ld   a,(player_sp_y)
 258B  B0      	    or   b
 258C  C29425  	    jp   nz,$2594
 258F  3E00    	    ld   a,$00
 2591  321684  	    ld   ($8416),a
 2594  CD5328  	    call $2853
 2597  C9      	    ret
+
 2598  3A1F84  	    ld   a,($841F)
 259B  FE01    	    cp   $01
 259D  CABC25  	    jp   z,$25BC
@@ -6403,14 +6460,17 @@ zeros               dc   55,0
 2613  3EA0    	    ld   a,$A0
 2615  3200B8  	    ld   (watchdog),a
 2618  C9      	    ret
+
+    ;; reset somthing
 2619  3E00    	    ld   a,$00
 261B  320084  	    ld   ($8400),a
 261E  322084  	    ld   ($8420),a
-2621  320684  	    ld   ($8406),a
-2624  320784  	    ld   ($8407),a
+2621  320684  	    ld   (player_x),a
+2624  320784  	    ld   (player_y),a
 2627  3E01    	    ld   a,$01
 2629  323380  	    ld   ($8033),a
 262C  C9      	    ret
+
 262D  212084  	    ld   hl,$8420
 2630  7E      	    ld   a,(hl)
 2631  A7      	    and  a
@@ -6423,12 +6483,13 @@ zeros               dc   55,0
 2640  322A84  	    ld   ($842A),a
 2643  CD1828  	    call $2818
 2646  C9      	    ret
+
 2647  3A2A84  	    ld   a,($842A)
 264A  A7      	    and  a
 264B  C27426  	    jp   nz,$2674
-264E  3A0784  	    ld   a,($8407)
+264E  3A0784  	    ld   a,(player_y)
 2651  C602    	    add  a,$02
-2653  320784  	    ld   ($8407),a
+2653  320784  	    ld   (player_y),a
 2656  FEE0    	    cp   $E0
 2658  D28B26  	    jp   nc,$268B
 265B  CD1B25  	    call $251B
@@ -6473,25 +6534,27 @@ zeros               dc   55,0
 26B1  C9      	    ret
 26B2  CD0A3D  	    call $3D0A
 26B5  C9      	    ret
-26B6  3A0784  	    ld   a,($8407)
+
+                move_player:
+26B6  3A0784  	    ld   a,(player_y)
 26B9  E607    	    and  $07
-26BB  FE02    	    cp   $02
+26BB  FE02    	    cp   $02    ; only allow change dir ever 02 on y
 26BD  C0      	    ret  nz
-26BE  3A0684  	    ld   a,($8406)
+26BE  3A0684  	    ld   a,(player_x)
 26C1  E607    	    and  $07
-26C3  FE04    	    cp   $04
+26C3  FE04    	    cp   $04    ; only allow change dir every 04 on x
 26C5  C0      	    ret  nz
-26C6  3A0184  	    ld   a,($8401)
+26C6  3A0184  	    ld   a,(controls)
 26C9  0F      	    rrca
-26CA  DA1027  	    jp   c,$2710
+26CA  DA1027  	    jp   c,move_player_left
 26CD  0F      	    rrca
-26CE  DA5227  	    jp   c,$2752
+26CE  DA5227  	    jp   c,move_player_right
 26D1  0F      	    rrca
-26D2  DA9427  	    jp   c,$2794
+26D2  DA9427  	    jp   c,move_player_down
 26D5  0F      	    rrca
-26D6  DAD627  	    jp   c,$27D6
+26D6  DAD627  	    jp   c,move_player_up
 26D9  00      	    nop
-26DA  3A0684  	    ld   a,($8406)
+26DA  3A0684  	    ld   a,(player_x)
 26DD  57      	    ld   d,a
 26DE  3E14    	    ld   a,$14
 26E0  0E20    	    ld   c,$20
@@ -6501,7 +6564,7 @@ zeros               dc   55,0
 26E8  81      	    add  a,c
 26E9  10F9    	    djnz $26E4
 26EB  C3FF26  	    jp   $26FF
-26EE  3A0784  	    ld   a,($8407)
+26EE  3A0784  	    ld   a,(player_y)
 26F1  57      	    ld   d,a
 26F2  3E22    	    ld   a,$22
 26F4  0E20    	    ld   c,$20
@@ -6510,19 +6573,21 @@ zeros               dc   55,0
 26F9  CA1828  	    jp   z,$2818
 26FC  81      	    add  a,c
 26FD  10F9    	    djnz $26F8
-26FF  3A0884  	    ld   a,($8408)
+26FF  3A0884  	    ld   a,(player_sp_x)
 2702  A7      	    and  a
 2703  CA2928  	    jp   z,$2829
-2706  3A0984  	    ld   a,($8409)
+2706  3A0984  	    ld   a,(player_sp_y)
 2709  A7      	    and  a
 270A  CA3E28  	    jp   z,$283E
 270D  C31828  	    jp   $2818
-2710  3A0684  	    ld   a,($8406)
+
+                move_player_left:
+2710  3A0684  	    ld   a,(player_x)
 2713  FE14    	    cp   $14
 2715  CA2928  	    jp   z,$2829
 2718  D22327  	    jp   nc,$2723
 271B  3E14    	    ld   a,$14
-271D  320684  	    ld   ($8406),a
+271D  320684  	    ld   (player_x),a
 2720  C32928  	    jp   $2829
 2723  CD1B25  	    call $251B
 2726  010200  	    ld   bc,$0002
@@ -6538,20 +6603,22 @@ zeros               dc   55,0
 2738  C32928  	    jp   $2829
 273B  E1      	    pop  hl
 273C  3A0B84  	    ld   a,($840B)
-273F  320884  	    ld   ($8408),a
+273F  320884  	    ld   (player_sp_x),a
 2742  3E00    	    ld   a,$00
-2744  320984  	    ld   ($8409),a
+2744  320984  	    ld   (player_sp_y),a
 2747  3E01    	    ld   a,$01
 2749  320484  	    ld   ($8404),a
 274C  3E00    	    ld   a,$00
 274E  321484  	    ld   ($8414),a
 2751  C9      	    ret
-2752  3A0684  	    ld   a,($8406)
+
+                move_player_right:
+2752  3A0684  	    ld   a,(player_x)
 2755  FED4    	    cp   $D4
 2757  CA2928  	    jp   z,$2829
 275A  DA6527  	    jp   c,$2765
 275D  3ED4    	    ld   a,$D4
-275F  320684  	    ld   ($8406),a
+275F  320684  	    ld   (player_x),a
 2762  C32928  	    jp   $2829
 2765  CD1B25  	    call $251B
 2768  01C2FF  	    ld   bc,$FFC2
@@ -6567,20 +6634,23 @@ zeros               dc   55,0
 277A  C32928  	    jp   $2829
 277D  E1      	    pop  hl
 277E  3A0D84  	    ld   a,($840D)
-2781  320884  	    ld   ($8408),a
+2781  320884  	    ld   (player_sp_x),a
 2784  3E00    	    ld   a,$00
-2786  320984  	    ld   ($8409),a
+2786  320984  	    ld   (player_sp_y),a
 2789  3E02    	    ld   a,$02
 278B  320484  	    ld   ($8404),a
 278E  3E80    	    ld   a,$80
 2790  321484  	    ld   ($8414),a
 2793  C9      	    ret
-2794  3A0784  	    ld   a,($8407)
+
+                ;;
+                move_player_down:
+2794  3A0784  	    ld   a,(player_y)
 2797  FEE2    	    cp   $E2
 2799  CA3E28  	    jp   z,$283E
 279C  DAA727  	    jp   c,$27A7
 279F  3EE2    	    ld   a,$E2
-27A1  320784  	    ld   ($8407),a
+27A1  320784  	    ld   (player_y),a
 27A4  C33E28  	    jp   $283E
 27A7  CD1B25  	    call $251B
 27AA  01E3FF  	    ld   bc,$FFE3
@@ -6596,20 +6666,22 @@ zeros               dc   55,0
 27BC  C33E28  	    jp   $283E
 27BF  E1      	    pop  hl
 27C0  3A0F84  	    ld   a,($840F)
-27C3  320984  	    ld   ($8409),a
+27C3  320984  	    ld   (player_sp_y),a
 27C6  3E00    	    ld   a,$00
-27C8  320884  	    ld   ($8408),a
+27C8  320884  	    ld   (player_sp_x),a
 27CB  3E04    	    ld   a,$04
 27CD  320484  	    ld   ($8404),a
 27D0  3E04    	    ld   a,$04
 27D2  321484  	    ld   ($8414),a
 27D5  C9      	    ret
-27D6  3A0784  	    ld   a,($8407)
+
+                move_player_up:
+27D6  3A0784  	    ld   a,(player_y)
 27D9  FE22    	    cp   $22
 27DB  CA3E28  	    jp   z,$283E
 27DE  D2E927  	    jp   nc,$27E9
 27E1  3E22    	    ld   a,$22
-27E3  320784  	    ld   ($8407),a
+27E3  320784  	    ld   (player_y),a
 27E6  C33E28  	    jp   $283E
 27E9  CD1B25  	    call $251B
 27EC  01E1FF  	    ld   bc,$FFE1
@@ -6625,26 +6697,29 @@ zeros               dc   55,0
 27FE  C33E28  	    jp   $283E
 2801  E1      	    pop  hl
 2802  3A1184  	    ld   a,($8411)
-2805  320984  	    ld   ($8409),a
+2805  320984  	    ld   (player_sp_y),a
 2808  3E00    	    ld   a,$00
-280A  320884  	    ld   ($8408),a
+280A  320884  	    ld   (player_sp_x),a
 280D  3E08    	    ld   a,$08
 280F  320484  	    ld   ($8404),a
 2812  3E08    	    ld   a,$08
 2814  321484  	    ld   ($8414),a
 2817  C9      	    ret
+
+
 2818  3E00    	    ld   a,$00
-281A  320884  	    ld   ($8408),a
+281A  320884  	    ld   (player_sp_x),a
 281D  3E00    	    ld   a,$00
-281F  320984  	    ld   ($8409),a
+281F  320984  	    ld   (player_sp_y),a
 2822  3E00    	    ld   a,$00
 2824  321684  	    ld   ($8416),a
 2827  00      	    nop
 2828  C9      	    ret
+
 2829  3E00    	    ld   a,$00
-282B  320884  	    ld   ($8408),a
+282B  320884  	    ld   (player_sp_x),a
 282E  00      	    nop
-282F  3A0984  	    ld   a,($8409)
+282F  3A0984  	    ld   a,(player_sp_y)
 2832  A7      	    and  a
 2833  C8      	    ret  z
 2834  FE80    	    cp   $80
@@ -6653,9 +6728,9 @@ zeros               dc   55,0
 283C  00      	    nop
 283D  C9      	    ret
 283E  3E00    	    ld   a,$00
-2840  320984  	    ld   ($8409),a
+2840  320984  	    ld   (player_sp_y),a
 2843  00      	    nop
-2844  3A0884  	    ld   a,($8408)
+2844  3A0884  	    ld   a,(player_sp_x)
 2847  A7      	    and  a
 2848  C8      	    ret  z
 2849  FE80    	    cp   $80
@@ -6666,16 +6741,16 @@ zeros               dc   55,0
 2853  3A2284  	    ld   a,($8422)
 2856  A7      	    and  a
 2857  C2BB28  	    jp   nz,$28BB
-285A  3A0884  	    ld   a,($8408)
+285A  3A0884  	    ld   a,(player_sp_x)
 285D  47      	    ld   b,a
-285E  3A0684  	    ld   a,($8406)
+285E  3A0684  	    ld   a,(player_x)
 2861  80      	    add  a,b
-2862  320684  	    ld   ($8406),a
-2865  3A0984  	    ld   a,($8409)
+2862  320684  	    ld   (player_x),a
+2865  3A0984  	    ld   a,(player_sp_y)
 2868  47      	    ld   b,a
-2869  3A0784  	    ld   a,($8407)
+2869  3A0784  	    ld   a,(player_y)
 286C  80      	    add  a,b
-286D  320784  	    ld   ($8407),a
+286D  320784  	    ld   (player_y),a
 2870  3A1684  	    ld   a,($8416)
 2873  A7      	    and  a
 2874  CABB28  	    jp   z,$28BB
@@ -6709,7 +6784,7 @@ zeros               dc   55,0
 28B7  B0      	    or   b
 28B8  321384  	    ld   ($8413),a
 28BB  210080  	    ld   hl,$8000
-28BE  3A0684  	    ld   a,($8406)
+28BE  3A0684  	    ld   a,(player_x)
 28C1  77      	    ld   (hl),a
 28C2  23      	    inc  hl
 28C3  3A1384  	    ld   a,($8413)
@@ -6718,14 +6793,14 @@ zeros               dc   55,0
 28C8  3A1284  	    ld   a,($8412)
 28CB  77      	    ld   (hl),a
 28CC  23      	    inc  hl
-28CD  3A0784  	    ld   a,($8407)
+28CD  3A0784  	    ld   a,(player_y)
 28D0  77      	    ld   (hl),a
 28D1  C9      	    ret
-28D2  3A0784  	    ld   a,($8407)
+28D2  3A0784  	    ld   a,(player_y)
 28D5  E607    	    and  $07
 28D7  FE02    	    cp   $02
 28D9  C0      	    ret  nz
-28DA  3A0684  	    ld   a,($8406)
+28DA  3A0684  	    ld   a,(player_x)
 28DD  E607    	    and  $07
 28DF  FE04    	    cp   $04
 28E1  C0      	    ret  nz
@@ -6771,7 +6846,7 @@ zeros               dc   55,0
 292A  CA3029  	    jp   z,$2930
 292D  FE3A    	    cp   $3A
 292F  C0      	    ret  nz
-2930  3A8086  	    ld   a,($8680)
+2930  3A8086  	    ld   a,(bomb_placed)
 2933  A7      	    and  a
 2934  C0      	    ret  nz
 2935  3AC185  	    ld   a,($85C1)
@@ -6779,9 +6854,9 @@ zeros               dc   55,0
 2939  C0      	    ret  nz
 293A  3E01    	    ld   a,$01
 293C  32C185  	    ld   ($85C1),a
-293F  3A0684  	    ld   a,($8406)
+293F  3A0684  	    ld   a,(player_x)
 2942  32C285  	    ld   ($85C2),a
-2945  3A0784  	    ld   a,($8407)
+2945  3A0784  	    ld   a,(player_y)
 2948  32C385  	    ld   ($85C3),a
 294B  C9      	    ret
 294C  01E2FF  	    ld   bc,$FFE2
@@ -6800,7 +6875,7 @@ zeros               dc   55,0
 2962  3A2D84  	    ld   a,($842D)
 2965  A7      	    and  a
 2966  C8      	    ret  z
-2967  3A0784  	    ld   a,($8407)
+2967  3A0784  	    ld   a,(player_y)
 296A  FE70    	    cp   $70
 296C  D27D29  	    jp   nc,$297D
 296F  0E01    	    ld   c,$01
@@ -6839,16 +6914,16 @@ zeros               dc   55,0
 29B3  7E      	    ld   a,(hl)
 29B4  FEF9    	    cp   $F9
 29B6  C0      	    ret  nz
-29B7  3AA080  	    ld   a,($80A0)
+29B7  3AA080  	    ld   a,(carrying_1)
 29BA  A7      	    and  a
 29BB  C8      	    ret  z
-29BC  3AA280  	    ld   a,($80A2)
+29BC  3AA280  	    ld   a,(carrying_3)
 29BF  FE01    	    cp   $01
 29C1  C0      	    ret  nz
 29C2  3E02    	    ld   a,$02
-29C4  32A280  	    ld   ($80A2),a
+29C4  32A280  	    ld   (carrying_3),a
 29C7  C9      	    ret
-29C8  3AA080  	    ld   a,($80A0)
+29C8  3AA080  	    ld   a,(carrying_1)
 29CB  A7      	    and  a
 29CC  C0      	    ret  nz
 29CD  01E1FF  	    ld   bc,$FFE1
@@ -6984,7 +7059,7 @@ zeros               dc   55,0
 2AE0  210485  	    ld   hl,$8504
 2AE3  7E      	    ld   a,(hl)
 2AE4  A7      	    and  a
-2AE5  C4922B  	    call nz,$2B92
+2AE5  C4922B  	    call nz,setup_cat_2
 2AE8  210685  	    ld   hl,$8506
 2AEB  7E      	    ld   a,(hl)
 2AEC  A7      	    and  a
@@ -7062,6 +7137,7 @@ zeros               dc   55,0
 2B54  3E87    	    ld   a,$87
 2B56  3200B8  	    ld   (watchdog),a
 2B59  C9      	    ret
+
 2B5A  3002    	    jr   nc,$2B5E
 2B5C  3002    	    jr   nc,$2B60
 2B5E  3002    	    jr   nc,$2B62
@@ -7098,7 +7174,11 @@ zeros               dc   55,0
 2B8D  00      	    nop
 2B8E  00      	    nop
 2B8F  00      	    nop
-2B90  010023  	    ld   bc,$2300
+2B90  01            byte 01     ; what?
+2B91  00            nop
+
+                setup_cat_2:
+2B92  23       	    inc  hl
 2B93  7E      	    ld   a,(hl)
 2B94  A7      	    and  a
 2B95  C2C42B  	    jp   nz,$2BC4
@@ -7106,7 +7186,7 @@ zeros               dc   55,0
 2B9B  A7      	    and  a
 2B9C  C0      	    ret  nz
 2B9D  3601    	    ld   (hl),$01
-2B9F  115085  	    ld   de,$8550
+2B9F  115085  	    ld   de,cat2_bytes
 2BA2  21CB2B  	    ld   hl,$2BCB
 2BA5  011D00  	    ld   bc,$001D
 2BA8  EDB0    	    ldir
@@ -7737,6 +7817,9 @@ zeros               dc   55,0
 2FF9  7E      	    ld   a,(hl)
 2FFA  FE01    	    cp   $01
 2FFC  C20230  	    jp   nz,$3002
+
+                ;;; ============ start of suprmous.x4 (plus 1 byte!)  =============
+
 2FFF  3602    	    ld   (hl),$02
 3001  C9      	    ret
 3002  FEFF    	    cp   $FF
@@ -9767,9 +9850,9 @@ zeros               dc   55,0
 3D9D  FE05    	    cp   $05
 3D9F  CA5D3D  	    jp   z,$3D5D
 3DA2  C9      	    ret
-3DA3  3A0684  	    ld   a,($8406)
+3DA3  3A0684  	    ld   a,(player_x)
 3DA6  D608    	    sub  $08
-3DA8  320684  	    ld   ($8406),a
+3DA8  320684  	    ld   (player_x),a
 3DAB  C3F43D  	    jp   $3DF4
 3DAE  23      	    inc  hl
 3DAF  23      	    inc  hl
@@ -9800,9 +9883,9 @@ zeros               dc   55,0
 3DE3  FE05    	    cp   $05
 3DE5  CA5D3D  	    jp   z,$3D5D
 3DE8  C9      	    ret
-3DE9  3A0684  	    ld   a,($8406)
+3DE9  3A0684  	    ld   a,(player_x)
 3DEC  C608    	    add  a,$08
-3DEE  320684  	    ld   ($8406),a
+3DEE  320684  	    ld   (player_x),a
 3DF1  C3F43D  	    jp   $3DF4
 3DF4  D5      	    push de
 3DF5  CD053E  	    call $3E05
@@ -10092,6 +10175,9 @@ zeros               dc   55,0
 3FFA  58      	    ld   e,b
 3FFB  93      	    sub  e
 3FFC  C490CC  	    call nz,$CC90
+
+                ;;; ============ start of suprmous.x5 =============
+
 3FFF  90      	    sub  b
 4000  D0      	    ret  nc
 4001  90      	    sub  b
@@ -10208,7 +10294,7 @@ zeros               dc   55,0
 407A  00      	    nop
 407B  00      	    nop
 407C  00      	    nop
-407D  3AA080  	    ld   a,($80A0)
+407D  3AA080  	    ld   a,(carrying_1)
 4080  A7      	    and  a
 4081  C2A940  	    jp   nz,$40A9
 4084  219C80  	    ld   hl,$809C
@@ -10231,17 +10317,17 @@ zeros               dc   55,0
 40A4  3AA880  	    ld   a,($80A8)
 40A7  77      	    ld   (hl),a
 40A8  C9      	    ret
-40A9  3AA180  	    ld   a,($80A1)
+40A9  3AA180  	    ld   a,(carrying_2)
 40AC  A7      	    and  a
 40AD  C22041  	    jp   nz,$4120
-40B0  11A180  	    ld   de,$80A1
+40B0  11A180  	    ld   de,carrying_2
 40B3  211441  	    ld   hl,$4114
 40B6  010900  	    ld   bc,$0009
 40B9  EDB0    	    ldir
-40BB  3A0684  	    ld   a,($8406)
+40BB  3A0684  	    ld   a,(player_x)
 40BE  C600    	    add  a,$00
 40C0  32A580  	    ld   ($80A5),a
-40C3  3A0784  	    ld   a,($8407)
+40C3  3A0784  	    ld   a,(player_y)
 40C6  C6F0    	    add  a,$F0
 40C8  32A880  	    ld   ($80A8),a
 40CB  3A9F80  	    ld   a,($809F)
@@ -10296,7 +10382,7 @@ zeros               dc   55,0
 411D  00      	    nop
 411E  00      	    nop
 411F  00      	    nop
-4120  3AA280  	    ld   a,($80A2)
+4120  3AA280  	    ld   a,(carrying_3)
 4123  FE01    	    cp   $01
 4125  CA3541  	    jp   z,$4135
 4128  FE02    	    cp   $02
@@ -10304,10 +10390,10 @@ zeros               dc   55,0
 412D  FE03    	    cp   $03
 412F  CA6741  	    jp   z,$4167
 4132  C38440  	    jp   $4084
-4135  3A0684  	    ld   a,($8406)
+4135  3A0684  	    ld   a,(player_x)
 4138  C600    	    add  a,$00
 413A  32A580  	    ld   ($80A5),a
-413D  3A0784  	    ld   a,($8407)
+413D  3A0784  	    ld   a,(player_y)
 4140  C6F0    	    add  a,$F0
 4142  32A880  	    ld   ($80A8),a
 4145  C39240  	    jp   $4092
@@ -10317,7 +10403,7 @@ zeros               dc   55,0
 414F  FE0A    	    cp   $0A
 4151  DA5C41  	    jp   c,$415C
 4154  3E03    	    ld   a,$03
-4156  32A280  	    ld   ($80A2),a
+4156  32A280  	    ld   (carrying_3),a
 4159  C39240  	    jp   $4092
 415C  3AA880  	    ld   a,($80A8)
 415F  C602    	    add  a,$02
@@ -10446,7 +10532,7 @@ zeros               dc   55,0
 4270  78      	    ld   a,b
 4271  E620    	    and  $20
 4273  CA2B44  	    jp   z,$442B
-4276  3A00A0  	    ld   a,($A000)
+4276  3A00A0  	    ld   a,(hw_in_0)
 4279  E610    	    and  $10
 427B  CA4344  	    jp   z,$4443
 427E  3A3080  	    ld   a,(is_playing)
@@ -11513,7 +11599,7 @@ zeros               dc   55,0
 48ED  24      	    inc  h
 48EE  24      	    inc  h
 48EF  F5      	    push af
-48F0  3A00A8  	    ld   a,($A800)
+48F0  3A00A8  	    ld   a,(hw_in_1)
 48F3  E640    	    and  $40
 48F5  C2FA48  	    jp   nz,$48FA
 48F8  F1      	    pop  af
