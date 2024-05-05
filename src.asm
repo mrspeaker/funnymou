@@ -7,10 +7,53 @@
      hiscore_lo      = $804A
      hiscore_mid     = $804B
      hiscore_hi      = $804C
+
+     carrying_1      = $80A0 ; carrying food
+     carrying_2      = $80A1 ; carrying food
+     carrying_3      = $80A2 ; carrying food... dropped?
+
      lives           = $8100
      lives_copy      = $8200 ; seems to mimic 8100?
 
+     controls        = $8401 ; 1=L, 2=R, 4=D, 8=U, 10=fire
+     player_x        = $8406
+     player_y        = $8407
+     player_sp_x     = $8408 ; fe = -2 left, 02 = 2 right
+     player_sp_y     = $8409 ; fe = -2 up, 02 = 2 down
+
+     cat1_bytes      = $8510
+     cat1_x          = $8518
+     cat1_y          = $8519
+     cat1_fr         = $851A
+
+     cat2_bytes      = $8550
+     cat2_x          = $8558
+     cat2_y          = $8559
+     cat2_fr         = $855A
+
+     cat3_bytes      = $8570
+     cat3_x          = $8578
+     cat3_y          = $8579
+     cat3_fr         = $857A
+
+     snake1_bytes    = $8610 ; tee hee, snake bytes
+     snake1_x        = $8618
+     snake1_y        = $8619
+     snake1_fr       = $861A
+
+     snake2_bytes    = $8630
+     snake2_x        = $8638
+     snake2_y        = $8639
+     snake2_fr       = $863A
+
      bombs           = $867f
+     bomb_placed     = $8680
+     bomb_x          = $8684
+     bomb_y          = $8685
+     bomb_um1        = $8686 ; anim frames or something
+     bomb_um2        = $8687
+     bomb_set_timer  = $868A
+     bomb_exploding  = $868B
 
      screen_ram      = $9000 ; - 0x93ff  videoram
      start_of_tiles  = $9040 ; top right tile
@@ -21,14 +64,19 @@
      x_offset        = $9800
      sprite_ram      = $9840
 
-     int_enable      = $b000 ; interrupt enable
+     int_enable      = $b000 ; interrupt enable w, DIP read
+     dip_switch      = $b000 ; interrupt enable w, DIP read
      coin_lockout    = $b002 ; dunno
      sound_enable    = $b003
      flip_scr_x      = $b006
      flip_scr_y      = $b007
      watchdog        = $B800 ;  or is it "sound command"?
 
-     hw_in_1         = $A800 ; 0x4 = P1
+     hw_in_0         = $A000 ;
+     hw_in_1         = $A800 ; 0x4 = P1, 0x8 = P2
+
+
+ ;;; ============ start of suprmous.x1 =============
 
 start:
     nop
@@ -54,11 +102,11 @@ start:
     call $0933
     xor  a
     ld   b,$08
-    ld   hl,int_enable
+    ld   hl,dip_switch
     ld   (hl),a
     inc  hl
     djnz $002D
-    ld   a,(int_enable)
+    ld   a,(dip_switch)
     ld   ($8020),a
     ld   b,a
     and  $07
@@ -845,7 +893,7 @@ start:
     ld   (de),a
     ret
     ld   iy,$8020
-    ld   a,($A800)
+    ld   a,(hw_in_1)
     ld   (iy+$01),a
     ld   c,a
     ld   b,$00
@@ -947,7 +995,7 @@ start:
     ld   (hl),$00
     inc  l
     jp   nz,$081B
-    ld   hl,int_enable
+    ld   hl,dip_switch
     ld   b,$08
     ld   (hl),$00
     inc  l
@@ -2761,6 +2809,9 @@ start:
     add  a,c
     add  a,c
     add  a,c
+
+ ;;; ============ start of suprmous.x2 =============
+
     add  a,h
     add  a,h
     add  a,h
@@ -2785,7 +2836,7 @@ start:
     ld   a,($841F)
     cp   $00
     jp   z,$1038
-    ld   a,($8680)
+    ld   a,(bomb_placed)
     and  a
     jp   nz,$10ED
     ld   ($8683),a
@@ -2793,7 +2844,7 @@ start:
     and  a
     ret  z
     jp   $1046
-    ld   hl,$8680
+    ld   hl,bomb_placed
     ld   a,$00
     ld   b,$10
     ld   (hl),a
@@ -2803,14 +2854,14 @@ start:
     ld   a,($85C1)
     and  a
     ret  nz
-    ld   a,($8401)
-    and  $10
+    ld   a,(controls)
+    and  $10    ; fire pressed?
     ret  z
     call $251B
-    ld   de,$FFE2 ; controls?
+    ld   de,$FFE2
     add  hl,de
     ld   a,(hl)
-    cp   $F0    ; fire?
+    cp   $F0
     ret  c
     ld   a,(bombs) ;(only here when holding a bomb
     and  a
@@ -2853,62 +2904,64 @@ start:
     pop  hl
     ret
 
- ;; (after?) Drop bomb?
+ ;; (after?) set bomb?
     ld   a,$00
     ld   ($8683),a
     ld   ($8681),a
     ld   ($8682),a
     ld   ($8688),a
     ld   ($8689),a
-    ld   ($868A),a
-    ld   ($868B),a
+    ld   (bomb_set_timer),a
+    ld   (bomb_exploding),a
     ld   a,$01
-    ld   ($8680),a
-    ld   hl,$8684
-    ld   a,($8406)
+    ld   (bomb_placed),a
+    ld   hl,bomb_x
+    ld   a,(player_x) ; set bomb pos to player pos
     ld   (hl),a
     inc  hl
-    ld   a,($8407)
+    ld   a,(player_y)
     ld   (hl),a
     inc  hl
-    ld   a,$3C
+    ld   a,$3C  ; ?
     ld   (hl),a
     inc  hl
-    ld   a,$86
+    ld   a,$86  ;
     ld   (hl),a
     ld   a,$85
     ld   (watchdog),a
     jp   $10D6
     ld   hl,$801C
-    ld   a,($8684)
+    ld   a,(bomb_x)
     ld   (hl),a
     inc  hl
-    ld   a,($8686)
+    ld   a,(bomb_um1)
     ld   (hl),a
     inc  hl
-    ld   a,($8687)
+    ld   a,(bomb_um2)
     ld   (hl),a
     inc  hl
-    ld   a,($8685)
+    ld   a,(bomb_y)
     ld   (hl),a
     ret
 
 
-    ld   a,($868B)
+    ld   a,(bomb_exploding)
     and  a
     jp   nz,$110D
-    ld   a,($868A)
+    ld   a,(bomb_set_timer)
     cp   $14
     jp   z,$1101
-    inc  a
-    ld   ($868A),a
+    inc  a      ; too soon to detonate
+    ld   (bomb_set_timer),a
     ret
-    ld   a,($8401)
-    and  $10
+    ld   a,(controls)
+    and  $10    ; fire pressed?
     ret  z
-    ld   a,$01
-    ld   ($868B),a
+ _detonate_bomb:
+    ld   a,$01  ; yep... explode bomb
+    ld   (bomb_exploding),a
     ret
+
     ld   hl,$8688
     inc  (hl)
     ld   a,(hl)
@@ -5593,6 +5646,9 @@ start:
     rrca
     jp   c,$20B3
     rrca
+
+ ;;; ============ start of suprmous.x3 =============
+
     jp   c,$20D9
     xor  a
     ld   ($8039),a
@@ -6280,13 +6336,13 @@ start:
     ld   (hl),a
     ex   af,af'
     jp   $2574
-    ld   a,($8407)
+    ld   a,(player_y)
     rrca
     rrca
     rrca
     and  $1F
     ld   e,a
-    ld   a,($8406)
+    ld   a,(player_x)
     neg
     rlca
     rlca
@@ -6325,22 +6381,23 @@ start:
     jp   z,$24FD
     xor  a
     jp   $2574
-    ld   a,($A000)
-    ld   ($8401),a
+    ld   a,(hw_in_0)
+    ld   (controls),a
     call $2598
     ld   a,($8422)
     and  a
     jp   nz,$2594
-    call $26B6
-    ld   a,($8408)
+    call move_player
+    ld   a,(player_sp_x)
     ld   b,a
-    ld   a,($8409)
+    ld   a,(player_sp_y)
     or   b
     jp   nz,$2594
     ld   a,$00
     ld   ($8416),a
     call $2853
     ret
+
     ld   a,($841F)
     cp   $01
     jp   z,$25BC
@@ -6403,14 +6460,17 @@ start:
     ld   a,$A0
     ld   (watchdog),a
     ret
+
+mthing
     ld   a,$00
     ld   ($8400),a
     ld   ($8420),a
-    ld   ($8406),a
-    ld   ($8407),a
+    ld   (player_x),a
+    ld   (player_y),a
     ld   a,$01
     ld   ($8033),a
     ret
+
     ld   hl,$8420
     ld   a,(hl)
     and  a
@@ -6423,12 +6483,13 @@ start:
     ld   ($842A),a
     call $2818
     ret
+
     ld   a,($842A)
     and  a
     jp   nz,$2674
-    ld   a,($8407)
+    ld   a,(player_y)
     add  a,$02
-    ld   ($8407),a
+    ld   (player_y),a
     cp   $E0
     jp   nc,$268B
     call $251B
@@ -6473,25 +6534,27 @@ start:
     ret
     call $3D0A
     ret
-    ld   a,($8407)
+
+ move_player:
+    ld   a,(player_y)
     and  $07
-    cp   $02
+    cp   $02    ; only allow change dir ever 02 on y
     ret  nz
-    ld   a,($8406)
+    ld   a,(player_x)
     and  $07
-    cp   $04
+    cp   $04    ; only allow change dir every 04 on x
     ret  nz
-    ld   a,($8401)
+    ld   a,(controls)
     rrca
-    jp   c,$2710
+    jp   c,move_player_left
     rrca
-    jp   c,$2752
+    jp   c,move_player_right
     rrca
-    jp   c,$2794
+    jp   c,move_player_down
     rrca
-    jp   c,$27D6
+    jp   c,move_player_up
     nop
-    ld   a,($8406)
+    ld   a,(player_x)
     ld   d,a
     ld   a,$14
     ld   c,$20
@@ -6501,7 +6564,7 @@ start:
     add  a,c
     djnz $26E4
     jp   $26FF
-    ld   a,($8407)
+    ld   a,(player_y)
     ld   d,a
     ld   a,$22
     ld   c,$20
@@ -6510,19 +6573,21 @@ start:
     jp   z,$2818
     add  a,c
     djnz $26F8
-    ld   a,($8408)
+    ld   a,(player_sp_x)
     and  a
     jp   z,$2829
-    ld   a,($8409)
+    ld   a,(player_sp_y)
     and  a
     jp   z,$283E
     jp   $2818
-    ld   a,($8406)
+
+ move_player_left:
+    ld   a,(player_x)
     cp   $14
     jp   z,$2829
     jp   nc,$2723
     ld   a,$14
-    ld   ($8406),a
+    ld   (player_x),a
     jp   $2829
     call $251B
     ld   bc,$0002
@@ -6538,20 +6603,22 @@ start:
     jp   $2829
     pop  hl
     ld   a,($840B)
-    ld   ($8408),a
+    ld   (player_sp_x),a
     ld   a,$00
-    ld   ($8409),a
+    ld   (player_sp_y),a
     ld   a,$01
     ld   ($8404),a
     ld   a,$00
     ld   ($8414),a
     ret
-    ld   a,($8406)
+
+ move_player_right:
+    ld   a,(player_x)
     cp   $D4
     jp   z,$2829
     jp   c,$2765
     ld   a,$D4
-    ld   ($8406),a
+    ld   (player_x),a
     jp   $2829
     call $251B
     ld   bc,$FFC2
@@ -6567,20 +6634,23 @@ start:
     jp   $2829
     pop  hl
     ld   a,($840D)
-    ld   ($8408),a
+    ld   (player_sp_x),a
     ld   a,$00
-    ld   ($8409),a
+    ld   (player_sp_y),a
     ld   a,$02
     ld   ($8404),a
     ld   a,$80
     ld   ($8414),a
     ret
-    ld   a,($8407)
+
+ ;;
+ move_player_down:
+    ld   a,(player_y)
     cp   $E2
     jp   z,$283E
     jp   c,$27A7
     ld   a,$E2
-    ld   ($8407),a
+    ld   (player_y),a
     jp   $283E
     call $251B
     ld   bc,$FFE3
@@ -6596,20 +6666,22 @@ start:
     jp   $283E
     pop  hl
     ld   a,($840F)
-    ld   ($8409),a
+    ld   (player_sp_y),a
     ld   a,$00
-    ld   ($8408),a
+    ld   (player_sp_x),a
     ld   a,$04
     ld   ($8404),a
     ld   a,$04
     ld   ($8414),a
     ret
-    ld   a,($8407)
+
+ move_player_up:
+    ld   a,(player_y)
     cp   $22
     jp   z,$283E
     jp   nc,$27E9
     ld   a,$22
-    ld   ($8407),a
+    ld   (player_y),a
     jp   $283E
     call $251B
     ld   bc,$FFE1
@@ -6625,26 +6697,29 @@ start:
     jp   $283E
     pop  hl
     ld   a,($8411)
-    ld   ($8409),a
+    ld   (player_sp_y),a
     ld   a,$00
-    ld   ($8408),a
+    ld   (player_sp_x),a
     ld   a,$08
     ld   ($8404),a
     ld   a,$08
     ld   ($8414),a
     ret
+
+
     ld   a,$00
-    ld   ($8408),a
+    ld   (player_sp_x),a
     ld   a,$00
-    ld   ($8409),a
+    ld   (player_sp_y),a
     ld   a,$00
     ld   ($8416),a
     nop
     ret
+
     ld   a,$00
-    ld   ($8408),a
+    ld   (player_sp_x),a
     nop
-    ld   a,($8409)
+    ld   a,(player_sp_y)
     and  a
     ret  z
     cp   $80
@@ -6653,9 +6728,9 @@ start:
     nop
     ret
     ld   a,$00
-    ld   ($8409),a
+    ld   (player_sp_y),a
     nop
-    ld   a,($8408)
+    ld   a,(player_sp_x)
     and  a
     ret  z
     cp   $80
@@ -6666,16 +6741,16 @@ start:
     ld   a,($8422)
     and  a
     jp   nz,$28BB
-    ld   a,($8408)
+    ld   a,(player_sp_x)
     ld   b,a
-    ld   a,($8406)
+    ld   a,(player_x)
     add  a,b
-    ld   ($8406),a
-    ld   a,($8409)
+    ld   (player_x),a
+    ld   a,(player_sp_y)
     ld   b,a
-    ld   a,($8407)
+    ld   a,(player_y)
     add  a,b
-    ld   ($8407),a
+    ld   (player_y),a
     ld   a,($8416)
     and  a
     jp   z,$28BB
@@ -6709,7 +6784,7 @@ start:
     or   b
     ld   ($8413),a
     ld   hl,$8000
-    ld   a,($8406)
+    ld   a,(player_x)
     ld   (hl),a
     inc  hl
     ld   a,($8413)
@@ -6718,14 +6793,14 @@ start:
     ld   a,($8412)
     ld   (hl),a
     inc  hl
-    ld   a,($8407)
+    ld   a,(player_y)
     ld   (hl),a
     ret
-    ld   a,($8407)
+    ld   a,(player_y)
     and  $07
     cp   $02
     ret  nz
-    ld   a,($8406)
+    ld   a,(player_x)
     and  $07
     cp   $04
     ret  nz
@@ -6771,7 +6846,7 @@ start:
     jp   z,$2930
     cp   $3A
     ret  nz
-    ld   a,($8680)
+    ld   a,(bomb_placed)
     and  a
     ret  nz
     ld   a,($85C1)
@@ -6779,9 +6854,9 @@ start:
     ret  nz
     ld   a,$01
     ld   ($85C1),a
-    ld   a,($8406)
+    ld   a,(player_x)
     ld   ($85C2),a
-    ld   a,($8407)
+    ld   a,(player_y)
     ld   ($85C3),a
     ret
     ld   bc,$FFE2
@@ -6800,7 +6875,7 @@ start:
     ld   a,($842D)
     and  a
     ret  z
-    ld   a,($8407)
+    ld   a,(player_y)
     cp   $70
     jp   nc,$297D
     ld   c,$01
@@ -6839,16 +6914,16 @@ start:
     ld   a,(hl)
     cp   $F9
     ret  nz
-    ld   a,($80A0)
+    ld   a,(carrying_1)
     and  a
     ret  z
-    ld   a,($80A2)
+    ld   a,(carrying_3)
     cp   $01
     ret  nz
     ld   a,$02
-    ld   ($80A2),a
+    ld   (carrying_3),a
     ret
-    ld   a,($80A0)
+    ld   a,(carrying_1)
     and  a
     ret  nz
     ld   bc,$FFE1
@@ -6984,7 +7059,7 @@ start:
     ld   hl,$8504
     ld   a,(hl)
     and  a
-    call nz,$2B92
+    call nz,setup_cat_2
     ld   hl,$8506
     ld   a,(hl)
     and  a
@@ -7062,6 +7137,7 @@ start:
     ld   a,$87
     ld   (watchdog),a
     ret
+
     jr   nc,$2B5E
     jr   nc,$2B60
     jr   nc,$2B62
@@ -7098,7 +7174,11 @@ start:
     nop
     nop
     nop
-    ld   bc,$2300
+     byte 01
+     nop
+
+ setup_cat_2:
+	    inc  hl
     ld   a,(hl)
     and  a
     jp   nz,$2BC4
@@ -7106,7 +7186,7 @@ start:
     and  a
     ret  nz
     ld   (hl),$01
-    ld   de,$8550
+    ld   de,cat2_bytes
     ld   hl,$2BCB
     ld   bc,$001D
     ldir
@@ -7737,6 +7817,9 @@ start:
     ld   a,(hl)
     cp   $01
     jp   nz,$3002
+
+ ;;; ============ start of suprmous.x4 (plus 1 byte!)  =============
+
     ld   (hl),$02
     ret
     cp   $FF
@@ -9767,9 +9850,9 @@ start:
     cp   $05
     jp   z,$3D5D
     ret
-    ld   a,($8406)
+    ld   a,(player_x)
     sub  $08
-    ld   ($8406),a
+    ld   (player_x),a
     jp   $3DF4
     inc  hl
     inc  hl
@@ -9800,9 +9883,9 @@ start:
     cp   $05
     jp   z,$3D5D
     ret
-    ld   a,($8406)
+    ld   a,(player_x)
     add  a,$08
-    ld   ($8406),a
+    ld   (player_x),a
     jp   $3DF4
     push de
     call $3E05
@@ -10092,6 +10175,9 @@ start:
     ld   e,b
     sub  e
     call nz,$CC90
+
+ ;;; ============ start of suprmous.x5 =============
+
     sub  b
     ret  nc
     sub  b
@@ -10208,7 +10294,7 @@ start:
     nop
     nop
     nop
-    ld   a,($80A0)
+    ld   a,(carrying_1)
     and  a
     jp   nz,$40A9
     ld   hl,$809C
@@ -10231,17 +10317,17 @@ start:
     ld   a,($80A8)
     ld   (hl),a
     ret
-    ld   a,($80A1)
+    ld   a,(carrying_2)
     and  a
     jp   nz,$4120
-    ld   de,$80A1
+    ld   de,carrying_2
     ld   hl,$4114
     ld   bc,$0009
     ldir
-    ld   a,($8406)
+    ld   a,(player_x)
     add  a,$00
     ld   ($80A5),a
-    ld   a,($8407)
+    ld   a,(player_y)
     add  a,$F0
     ld   ($80A8),a
     ld   a,($809F)
@@ -10296,7 +10382,7 @@ start:
     nop
     nop
     nop
-    ld   a,($80A2)
+    ld   a,(carrying_3)
     cp   $01
     jp   z,$4135
     cp   $02
@@ -10304,10 +10390,10 @@ start:
     cp   $03
     jp   z,$4167
     jp   $4084
-    ld   a,($8406)
+    ld   a,(player_x)
     add  a,$00
     ld   ($80A5),a
-    ld   a,($8407)
+    ld   a,(player_y)
     add  a,$F0
     ld   ($80A8),a
     jp   $4092
@@ -10317,7 +10403,7 @@ start:
     cp   $0A
     jp   c,$415C
     ld   a,$03
-    ld   ($80A2),a
+    ld   (carrying_3),a
     jp   $4092
     ld   a,($80A8)
     add  a,$02
@@ -10446,7 +10532,7 @@ start:
     ld   a,b
     and  $20
     jp   z,$442B
-    ld   a,($A000)
+    ld   a,(hw_in_0)
     and  $10
     jp   z,$4443
     ld   a,(is_playing)
@@ -11513,7 +11599,7 @@ start:
     inc  h
     inc  h
     push af
-    ld   a,($A800)
+    ld   a,(hw_in_1)
     and  $40
     jp   nz,$48FA
     pop  af
