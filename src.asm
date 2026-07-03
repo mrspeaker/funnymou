@@ -3416,15 +3416,15 @@ start:
     call draw_map
     ret
     ld   a,$83
-    ld   de,$16A1
+    ld   de,level_2_map
     call draw_map
     ret
     ld   a,$83
-    ld   de,$19B1
+    ld   de,level_3_map
     call draw_map
     ret
     ld   a,$83
-    ld   de,$1CC1
+    ld   de,level_4_map
     call draw_map
     ret
 
@@ -3518,2218 +3518,379 @@ start:
    db   $25, $25, $25, $f5, $f5, $f5, $f5, $f4
   db   $35, $35, $35, $35, $25, $25, $25, $f4
 
-  db   $35, $35
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$1496
-    dec  h
-    dec  h
-    dec  h
-    or   $25
-    scf
-    jr   c,$149E
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call m,$3725
-    jr   c,$14B2
-    dec  h
-    dec  h
-    dec  h
-    call m,$3725
-    jr   c,$14BA
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$14CE
-    dec  h
-    dec  h
-    dec  h
-    or   $25
-    scf
-    jr   c,$14D6
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    call p,$3636
-    ld   (hl),$36
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    ld   (hl),$25
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    ld   sp,hl
-    dec  h
-    dec  h
-    dec  h
-    ld   (hl),$25
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    ld   (hl),$25
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$3636
-    ld   (hl),$36
-    dec  h
-    dec  h
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    rst  $38
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$15E6
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call m,$3725
-    jr   c,$1602
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    rst  $38
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$161E
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
- ;;; Another map?
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    rst  $38
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$17AA
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call m,$3725
-    jr   c,$17C6
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$17E2
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$3636
-    ld   (hl),$36
-    dec  h
-    dec  h
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    ld   (hl),$25
-    dec  h
-    dec  h
-    rst  $38
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    ld   sp,hl
-    dec  h
-    dec  h
-    dec  h
-    ld   (hl),$25
-    dec  h
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    ld   (hl),$25
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$3636
-    ld   (hl),$36
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$18F6
-    dec  h
-    dec  h
-    dec  h
-    or   $25
-    scf
-    jr   c,$18FE
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call m,$3725
-    jr   c,$1912
-    dec  h
-    dec  h
-    dec  h
-    call m,$3725
-    jr   c,$191A
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$192E
-    dec  h
-    dec  h
-    dec  h
-    or   $25
-    scf
-    jr   c,$1936
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
+    db   $35, $35, $35, $35, $25, $25, $25, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $FC
+    db   $25, $37, $38, $35, $25, $25, $25, $FC
+    db   $25, $37, $38, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+    db   $35, $35, $35, $35, $25, $25, $25, $F4
+    db   $35, $35, $35, $35, $25, $25, $25, $F4
+    db   $36, $36, $36, $36, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $36
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F9
+    db   $25, $25, $25, $36, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $36
+    db   $25, $25, $25, $25, $25, $25, $25, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F4
+    db   $36, $36, $36, $36, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $FF, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+    db   $35, $35, $35, $35, $25, $25, $25, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $FC
+    db   $25, $37, $38, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $FF, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+    db   $35, $35, $35, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+ level_2_map:     ; next map at 19B1 (784 bytes per screen)
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $FF, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F4, $35, $35, $35, $35
+    db   $25, $25, $25, $25, $25, $25, $25, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F6
+    db   $25, $37, $38, $35, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $FC, $25, $37, $38, $35
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F6
+    db   $25, $37, $38, $35, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $F5
+    db   $F5, $F5, $F5, $F4, $35, $35, $35, $35
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+    db   $36, $36, $36, $36, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $36
+    db   $25, $25, $25, $FF, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F9
+    db   $25, $25, $25, $36, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $36
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F4
+    db   $36, $36, $36, $36, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+    db   $35, $35, $35, $35, $25, $25, $25, $F4
+    db   $35, $35, $35, $35, $25, $25, $25, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $FC
+    db   $25, $37, $38, $35, $25, $25, $25, $FC
+    db   $25, $37, $38, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+    db   $35, $35, $35, $35, $25, $25, $25, $F4
+    db   $35, $35, $35, $35, $25, $25, $25, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
 
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-
- ;;; another map?
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$1ABE
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call m,$3725
-    jr   c,$1ADA
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$1AF6
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    call p,$3636
-    ld   (hl),$36
-    dec  h
-    dec  h
-    dec  h
-    or   $25
-    scf
-    jr   c,$1B22
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    ld   (hl),$25
-    dec  h
-    dec  h
-    call m,$3725
-    jr   c,$1B3E
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    ld   sp,hl
-    dec  h
-    dec  h
-    dec  h
-    ld   (hl),$25
-    dec  h
-    dec  h
-    or   $25
-    scf
-    jr   c,$1B5A
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    ld   (hl),$25
-    dec  h
-    dec  h
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$3636
-    ld   (hl),$36
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    rst  $38
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$1C0A
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call m,$3725
-    jr   c,$1C26
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$1C42
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    rst  $38
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
- ;;; Another map?
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$3636
-    ld   (hl),$36
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    ld   (hl),$25
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    rst  $38
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    ld   sp,hl
-    dec  h
-    dec  h
-    dec  h
-    ld   (hl),$25
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    ld   (hl),$25
-    dec  h
-    dec  h
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$3636
-    ld   (hl),$36
-    dec  h
-    dec  h
-    dec  h
-    or   $25
-    scf
-    jr   c,$1EA2
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call m,$3725
-    jr   c,$1EBE
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    rst  $38
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    or   $25
-    scf
-    jr   c,$1EDA
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  iyh
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    or   $25
-    scf
-    jr   c,$1F1A
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$1F26
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call m,$3725
-    jr   c,$1F36
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call m,$3725
-    jr   c,$1F42
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    or   $25
-    scf
-    jr   c,$1F52
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    or   $25
-    scf
-    jr   c,$1F5E
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    call p,$2525
-    dec  h
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    push af
-    call p,$2525
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
-    dec  h
+ level_3_map:     ; next map at 1CC1 (784 bytes per screen)
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F4
+    db   $35, $35, $35, $35, $25, $25, $25, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $FC
+    db   $25, $37, $38, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $35, $35, $35, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $35, $35, $35, $35, $25, $25, $25, $F4
+    db   $36, $36, $36, $36, $25, $25, $25, $F6
+    db   $25, $37, $38, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $36
+    db   $25, $25, $25, $FC, $25, $37, $38, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F9
+    db   $25, $25, $25, $36, $25, $25, $25, $F6
+    db   $25, $37, $38, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $36
+    db   $25, $25, $25, $F4, $35, $35, $35, $35
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F4
+    db   $36, $36, $36, $36, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $FF, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F4, $35, $35, $35, $35
+    db   $25, $25, $25, $25, $25, $25, $25, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F6
+    db   $25, $37, $38, $35, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $FC, $25, $37, $38, $35
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F6
+    db   $25, $37, $38, $35, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F5
+    db   $F5, $F5, $F5, $F4, $35, $35, $35, $35
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $FF, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+ level_4_map:     ; end of level data at 1FD0 (784 bytes per screen)
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F4
+    db   $36, $36, $36, $36, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $36
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $FF, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F9
+    db   $25, $25, $25, $36, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $36
+    db   $25, $25, $25, $F4, $35, $35, $35, $35
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $36, $36, $36, $36, $25, $25, $25, $F6
+    db   $25, $37, $38, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $FC, $25, $37, $38, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $FF, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F6
+    db   $25, $37, $38, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $FD
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $35, $35, $35, $35
+    db   $25, $25, $25, $F4, $35, $35, $35, $35
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+    db   $35, $35, $35, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F6
+    db   $25, $37, $38, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $FC, $25, $37, $38, $35
+    db   $25, $25, $25, $F4, $25, $25, $25, $FC
+    db   $25, $37, $38, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F6
+    db   $25, $37, $38, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $F6, $25, $37, $38, $35
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F4, $35, $35, $35, $35
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+    db   $35, $35, $35, $35, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $F4
+    db   $25, $25, $25, $F4, $25, $25, $25, $25
+    db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+    db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F4
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
+    db   $25, $25, $25, $25, $25, $25, $25, $25
 
  main_game_loop:
     ld   a,(screen_state)

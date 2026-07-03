@@ -3416,15 +3416,15 @@ zeros               dc   55,0
 1327  CD4613  	    call draw_map
 132A  C9      	    ret
 132B  3E83    	    ld   a,$83
-132D  11A116  	    ld   de,$16A1
+132D  11A116  	    ld   de,level_2_map
 1330  CD4613  	    call draw_map
 1333  C9      	    ret
 1334  3E83    	    ld   a,$83
-1336  11B119  	    ld   de,$19B1
+1336  11B119  	    ld   de,level_3_map
 1339  CD4613  	    call draw_map
 133C  C9      	    ret
 133D  3E83    	    ld   a,$83
-133F  11C11C  	    ld   de,$1CC1
+133F  11C11C  	    ld   de,level_4_map
 1342  CD4613  	    call draw_map
 1345  C9      	    ret
 
@@ -3518,2218 +3518,379 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 1434         	    db   $25, $25, $25, $f5, $f5, $f5, $f5, $f4
 143C        	    db   $35, $35, $35, $35, $25, $25, $25, $f4
 
-1448  3535  	    db   $35, $35
-144B  35      	    dec  (hl)
-144C  35      	    dec  (hl)
-144D  25      	    dec  h
-144E  25      	    dec  h
-144F  25      	    dec  h
-1450  F5      	    push af
-1451  F5      	    push af
-1452  F5      	    push af
-1453  F5      	    push af
-1454  F42525  	    call p,$2525
-1457  25      	    dec  h
-1458  F42525  	    call p,$2525
-145B  25      	    dec  h
-145C  F625    	    or   $25
-145E  37      	    scf
-145F  3835    	    jr   c,$1496
-1461  25      	    dec  h
-1462  25      	    dec  h
-1463  25      	    dec  h
-1464  F625    	    or   $25
-1466  37      	    scf
-1467  3835    	    jr   c,$149E
-1469  25      	    dec  h
-146A  25      	    dec  h
-146B  25      	    dec  h
-146C  F42525  	    call p,$2525
-146F  25      	    dec  h
-1470  25      	    dec  h
-1471  25      	    dec  h
-1472  25      	    dec  h
-1473  25      	    dec  h
-1474  F42525  	    call p,$2525
-1477  25      	    dec  h
-1478  FC2537  	    call m,$3725
-147B  3835    	    jr   c,$14B2
-147D  25      	    dec  h
-147E  25      	    dec  h
-147F  25      	    dec  h
-1480  FC2537  	    call m,$3725
-1483  3835    	    jr   c,$14BA
-1485  25      	    dec  h
-1486  25      	    dec  h
-1487  25      	    dec  h
-1488  F42525  	    call p,$2525
-148B  25      	    dec  h
-148C  25      	    dec  h
-148D  25      	    dec  h
-148E  25      	    dec  h
-148F  25      	    dec  h
-1490  F42525  	    call p,$2525
-1493  25      	    dec  h
-1494  F625    	    or   $25
-1496  37      	    scf
-1497  3835    	    jr   c,$14CE
-1499  25      	    dec  h
-149A  25      	    dec  h
-149B  25      	    dec  h
-149C  F625    	    or   $25
-149E  37      	    scf
-149F  3835    	    jr   c,$14D6
-14A1  25      	    dec  h
-14A2  25      	    dec  h
-14A3  25      	    dec  h
-14A4  F42525  	    call p,$2525
-14A7  25      	    dec  h
-14A8  25      	    dec  h
-14A9  25      	    dec  h
-14AA  25      	    dec  h
-14AB  25      	    dec  h
-14AC  F5      	    push af
-14AD  F5      	    push af
-14AE  F5      	    push af
-14AF  F5      	    push af
-14B0  F43535  	    call p,$3535
-14B3  35      	    dec  (hl)
-14B4  35      	    dec  (hl)
-14B5  25      	    dec  h
-14B6  25      	    dec  h
-14B7  25      	    dec  h
-14B8  F43535  	    call p,$3535
-14BB  35      	    dec  (hl)
-14BC  35      	    dec  (hl)
-14BD  25      	    dec  h
-14BE  25      	    dec  h
-14BF  25      	    dec  h
-14C0  F43636  	    call p,$3636
-14C3  3636    	    ld   (hl),$36
-14C5  25      	    dec  h
-14C6  25      	    dec  h
-14C7  25      	    dec  h
-14C8  25      	    dec  h
-14C9  25      	    dec  h
-14CA  25      	    dec  h
-14CB  25      	    dec  h
-14CC  F42525  	    call p,$2525
-14CF  25      	    dec  h
-14D0  25      	    dec  h
-14D1  25      	    dec  h
-14D2  25      	    dec  h
-14D3  25      	    dec  h
-14D4  F42525  	    call p,$2525
-14D7  25      	    dec  h
-14D8  25      	    dec  h
-14D9  25      	    dec  h
-14DA  25      	    dec  h
-14DB  25      	    dec  h
-14DC  F42525  	    call p,$2525
-14DF  25      	    dec  h
-14E0  3625    	    ld   (hl),$25
-14E2  25      	    dec  h
-14E3  25      	    dec  h
-14E4  25      	    dec  h
-14E5  25      	    dec  h
-14E6  25      	    dec  h
-14E7  25      	    dec  h
-14E8  F42525  	    call p,$2525
-14EB  25      	    dec  h
-14EC  25      	    dec  h
-14ED  25      	    dec  h
-14EE  25      	    dec  h
-14EF  25      	    dec  h
-14F0  F42525  	    call p,$2525
-14F3  25      	    dec  h
-14F4  25      	    dec  h
-14F5  25      	    dec  h
-14F6  25      	    dec  h
-14F7  25      	    dec  h
-14F8  F9      	    ld   sp,hl
-14F9  25      	    dec  h
-14FA  25      	    dec  h
-14FB  25      	    dec  h
-14FC  3625    	    ld   (hl),$25
-14FE  25      	    dec  h
-14FF  25      	    dec  h
-1500  25      	    dec  h
-1501  25      	    dec  h
-1502  25      	    dec  h
-1503  25      	    dec  h
-1504  F42525  	    call p,$2525
-1507  25      	    dec  h
-1508  25      	    dec  h
-1509  25      	    dec  h
-150A  25      	    dec  h
-150B  25      	    dec  h
-150C  F42525  	    call p,$2525
-150F  25      	    dec  h
-1510  25      	    dec  h
-1511  25      	    dec  h
-1512  25      	    dec  h
-1513  25      	    dec  h
-1514  F42525  	    call p,$2525
-1517  25      	    dec  h
-1518  3625    	    ld   (hl),$25
-151A  25      	    dec  h
-151B  25      	    dec  h
-151C  25      	    dec  h
-151D  25      	    dec  h
-151E  25      	    dec  h
-151F  25      	    dec  h
-1520  F5      	    push af
-1521  F5      	    push af
-1522  F5      	    push af
-1523  F5      	    push af
-1524  F5      	    push af
-1525  F5      	    push af
-1526  F5      	    push af
-1527  F5      	    push af
-1528  F5      	    push af
-1529  F5      	    push af
-152A  F5      	    push af
-152B  F5      	    push af
-152C  F5      	    push af
-152D  F5      	    push af
-152E  F5      	    push af
-152F  F5      	    push af
-1530  F43636  	    call p,$3636
-1533  3636    	    ld   (hl),$36
-1535  25      	    dec  h
-1536  25      	    dec  h
-1537  25      	    dec  h
-1538  FD25    	    dec  iyh
-153A  25      	    dec  h
-153B  25      	    dec  h
-153C  F42525  	    call p,$2525
-153F  25      	    dec  h
-1540  25      	    dec  h
-1541  25      	    dec  h
-1542  25      	    dec  h
-1543  25      	    dec  h
-1544  F42525  	    call p,$2525
-1547  25      	    dec  h
-1548  F42525  	    call p,$2525
-154B  25      	    dec  h
-154C  F42525  	    call p,$2525
-154F  25      	    dec  h
-1550  25      	    dec  h
-1551  25      	    dec  h
-1552  25      	    dec  h
-1553  25      	    dec  h
-1554  FF      	    rst  $38
-1555  25      	    dec  h
-1556  25      	    dec  h
-1557  25      	    dec  h
-1558  F42525  	    call p,$2525
-155B  25      	    dec  h
-155C  25      	    dec  h
-155D  25      	    dec  h
-155E  25      	    dec  h
-155F  25      	    dec  h
-1560  F42525  	    call p,$2525
-1563  25      	    dec  h
-1564  F42525  	    call p,$2525
-1567  25      	    dec  h
-1568  F42525  	    call p,$2525
-156B  25      	    dec  h
-156C  25      	    dec  h
-156D  25      	    dec  h
-156E  25      	    dec  h
-156F  25      	    dec  h
-1570  FD25    	    dec  iyh
-1572  25      	    dec  h
-1573  25      	    dec  h
-1574  F42525  	    call p,$2525
-1577  25      	    dec  h
-1578  25      	    dec  h
-1579  25      	    dec  h
-157A  25      	    dec  h
-157B  25      	    dec  h
-157C  F42525  	    call p,$2525
-157F  25      	    dec  h
-1580  F42525  	    call p,$2525
-1583  25      	    dec  h
-1584  F42525  	    call p,$2525
-1587  25      	    dec  h
-1588  25      	    dec  h
-1589  25      	    dec  h
-158A  25      	    dec  h
-158B  25      	    dec  h
-158C  F5      	    push af
-158D  F5      	    push af
-158E  F5      	    push af
-158F  F5      	    push af
-1590  F43535  	    call p,$3535
-1593  35      	    dec  (hl)
-1594  35      	    dec  (hl)
-1595  25      	    dec  h
-1596  25      	    dec  h
-1597  25      	    dec  h
-1598  F5      	    push af
-1599  F5      	    push af
-159A  F5      	    push af
-159B  F5      	    push af
-159C  F5      	    push af
-159D  F5      	    push af
-159E  F5      	    push af
-159F  F5      	    push af
-15A0  F5      	    push af
-15A1  F5      	    push af
-15A2  F5      	    push af
-15A3  F5      	    push af
-15A4  F42525  	    call p,$2525
-15A7  25      	    dec  h
-15A8  F42525  	    call p,$2525
-15AB  25      	    dec  h
-15AC  F625    	    or   $25
-15AE  37      	    scf
-15AF  3835    	    jr   c,$15E6
-15B1  25      	    dec  h
-15B2  25      	    dec  h
-15B3  25      	    dec  h
-15B4  F42525  	    call p,$2525
-15B7  25      	    dec  h
-15B8  FD25    	    dec  iyh
-15BA  25      	    dec  h
-15BB  25      	    dec  h
-15BC  F42525  	    call p,$2525
-15BF  25      	    dec  h
-15C0  F42525  	    call p,$2525
-15C3  25      	    dec  h
-15C4  F42525  	    call p,$2525
-15C7  25      	    dec  h
-15C8  FC2537  	    call m,$3725
-15CB  3835    	    jr   c,$1602
-15CD  25      	    dec  h
-15CE  25      	    dec  h
-15CF  25      	    dec  h
-15D0  F42525  	    call p,$2525
-15D3  25      	    dec  h
-15D4  FF      	    rst  $38
-15D5  25      	    dec  h
-15D6  25      	    dec  h
-15D7  25      	    dec  h
-15D8  F42525  	    call p,$2525
-15DB  25      	    dec  h
-15DC  F42525  	    call p,$2525
-15DF  25      	    dec  h
-15E0  F42525  	    call p,$2525
-15E3  25      	    dec  h
-15E4  F625    	    or   $25
-15E6  37      	    scf
-15E7  3835    	    jr   c,$161E
-15E9  25      	    dec  h
-15EA  25      	    dec  h
-15EB  25      	    dec  h
-15EC  F42525  	    call p,$2525
-15EF  25      	    dec  h
-15F0  FD25    	    dec  iyh
-15F2  25      	    dec  h
-15F3  25      	    dec  h
-15F4  F42525  	    call p,$2525
-15F7  25      	    dec  h
-15F8  F42525  	    call p,$2525
-15FB  25      	    dec  h
-15FC  F5      	    push af
-15FD  F5      	    push af
-15FE  F5      	    push af
-15FF  F5      	    push af
-1600  F43535  	    call p,$3535
-1603  35      	    dec  (hl)
-1604  35      	    dec  (hl)
-1605  25      	    dec  h
-1606  25      	    dec  h
-1607  25      	    dec  h
-1608  F42525  	    call p,$2525
-160B  25      	    dec  h
-160C  25      	    dec  h
-160D  25      	    dec  h
-160E  25      	    dec  h
-160F  25      	    dec  h
-1610  F5      	    push af
-1611  F5      	    push af
-1612  F5      	    push af
-1613  F5      	    push af
-1614  F42525  	    call p,$2525
-1617  25      	    dec  h
-1618  F42525  	    call p,$2525
-161B  25      	    dec  h
-161C  F42525  	    call p,$2525
-161F  25      	    dec  h
-1620  25      	    dec  h
-1621  25      	    dec  h
-1622  25      	    dec  h
-1623  25      	    dec  h
-1624  F42525  	    call p,$2525
-1627  25      	    dec  h
-1628  25      	    dec  h
-1629  25      	    dec  h
-162A  25      	    dec  h
-162B  25      	    dec  h
-162C  F42525  	    call p,$2525
-162F  25      	    dec  h
-1630  F42525  	    call p,$2525
-1633  25      	    dec  h
-1634  F42525  	    call p,$2525
-1637  25      	    dec  h
-1638  F42525  	    call p,$2525
-163B  25      	    dec  h
-163C  25      	    dec  h
-163D  25      	    dec  h
-163E  25      	    dec  h
-163F  25      	    dec  h
-1640  F42525  	    call p,$2525
-1643  25      	    dec  h
-1644  25      	    dec  h
-1645  25      	    dec  h
-1646  25      	    dec  h
-1647  25      	    dec  h
-1648  F42525  	    call p,$2525
-164B  25      	    dec  h
-164C  F42525  	    call p,$2525
-164F  25      	    dec  h
-1650  F42525  	    call p,$2525
-1653  25      	    dec  h
-1654  F42525  	    call p,$2525
-1657  25      	    dec  h
-1658  25      	    dec  h
-1659  25      	    dec  h
-165A  25      	    dec  h
-165B  25      	    dec  h
-165C  F42525  	    call p,$2525
-165F  25      	    dec  h
-1660  25      	    dec  h
-1661  25      	    dec  h
-1662  25      	    dec  h
-1663  25      	    dec  h
-1664  F42525  	    call p,$2525
-1667  25      	    dec  h
-1668  F42525  	    call p,$2525
-166B  25      	    dec  h
-166C  F5      	    push af
-166D  F5      	    push af
-166E  F5      	    push af
-166F  F5      	    push af
-1670  F5      	    push af
-1671  F5      	    push af
-1672  F5      	    push af
-1673  F5      	    push af
-1674  F5      	    push af
-1675  F5      	    push af
-1676  F5      	    push af
-1677  F5      	    push af
-1678  F5      	    push af
-1679  F5      	    push af
-167A  F5      	    push af
-167B  F5      	    push af
-167C  F5      	    push af
-167D  F5      	    push af
-167E  F5      	    push af
-167F  F5      	    push af
-1680  F5      	    push af
-1681  F5      	    push af
-1682  F5      	    push af
-1683  F5      	    push af
-1684  F42525  	    call p,$2525
-1687  25      	    dec  h
-1688  25      	    dec  h
-1689  25      	    dec  h
-168A  25      	    dec  h
-168B  25      	    dec  h
-168C  25      	    dec  h
-168D  25      	    dec  h
-168E  25      	    dec  h
-168F  25      	    dec  h
-1690  25      	    dec  h
-1691  25      	    dec  h
-1692  25      	    dec  h
-1693  25      	    dec  h
-1694  25      	    dec  h
-1695  25      	    dec  h
-1696  25      	    dec  h
-1697  25      	    dec  h
-1698  25      	    dec  h
-1699  25      	    dec  h
-169A  25      	    dec  h
-169B  25      	    dec  h
-169C  25      	    dec  h
-169D  25      	    dec  h
-169E  25      	    dec  h
-169F  25      	    dec  h
-16A0  25      	    dec  h
-                ;;; Another map?
-16A1  25      	    dec  h
-16A2  25      	    dec  h
-16A3  25      	    dec  h
-16A4  25      	    dec  h
-16A5  25      	    dec  h
-16A6  25      	    dec  h
-16A7  25      	    dec  h
-16A8  25      	    dec  h
-16A9  25      	    dec  h
-16AA  25      	    dec  h
-16AB  25      	    dec  h
-16AC  25      	    dec  h
-16AD  25      	    dec  h
-16AE  25      	    dec  h
-16AF  25      	    dec  h
-16B0  25      	    dec  h
-16B1  25      	    dec  h
-16B2  25      	    dec  h
-16B3  25      	    dec  h
-16B4  25      	    dec  h
-16B5  25      	    dec  h
-16B6  25      	    dec  h
-16B7  25      	    dec  h
-16B8  25      	    dec  h
-16B9  25      	    dec  h
-16BA  25      	    dec  h
-16BB  25      	    dec  h
-16BC  25      	    dec  h
-16BD  25      	    dec  h
-16BE  25      	    dec  h
-16BF  25      	    dec  h
-16C0  25      	    dec  h
-16C1  25      	    dec  h
-16C2  25      	    dec  h
-16C3  25      	    dec  h
-16C4  25      	    dec  h
-16C5  25      	    dec  h
-16C6  25      	    dec  h
-16C7  25      	    dec  h
-16C8  25      	    dec  h
-16C9  25      	    dec  h
-16CA  25      	    dec  h
-16CB  25      	    dec  h
-16CC  25      	    dec  h
-16CD  25      	    dec  h
-16CE  25      	    dec  h
-16CF  25      	    dec  h
-16D0  25      	    dec  h
-16D1  25      	    dec  h
-16D2  25      	    dec  h
-16D3  25      	    dec  h
-16D4  25      	    dec  h
-16D5  25      	    dec  h
-16D6  25      	    dec  h
-16D7  25      	    dec  h
-16D8  25      	    dec  h
-16D9  25      	    dec  h
-16DA  25      	    dec  h
-16DB  25      	    dec  h
-16DC  F5      	    push af
-16DD  F5      	    push af
-16DE  F5      	    push af
-16DF  F5      	    push af
-16E0  F42525  	    call p,$2525
-16E3  25      	    dec  h
-16E4  F5      	    push af
-16E5  F5      	    push af
-16E6  F5      	    push af
-16E7  F5      	    push af
-16E8  F5      	    push af
-16E9  F5      	    push af
-16EA  F5      	    push af
-16EB  F5      	    push af
-16EC  F5      	    push af
-16ED  F5      	    push af
-16EE  F5      	    push af
-16EF  F5      	    push af
-16F0  F5      	    push af
-16F1  F5      	    push af
-16F2  F5      	    push af
-16F3  F5      	    push af
-16F4  F42525  	    call p,$2525
-16F7  25      	    dec  h
-16F8  F42525  	    call p,$2525
-16FB  25      	    dec  h
-16FC  F42525  	    call p,$2525
-16FF  25      	    dec  h
-1700  F42525  	    call p,$2525
-1703  25      	    dec  h
-1704  25      	    dec  h
-1705  25      	    dec  h
-1706  25      	    dec  h
-1707  25      	    dec  h
-1708  FD25    	    dec  iyh
-170A  25      	    dec  h
-170B  25      	    dec  h
-170C  F42525  	    call p,$2525
-170F  25      	    dec  h
-1710  F42525  	    call p,$2525
-1713  25      	    dec  h
-1714  F42525  	    call p,$2525
-1717  25      	    dec  h
-1718  F42525  	    call p,$2525
-171B  25      	    dec  h
-171C  F42525  	    call p,$2525
-171F  25      	    dec  h
-1720  25      	    dec  h
-1721  25      	    dec  h
-1722  25      	    dec  h
-1723  25      	    dec  h
-1724  FF      	    rst  $38
-1725  25      	    dec  h
-1726  25      	    dec  h
-1727  25      	    dec  h
-1728  F42525  	    call p,$2525
-172B  25      	    dec  h
-172C  F42525  	    call p,$2525
-172F  25      	    dec  h
-1730  F42525  	    call p,$2525
-1733  25      	    dec  h
-1734  F42525  	    call p,$2525
-1737  25      	    dec  h
-1738  F42525  	    call p,$2525
-173B  25      	    dec  h
-173C  25      	    dec  h
-173D  25      	    dec  h
-173E  25      	    dec  h
-173F  25      	    dec  h
-1740  FD25    	    dec  iyh
-1742  25      	    dec  h
-1743  25      	    dec  h
-1744  F42525  	    call p,$2525
-1747  25      	    dec  h
-1748  F42525  	    call p,$2525
-174B  25      	    dec  h
-174C  F5      	    push af
-174D  F5      	    push af
-174E  F5      	    push af
-174F  F5      	    push af
-1750  F5      	    push af
-1751  F5      	    push af
-1752  F5      	    push af
-1753  F5      	    push af
-1754  F43535  	    call p,$3535
-1757  35      	    dec  (hl)
-1758  35      	    dec  (hl)
-1759  25      	    dec  h
-175A  25      	    dec  h
-175B  25      	    dec  h
-175C  25      	    dec  h
-175D  25      	    dec  h
-175E  25      	    dec  h
-175F  25      	    dec  h
-1760  F5      	    push af
-1761  F5      	    push af
-1762  F5      	    push af
-1763  F5      	    push af
-1764  F42525  	    call p,$2525
-1767  25      	    dec  h
-1768  25      	    dec  h
-1769  25      	    dec  h
-176A  25      	    dec  h
-176B  25      	    dec  h
-176C  F42525  	    call p,$2525
-176F  25      	    dec  h
-1770  F625    	    or   $25
-1772  37      	    scf
-1773  3835    	    jr   c,$17AA
-1775  25      	    dec  h
-1776  25      	    dec  h
-1777  25      	    dec  h
-1778  25      	    dec  h
-1779  25      	    dec  h
-177A  25      	    dec  h
-177B  25      	    dec  h
-177C  F42525  	    call p,$2525
-177F  25      	    dec  h
-1780  25      	    dec  h
-1781  25      	    dec  h
-1782  25      	    dec  h
-1783  25      	    dec  h
-1784  25      	    dec  h
-1785  25      	    dec  h
-1786  25      	    dec  h
-1787  25      	    dec  h
-1788  F42525  	    call p,$2525
-178B  25      	    dec  h
-178C  FC2537  	    call m,$3725
-178F  3835    	    jr   c,$17C6
-1791  25      	    dec  h
-1792  25      	    dec  h
-1793  25      	    dec  h
-1794  25      	    dec  h
-1795  25      	    dec  h
-1796  25      	    dec  h
-1797  25      	    dec  h
-1798  F42525  	    call p,$2525
-179B  25      	    dec  h
-179C  25      	    dec  h
-179D  25      	    dec  h
-179E  25      	    dec  h
-179F  25      	    dec  h
-17A0  25      	    dec  h
-17A1  25      	    dec  h
-17A2  25      	    dec  h
-17A3  25      	    dec  h
-17A4  F42525  	    call p,$2525
-17A7  25      	    dec  h
-17A8  F625    	    or   $25
-17AA  37      	    scf
-17AB  3835    	    jr   c,$17E2
-17AD  25      	    dec  h
-17AE  25      	    dec  h
-17AF  25      	    dec  h
-17B0  25      	    dec  h
-17B1  25      	    dec  h
-17B2  25      	    dec  h
-17B3  25      	    dec  h
-17B4  F42525  	    call p,$2525
-17B7  25      	    dec  h
-17B8  25      	    dec  h
-17B9  25      	    dec  h
-17BA  25      	    dec  h
-17BB  25      	    dec  h
-17BC  25      	    dec  h
-17BD  25      	    dec  h
-17BE  25      	    dec  h
-17BF  25      	    dec  h
-17C0  F5      	    push af
-17C1  F5      	    push af
-17C2  F5      	    push af
-17C3  F5      	    push af
-17C4  F43535  	    call p,$3535
-17C7  35      	    dec  (hl)
-17C8  35      	    dec  (hl)
-17C9  25      	    dec  h
-17CA  25      	    dec  h
-17CB  25      	    dec  h
-17CC  F5      	    push af
-17CD  F5      	    push af
-17CE  F5      	    push af
-17CF  F5      	    push af
-17D0  F43636  	    call p,$3636
-17D3  3636    	    ld   (hl),$36
-17D5  25      	    dec  h
-17D6  25      	    dec  h
-17D7  25      	    dec  h
-17D8  FD25    	    dec  iyh
-17DA  25      	    dec  h
-17DB  25      	    dec  h
-17DC  F42525  	    call p,$2525
-17DF  25      	    dec  h
-17E0  F42525  	    call p,$2525
-17E3  25      	    dec  h
-17E4  25      	    dec  h
-17E5  25      	    dec  h
-17E6  25      	    dec  h
-17E7  25      	    dec  h
-17E8  F42525  	    call p,$2525
-17EB  25      	    dec  h
-17EC  F42525  	    call p,$2525
-17EF  25      	    dec  h
-17F0  3625    	    ld   (hl),$25
-17F2  25      	    dec  h
-17F3  25      	    dec  h
-17F4  FF      	    rst  $38
-17F5  25      	    dec  h
-17F6  25      	    dec  h
-17F7  25      	    dec  h
-17F8  F42525  	    call p,$2525
-17FB  25      	    dec  h
-17FC  F42525  	    call p,$2525
-17FF  25      	    dec  h
-1800  25      	    dec  h
-1801  25      	    dec  h
-1802  25      	    dec  h
-1803  25      	    dec  h
-1804  F42525  	    call p,$2525
-1807  25      	    dec  h
-1808  F9      	    ld   sp,hl
-1809  25      	    dec  h
-180A  25      	    dec  h
-180B  25      	    dec  h
-180C  3625    	    ld   (hl),$25
-180E  25      	    dec  h
-180F  25      	    dec  h
-1810  FD25    	    dec  iyh
-1812  25      	    dec  h
-1813  25      	    dec  h
-1814  F42525  	    call p,$2525
-1817  25      	    dec  h
-1818  F42525  	    call p,$2525
-181B  25      	    dec  h
-181C  25      	    dec  h
-181D  25      	    dec  h
-181E  25      	    dec  h
-181F  25      	    dec  h
-1820  F42525  	    call p,$2525
-1823  25      	    dec  h
-1824  F42525  	    call p,$2525
-1827  25      	    dec  h
-1828  3625    	    ld   (hl),$25
-182A  25      	    dec  h
-182B  25      	    dec  h
-182C  F5      	    push af
-182D  F5      	    push af
-182E  F5      	    push af
-182F  F5      	    push af
-1830  F5      	    push af
-1831  F5      	    push af
-1832  F5      	    push af
-1833  F5      	    push af
-1834  F5      	    push af
-1835  F5      	    push af
-1836  F5      	    push af
-1837  F5      	    push af
-1838  F5      	    push af
-1839  F5      	    push af
-183A  F5      	    push af
-183B  F5      	    push af
-183C  F5      	    push af
-183D  F5      	    push af
-183E  F5      	    push af
-183F  F5      	    push af
-1840  F43636  	    call p,$3636
-1843  3636    	    ld   (hl),$36
-1845  25      	    dec  h
-1846  25      	    dec  h
-1847  25      	    dec  h
-1848  F42525  	    call p,$2525
-184B  25      	    dec  h
-184C  F42525  	    call p,$2525
-184F  25      	    dec  h
-1850  25      	    dec  h
-1851  25      	    dec  h
-1852  25      	    dec  h
-1853  25      	    dec  h
-1854  F42525  	    call p,$2525
-1857  25      	    dec  h
-1858  25      	    dec  h
-1859  25      	    dec  h
-185A  25      	    dec  h
-185B  25      	    dec  h
-185C  F42525  	    call p,$2525
-185F  25      	    dec  h
-1860  25      	    dec  h
-1861  25      	    dec  h
-1862  25      	    dec  h
-1863  25      	    dec  h
-1864  F42525  	    call p,$2525
-1867  25      	    dec  h
-1868  F42525  	    call p,$2525
-186B  25      	    dec  h
-186C  25      	    dec  h
-186D  25      	    dec  h
-186E  25      	    dec  h
-186F  25      	    dec  h
-1870  F42525  	    call p,$2525
-1873  25      	    dec  h
-1874  25      	    dec  h
-1875  25      	    dec  h
-1876  25      	    dec  h
-1877  25      	    dec  h
-1878  F42525  	    call p,$2525
-187B  25      	    dec  h
-187C  25      	    dec  h
-187D  25      	    dec  h
-187E  25      	    dec  h
-187F  25      	    dec  h
-1880  F42525  	    call p,$2525
-1883  25      	    dec  h
-1884  F42525  	    call p,$2525
-1887  25      	    dec  h
-1888  25      	    dec  h
-1889  25      	    dec  h
-188A  25      	    dec  h
-188B  25      	    dec  h
-188C  F42525  	    call p,$2525
-188F  25      	    dec  h
-1890  25      	    dec  h
-1891  25      	    dec  h
-1892  25      	    dec  h
-1893  25      	    dec  h
-1894  F42525  	    call p,$2525
-1897  25      	    dec  h
-1898  25      	    dec  h
-1899  25      	    dec  h
-189A  25      	    dec  h
-189B  25      	    dec  h
-189C  F5      	    push af
-189D  F5      	    push af
-189E  F5      	    push af
-189F  F5      	    push af
-18A0  F43535  	    call p,$3535
-18A3  35      	    dec  (hl)
-18A4  35      	    dec  (hl)
-18A5  25      	    dec  h
-18A6  25      	    dec  h
-18A7  25      	    dec  h
-18A8  F43535  	    call p,$3535
-18AB  35      	    dec  (hl)
-18AC  35      	    dec  (hl)
-18AD  25      	    dec  h
-18AE  25      	    dec  h
-18AF  25      	    dec  h
-18B0  F5      	    push af
-18B1  F5      	    push af
-18B2  F5      	    push af
-18B3  F5      	    push af
-18B4  F42525  	    call p,$2525
-18B7  25      	    dec  h
-18B8  F42525  	    call p,$2525
-18BB  25      	    dec  h
-18BC  F625    	    or   $25
-18BE  37      	    scf
-18BF  3835    	    jr   c,$18F6
-18C1  25      	    dec  h
-18C2  25      	    dec  h
-18C3  25      	    dec  h
-18C4  F625    	    or   $25
-18C6  37      	    scf
-18C7  3835    	    jr   c,$18FE
-18C9  25      	    dec  h
-18CA  25      	    dec  h
-18CB  25      	    dec  h
-18CC  F42525  	    call p,$2525
-18CF  25      	    dec  h
-18D0  F42525  	    call p,$2525
-18D3  25      	    dec  h
-18D4  F42525  	    call p,$2525
-18D7  25      	    dec  h
-18D8  FC2537  	    call m,$3725
-18DB  3835    	    jr   c,$1912
-18DD  25      	    dec  h
-18DE  25      	    dec  h
-18DF  25      	    dec  h
-18E0  FC2537  	    call m,$3725
-18E3  3835    	    jr   c,$191A
-18E5  25      	    dec  h
-18E6  25      	    dec  h
-18E7  25      	    dec  h
-18E8  F42525  	    call p,$2525
-18EB  25      	    dec  h
-18EC  F42525  	    call p,$2525
-18EF  25      	    dec  h
-18F0  F42525  	    call p,$2525
-18F3  25      	    dec  h
-18F4  F625    	    or   $25
-18F6  37      	    scf
-18F7  3835    	    jr   c,$192E
-18F9  25      	    dec  h
-18FA  25      	    dec  h
-18FB  25      	    dec  h
-18FC  F625    	    or   $25
-18FE  37      	    scf
-18FF  3835    	    jr   c,$1936
-1901  25      	    dec  h
-1902  25      	    dec  h
-1903  25      	    dec  h
-1904  F42525  	    call p,$2525
-1907  25      	    dec  h
-1908  F42525  	    call p,$2525
-190B  25      	    dec  h
-190C  F5      	    push af
-190D  F5      	    push af
-190E  F5      	    push af
-190F  F5      	    push af
-1910  F43535  	    call p,$3535
-1913  35      	    dec  (hl)
-1914  35      	    dec  (hl)
-1915  25      	    dec  h
-1916  25      	    dec  h
-1917  25      	    dec  h
-1918  F43535  	    call p,$3535
-191B  35      	    dec  (hl)
-191C  35      	    dec  (hl)
-191D  25      	    dec  h
-191E  25      	    dec  h
-191F  25      	    dec  h
-1920  F5      	    push af
-1921  F5      	    push af
-1922  F5      	    push af
-1923  F5      	    push af
-1924  F42525  	    call p,$2525
-1927  25      	    dec  h
-1928  F42525  	    call p,$2525
-192B  25      	    dec  h
-192C  F42525  	    call p,$2525
-192F  25      	    dec  h
-1930  25      	    dec  h
-1931  25      	    dec  h
-1932  25      	    dec  h
-1933  25      	    dec  h
-1934  F42525  	    call p,$2525
-1937  25      	    dec  h
-1938  25      	    dec  h
-1939  25      	    dec  h
-193A  25      	    dec  h
-193B  25      	    dec  h
-193C  F42525  	    call p,$2525
-193F  25      	    dec  h
-1940  F42525  	    call p,$2525
-1943  25      	    dec  h
-1944  F42525  	    call p,$2525
-1947  25      	    dec  h
-1948  F42525  	    call p,$2525
-194B  25      	    dec  h
-194C  25      	    dec  h
-194D  25      	    dec  h
-194E  25      	    dec  h
-194F  25      	    dec  h
-1950  F42525  	    call p,$2525
-1953  25      	    dec  h
-1954  25      	    dec  h
-1955  25      	    dec  h
-1956  25      	    dec  h
-1957  25      	    dec  h
-1958  F42525  	    call p,$2525
-195B  25      	    dec  h
-195C  F42525  	    call p,$2525
-195F  25      	    dec  h
-1960  F42525  	    call p,$2525
-1963  25      	    dec  h
-1964  F42525  	    call p,$2525
-1967  25      	    dec  h
-1968  25      	    dec  h
-1969  25      	    dec  h
-196A  25      	    dec  h
-196B  25      	    dec  h
-196C  F42525  	    call p,$2525
-196F  25      	    dec  h
-1970  25      	    dec  h
-1971  25      	    dec  h
-1972  25      	    dec  h
-1973  25      	    dec  h
-1974  F42525  	    call p,$2525
-1977  25      	    dec  h
-1978  F42525  	    call p,$2525
-197B  25      	    dec  h
-197C  F5      	    push af
-197D  F5      	    push af
-197E  F5      	    push af
-197F  F5      	    push af
-1980  F5      	    push af
-1981  F5      	    push af
-1982  F5      	    push af
-1983  F5      	    push af
-1984  F5      	    push af
-1985  F5      	    push af
-1986  F5      	    push af
-1987  F5      	    push af
-1988  F5      	    push af
-1989  F5      	    push af
-198A  F5      	    push af
-198B  F5      	    push af
-198C  F5      	    push af
-198D  F5      	    push af
-198E  F5      	    push af
-198F  F5      	    push af
-1990  F5      	    push af
-1991  F5      	    push af
-1992  F5      	    push af
-1993  F5      	    push af
-1994  F42525  	    call p,$2525
-1997  25      	    dec  h
-1998  25      	    dec  h
-1999  25      	    dec  h
-199A  25      	    dec  h
-199B  25      	    dec  h
-199C  25      	    dec  h
-199D  25      	    dec  h
-199E  25      	    dec  h
-199F  25      	    dec  h
-19A0  25      	    dec  h
-19A1  25      	    dec  h
-19A2  25      	    dec  h
-19A3  25      	    dec  h
-19A4  25      	    dec  h
-19A5  25      	    dec  h
-19A6  25      	    dec  h
-19A7  25      	    dec  h
-19A8  25      	    dec  h
+1449               db   $35, $35, $35, $35, $25, $25, $25, $F5
+1451               db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+1459               db   $25, $25, $25, $F6, $25, $37, $38, $35
+1461               db   $25, $25, $25, $F6, $25, $37, $38, $35
+1469               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1471               db   $25, $25, $25, $F4, $25, $25, $25, $FC
+1479               db   $25, $37, $38, $35, $25, $25, $25, $FC
+1481               db   $25, $37, $38, $35, $25, $25, $25, $F4
+1489               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1491               db   $25, $25, $25, $F6, $25, $37, $38, $35
+1499               db   $25, $25, $25, $F6, $25, $37, $38, $35
+14A1               db   $25, $25, $25, $F4, $25, $25, $25, $25
+14A9               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+14B1               db   $35, $35, $35, $35, $25, $25, $25, $F4
+14B9               db   $35, $35, $35, $35, $25, $25, $25, $F4
+14C1               db   $36, $36, $36, $36, $25, $25, $25, $25
+14C9               db   $25, $25, $25, $F4, $25, $25, $25, $25
+14D1               db   $25, $25, $25, $F4, $25, $25, $25, $25
+14D9               db   $25, $25, $25, $F4, $25, $25, $25, $36
+14E1               db   $25, $25, $25, $25, $25, $25, $25, $F4
+14E9               db   $25, $25, $25, $25, $25, $25, $25, $F4
+14F1               db   $25, $25, $25, $25, $25, $25, $25, $F9
+14F9               db   $25, $25, $25, $36, $25, $25, $25, $25
+1501               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1509               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1511               db   $25, $25, $25, $F4, $25, $25, $25, $36
+1519               db   $25, $25, $25, $25, $25, $25, $25, $F5
+1521               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1529               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F4
+1531               db   $36, $36, $36, $36, $25, $25, $25, $FD
+1539               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1541               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1549               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1551               db   $25, $25, $25, $FF, $25, $25, $25, $F4
+1559               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1561               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1569               db   $25, $25, $25, $25, $25, $25, $25, $FD
+1571               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1579               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1581               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1589               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+1591               db   $35, $35, $35, $35, $25, $25, $25, $F5
+1599               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+15A1               db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+15A9               db   $25, $25, $25, $F6, $25, $37, $38, $35
+15B1               db   $25, $25, $25, $F4, $25, $25, $25, $FD
+15B9               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+15C1               db   $25, $25, $25, $F4, $25, $25, $25, $FC
+15C9               db   $25, $37, $38, $35, $25, $25, $25, $F4
+15D1               db   $25, $25, $25, $FF, $25, $25, $25, $F4
+15D9               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+15E1               db   $25, $25, $25, $F6, $25, $37, $38, $35
+15E9               db   $25, $25, $25, $F4, $25, $25, $25, $FD
+15F1               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+15F9               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+1601               db   $35, $35, $35, $35, $25, $25, $25, $F4
+1609               db   $25, $25, $25, $25, $25, $25, $25, $F5
+1611               db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+1619               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1621               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1629               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1631               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1639               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1641               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1649               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1651               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1659               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1661               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1669               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1671               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1679               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1681               db   $F5, $F5, $F5, $F4, $25, $25, $25, $25
+1689               db   $25, $25, $25, $25, $25, $25, $25, $25
+1691               db   $25, $25, $25, $25, $25, $25, $25, $25
+1699               db   $25, $25, $25, $25, $25, $25, $25, $25
+                level_2_map:     ; next map at 19B1 (784 bytes per screen)
+16A1               db   $25, $25, $25, $25, $25, $25, $25, $25
+16A9               db   $25, $25, $25, $25, $25, $25, $25, $25
+16B1               db   $25, $25, $25, $25, $25, $25, $25, $25
+16B9               db   $25, $25, $25, $25, $25, $25, $25, $25
+16C1               db   $25, $25, $25, $25, $25, $25, $25, $25
+16C9               db   $25, $25, $25, $25, $25, $25, $25, $25
+16D1               db   $25, $25, $25, $25, $25, $25, $25, $25
+16D9               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+16E1               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+16E9               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+16F1               db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+16F9               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1701               db   $25, $25, $25, $25, $25, $25, $25, $FD
+1709               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1711               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1719               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1721               db   $25, $25, $25, $FF, $25, $25, $25, $F4
+1729               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1731               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1739               db   $25, $25, $25, $25, $25, $25, $25, $FD
+1741               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1749               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1751               db   $F5, $F5, $F5, $F4, $35, $35, $35, $35
+1759               db   $25, $25, $25, $25, $25, $25, $25, $F5
+1761               db   $F5, $F5, $F5, $F4, $25, $25, $25, $25
+1769               db   $25, $25, $25, $F4, $25, $25, $25, $F6
+1771               db   $25, $37, $38, $35, $25, $25, $25, $25
+1779               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1781               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1789               db   $25, $25, $25, $FC, $25, $37, $38, $35
+1791               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1799               db   $25, $25, $25, $25, $25, $25, $25, $25
+17A1               db   $25, $25, $25, $F4, $25, $25, $25, $F6
+17A9               db   $25, $37, $38, $35, $25, $25, $25, $25
+17B1               db   $25, $25, $25, $F4, $25, $25, $25, $25
+17B9               db   $25, $25, $25, $25, $25, $25, $25, $F5
+17C1               db   $F5, $F5, $F5, $F4, $35, $35, $35, $35
+17C9               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+17D1               db   $36, $36, $36, $36, $25, $25, $25, $FD
+17D9               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+17E1               db   $25, $25, $25, $25, $25, $25, $25, $F4
+17E9               db   $25, $25, $25, $F4, $25, $25, $25, $36
+17F1               db   $25, $25, $25, $FF, $25, $25, $25, $F4
+17F9               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1801               db   $25, $25, $25, $F4, $25, $25, $25, $F9
+1809               db   $25, $25, $25, $36, $25, $25, $25, $FD
+1811               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1819               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1821               db   $25, $25, $25, $F4, $25, $25, $25, $36
+1829               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1831               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1839               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F4
+1841               db   $36, $36, $36, $36, $25, $25, $25, $F4
+1849               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1851               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1859               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1861               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1869               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1871               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1879               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1881               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1889               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1891               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1899               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+18A1               db   $35, $35, $35, $35, $25, $25, $25, $F4
+18A9               db   $35, $35, $35, $35, $25, $25, $25, $F5
+18B1               db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+18B9               db   $25, $25, $25, $F6, $25, $37, $38, $35
+18C1               db   $25, $25, $25, $F6, $25, $37, $38, $35
+18C9               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+18D1               db   $25, $25, $25, $F4, $25, $25, $25, $FC
+18D9               db   $25, $37, $38, $35, $25, $25, $25, $FC
+18E1               db   $25, $37, $38, $35, $25, $25, $25, $F4
+18E9               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+18F1               db   $25, $25, $25, $F6, $25, $37, $38, $35
+18F9               db   $25, $25, $25, $F6, $25, $37, $38, $35
+1901               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1909               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+1911               db   $35, $35, $35, $35, $25, $25, $25, $F4
+1919               db   $35, $35, $35, $35, $25, $25, $25, $F5
+1921               db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+1929               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1931               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1939               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1941               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1949               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1951               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1959               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1961               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1969               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1971               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1979               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1981               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1989               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1991               db   $F5, $F5, $F5, $F4, $25, $25, $25, $25
+1999               db   $25, $25, $25, $25, $25, $25, $25, $25
+19A1               db   $25, $25, $25, $25, $25, $25, $25, $25
+19A9               db   $25, $25, $25, $25, $25, $25, $25, $25
 
-19A9  25      	    dec  h
-19AA  25      	    dec  h
-19AB  25      	    dec  h
-19AC  25      	    dec  h
-19AD  25      	    dec  h
-19AE  25      	    dec  h
-19AF  25      	    dec  h
-19B0  25      	    dec  h
-
-                ;;; another map?
-19B1  25      	    dec  h
-19B2  25      	    dec  h
-19B3  25      	    dec  h
-19B4  25      	    dec  h
-19B5  25      	    dec  h
-19B6  25      	    dec  h
-19B7  25      	    dec  h
-19B8  25      	    dec  h
-19B9  25      	    dec  h
-19BA  25      	    dec  h
-19BB  25      	    dec  h
-19BC  25      	    dec  h
-19BD  25      	    dec  h
-19BE  25      	    dec  h
-19BF  25      	    dec  h
-19C0  25      	    dec  h
-19C1  25      	    dec  h
-19C2  25      	    dec  h
-19C3  25      	    dec  h
-19C4  25      	    dec  h
-19C5  25      	    dec  h
-19C6  25      	    dec  h
-19C7  25      	    dec  h
-19C8  25      	    dec  h
-19C9  25      	    dec  h
-19CA  25      	    dec  h
-19CB  25      	    dec  h
-19CC  25      	    dec  h
-19CD  25      	    dec  h
-19CE  25      	    dec  h
-19CF  25      	    dec  h
-19D0  25      	    dec  h
-19D1  25      	    dec  h
-19D2  25      	    dec  h
-19D3  25      	    dec  h
-19D4  25      	    dec  h
-19D5  25      	    dec  h
-19D6  25      	    dec  h
-19D7  25      	    dec  h
-19D8  25      	    dec  h
-19D9  25      	    dec  h
-19DA  25      	    dec  h
-19DB  25      	    dec  h
-19DC  25      	    dec  h
-19DD  25      	    dec  h
-19DE  25      	    dec  h
-19DF  25      	    dec  h
-19E0  25      	    dec  h
-19E1  25      	    dec  h
-19E2  25      	    dec  h
-19E3  25      	    dec  h
-19E4  25      	    dec  h
-19E5  25      	    dec  h
-19E6  25      	    dec  h
-19E7  25      	    dec  h
-19E8  25      	    dec  h
-19E9  25      	    dec  h
-19EA  25      	    dec  h
-19EB  25      	    dec  h
-19EC  F5      	    push af
-19ED  F5      	    push af
-19EE  F5      	    push af
-19EF  F5      	    push af
-19F0  F5      	    push af
-19F1  F5      	    push af
-19F2  F5      	    push af
-19F3  F5      	    push af
-19F4  F5      	    push af
-19F5  F5      	    push af
-19F6  F5      	    push af
-19F7  F5      	    push af
-19F8  F5      	    push af
-19F9  F5      	    push af
-19FA  F5      	    push af
-19FB  F5      	    push af
-19FC  F5      	    push af
-19FD  F5      	    push af
-19FE  F5      	    push af
-19FF  F5      	    push af
-1A00  F5      	    push af
-1A01  F5      	    push af
-1A02  F5      	    push af
-1A03  F5      	    push af
-1A04  F42525  	    call p,$2525
-1A07  25      	    dec  h
-1A08  F42525  	    call p,$2525
-1A0B  25      	    dec  h
-1A0C  F42525  	    call p,$2525
-1A0F  25      	    dec  h
-1A10  F42525  	    call p,$2525
-1A13  25      	    dec  h
-1A14  F42525  	    call p,$2525
-1A17  25      	    dec  h
-1A18  25      	    dec  h
-1A19  25      	    dec  h
-1A1A  25      	    dec  h
-1A1B  25      	    dec  h
-1A1C  F42525  	    call p,$2525
-1A1F  25      	    dec  h
-1A20  F42525  	    call p,$2525
-1A23  25      	    dec  h
-1A24  F42525  	    call p,$2525
-1A27  25      	    dec  h
-1A28  F42525  	    call p,$2525
-1A2B  25      	    dec  h
-1A2C  F42525  	    call p,$2525
-1A2F  25      	    dec  h
-1A30  F42525  	    call p,$2525
-1A33  25      	    dec  h
-1A34  25      	    dec  h
-1A35  25      	    dec  h
-1A36  25      	    dec  h
-1A37  25      	    dec  h
-1A38  F42525  	    call p,$2525
-1A3B  25      	    dec  h
-1A3C  F42525  	    call p,$2525
-1A3F  25      	    dec  h
-1A40  F42525  	    call p,$2525
-1A43  25      	    dec  h
-1A44  F42525  	    call p,$2525
-1A47  25      	    dec  h
-1A48  F42525  	    call p,$2525
-1A4B  25      	    dec  h
-1A4C  F42525  	    call p,$2525
-1A4F  25      	    dec  h
-1A50  25      	    dec  h
-1A51  25      	    dec  h
-1A52  25      	    dec  h
-1A53  25      	    dec  h
-1A54  F42525  	    call p,$2525
-1A57  25      	    dec  h
-1A58  F42525  	    call p,$2525
-1A5B  25      	    dec  h
-1A5C  F5      	    push af
-1A5D  F5      	    push af
-1A5E  F5      	    push af
-1A5F  F5      	    push af
-1A60  F5      	    push af
-1A61  F5      	    push af
-1A62  F5      	    push af
-1A63  F5      	    push af
-1A64  F5      	    push af
-1A65  F5      	    push af
-1A66  F5      	    push af
-1A67  F5      	    push af
-1A68  F43535  	    call p,$3535
-1A6B  35      	    dec  (hl)
-1A6C  35      	    dec  (hl)
-1A6D  25      	    dec  h
-1A6E  25      	    dec  h
-1A6F  25      	    dec  h
-1A70  F5      	    push af
-1A71  F5      	    push af
-1A72  F5      	    push af
-1A73  F5      	    push af
-1A74  F42525  	    call p,$2525
-1A77  25      	    dec  h
-1A78  F42525  	    call p,$2525
-1A7B  25      	    dec  h
-1A7C  25      	    dec  h
-1A7D  25      	    dec  h
-1A7E  25      	    dec  h
-1A7F  25      	    dec  h
-1A80  F42525  	    call p,$2525
-1A83  25      	    dec  h
-1A84  F625    	    or   $25
-1A86  37      	    scf
-1A87  3835    	    jr   c,$1ABE
-1A89  25      	    dec  h
-1A8A  25      	    dec  h
-1A8B  25      	    dec  h
-1A8C  F42525  	    call p,$2525
-1A8F  25      	    dec  h
-1A90  25      	    dec  h
-1A91  25      	    dec  h
-1A92  25      	    dec  h
-1A93  25      	    dec  h
-1A94  F42525  	    call p,$2525
-1A97  25      	    dec  h
-1A98  25      	    dec  h
-1A99  25      	    dec  h
-1A9A  25      	    dec  h
-1A9B  25      	    dec  h
-1A9C  F42525  	    call p,$2525
-1A9F  25      	    dec  h
-1AA0  FC2537  	    call m,$3725
-1AA3  3835    	    jr   c,$1ADA
-1AA5  25      	    dec  h
-1AA6  25      	    dec  h
-1AA7  25      	    dec  h
-1AA8  F42525  	    call p,$2525
-1AAB  25      	    dec  h
-1AAC  25      	    dec  h
-1AAD  25      	    dec  h
-1AAE  25      	    dec  h
-1AAF  25      	    dec  h
-1AB0  F42525  	    call p,$2525
-1AB3  25      	    dec  h
-1AB4  25      	    dec  h
-1AB5  25      	    dec  h
-1AB6  25      	    dec  h
-1AB7  25      	    dec  h
-1AB8  F42525  	    call p,$2525
-1ABB  25      	    dec  h
-1ABC  F625    	    or   $25
-1ABE  37      	    scf
-1ABF  3835    	    jr   c,$1AF6
-1AC1  25      	    dec  h
-1AC2  25      	    dec  h
-1AC3  25      	    dec  h
-1AC4  F42525  	    call p,$2525
-1AC7  25      	    dec  h
-1AC8  25      	    dec  h
-1AC9  25      	    dec  h
-1ACA  25      	    dec  h
-1ACB  25      	    dec  h
-1ACC  F43535  	    call p,$3535
-1ACF  35      	    dec  (hl)
-1AD0  35      	    dec  (hl)
-1AD1  25      	    dec  h
-1AD2  25      	    dec  h
-1AD3  25      	    dec  h
-1AD4  F42525  	    call p,$2525
-1AD7  25      	    dec  h
-1AD8  F43535  	    call p,$3535
-1ADB  35      	    dec  (hl)
-1ADC  35      	    dec  (hl)
-1ADD  25      	    dec  h
-1ADE  25      	    dec  h
-1ADF  25      	    dec  h
-1AE0  F43636  	    call p,$3636
-1AE3  3636    	    ld   (hl),$36
-1AE5  25      	    dec  h
-1AE6  25      	    dec  h
-1AE7  25      	    dec  h
-1AE8  F625    	    or   $25
-1AEA  37      	    scf
-1AEB  3835    	    jr   c,$1B22
-1AED  25      	    dec  h
-1AEE  25      	    dec  h
-1AEF  25      	    dec  h
-1AF0  F42525  	    call p,$2525
-1AF3  25      	    dec  h
-1AF4  F42525  	    call p,$2525
-1AF7  25      	    dec  h
-1AF8  25      	    dec  h
-1AF9  25      	    dec  h
-1AFA  25      	    dec  h
-1AFB  25      	    dec  h
-1AFC  F42525  	    call p,$2525
-1AFF  25      	    dec  h
-1B00  3625    	    ld   (hl),$25
-1B02  25      	    dec  h
-1B03  25      	    dec  h
-1B04  FC2537  	    call m,$3725
-1B07  3835    	    jr   c,$1B3E
-1B09  25      	    dec  h
-1B0A  25      	    dec  h
-1B0B  25      	    dec  h
-1B0C  F42525  	    call p,$2525
-1B0F  25      	    dec  h
-1B10  F42525  	    call p,$2525
-1B13  25      	    dec  h
-1B14  25      	    dec  h
-1B15  25      	    dec  h
-1B16  25      	    dec  h
-1B17  25      	    dec  h
-1B18  F9      	    ld   sp,hl
-1B19  25      	    dec  h
-1B1A  25      	    dec  h
-1B1B  25      	    dec  h
-1B1C  3625    	    ld   (hl),$25
-1B1E  25      	    dec  h
-1B1F  25      	    dec  h
-1B20  F625    	    or   $25
-1B22  37      	    scf
-1B23  3835    	    jr   c,$1B5A
-1B25  25      	    dec  h
-1B26  25      	    dec  h
-1B27  25      	    dec  h
-1B28  F42525  	    call p,$2525
-1B2B  25      	    dec  h
-1B2C  F42525  	    call p,$2525
-1B2F  25      	    dec  h
-1B30  25      	    dec  h
-1B31  25      	    dec  h
-1B32  25      	    dec  h
-1B33  25      	    dec  h
-1B34  F42525  	    call p,$2525
-1B37  25      	    dec  h
-1B38  3625    	    ld   (hl),$25
-1B3A  25      	    dec  h
-1B3B  25      	    dec  h
-1B3C  F43535  	    call p,$3535
-1B3F  35      	    dec  (hl)
-1B40  35      	    dec  (hl)
-1B41  25      	    dec  h
-1B42  25      	    dec  h
-1B43  25      	    dec  h
-1B44  F5      	    push af
-1B45  F5      	    push af
-1B46  F5      	    push af
-1B47  F5      	    push af
-1B48  F5      	    push af
-1B49  F5      	    push af
-1B4A  F5      	    push af
-1B4B  F5      	    push af
-1B4C  F5      	    push af
-1B4D  F5      	    push af
-1B4E  F5      	    push af
-1B4F  F5      	    push af
-1B50  F43636  	    call p,$3636
-1B53  3636    	    ld   (hl),$36
-1B55  25      	    dec  h
-1B56  25      	    dec  h
-1B57  25      	    dec  h
-1B58  F42525  	    call p,$2525
-1B5B  25      	    dec  h
-1B5C  25      	    dec  h
-1B5D  25      	    dec  h
-1B5E  25      	    dec  h
-1B5F  25      	    dec  h
-1B60  F42525  	    call p,$2525
-1B63  25      	    dec  h
-1B64  25      	    dec  h
-1B65  25      	    dec  h
-1B66  25      	    dec  h
-1B67  25      	    dec  h
-1B68  FD25    	    dec  iyh
-1B6A  25      	    dec  h
-1B6B  25      	    dec  h
-1B6C  F42525  	    call p,$2525
-1B6F  25      	    dec  h
-1B70  25      	    dec  h
-1B71  25      	    dec  h
-1B72  25      	    dec  h
-1B73  25      	    dec  h
-1B74  F42525  	    call p,$2525
-1B77  25      	    dec  h
-1B78  25      	    dec  h
-1B79  25      	    dec  h
-1B7A  25      	    dec  h
-1B7B  25      	    dec  h
-1B7C  F42525  	    call p,$2525
-1B7F  25      	    dec  h
-1B80  25      	    dec  h
-1B81  25      	    dec  h
-1B82  25      	    dec  h
-1B83  25      	    dec  h
-1B84  FF      	    rst  $38
-1B85  25      	    dec  h
-1B86  25      	    dec  h
-1B87  25      	    dec  h
-1B88  F42525  	    call p,$2525
-1B8B  25      	    dec  h
-1B8C  25      	    dec  h
-1B8D  25      	    dec  h
-1B8E  25      	    dec  h
-1B8F  25      	    dec  h
-1B90  F42525  	    call p,$2525
-1B93  25      	    dec  h
-1B94  25      	    dec  h
-1B95  25      	    dec  h
-1B96  25      	    dec  h
-1B97  25      	    dec  h
-1B98  F42525  	    call p,$2525
-1B9B  25      	    dec  h
-1B9C  25      	    dec  h
-1B9D  25      	    dec  h
-1B9E  25      	    dec  h
-1B9F  25      	    dec  h
-1BA0  FD25    	    dec  iyh
-1BA2  25      	    dec  h
-1BA3  25      	    dec  h
-1BA4  F42525  	    call p,$2525
-1BA7  25      	    dec  h
-1BA8  25      	    dec  h
-1BA9  25      	    dec  h
-1BAA  25      	    dec  h
-1BAB  25      	    dec  h
-1BAC  F5      	    push af
-1BAD  F5      	    push af
-1BAE  F5      	    push af
-1BAF  F5      	    push af
-1BB0  F5      	    push af
-1BB1  F5      	    push af
-1BB2  F5      	    push af
-1BB3  F5      	    push af
-1BB4  F43535  	    call p,$3535
-1BB7  35      	    dec  (hl)
-1BB8  35      	    dec  (hl)
-1BB9  25      	    dec  h
-1BBA  25      	    dec  h
-1BBB  25      	    dec  h
-1BBC  25      	    dec  h
-1BBD  25      	    dec  h
-1BBE  25      	    dec  h
-1BBF  25      	    dec  h
-1BC0  F5      	    push af
-1BC1  F5      	    push af
-1BC2  F5      	    push af
-1BC3  F5      	    push af
-1BC4  F42525  	    call p,$2525
-1BC7  25      	    dec  h
-1BC8  25      	    dec  h
-1BC9  25      	    dec  h
-1BCA  25      	    dec  h
-1BCB  25      	    dec  h
-1BCC  F42525  	    call p,$2525
-1BCF  25      	    dec  h
-1BD0  F625    	    or   $25
-1BD2  37      	    scf
-1BD3  3835    	    jr   c,$1C0A
-1BD5  25      	    dec  h
-1BD6  25      	    dec  h
-1BD7  25      	    dec  h
-1BD8  25      	    dec  h
-1BD9  25      	    dec  h
-1BDA  25      	    dec  h
-1BDB  25      	    dec  h
-1BDC  F42525  	    call p,$2525
-1BDF  25      	    dec  h
-1BE0  F42525  	    call p,$2525
-1BE3  25      	    dec  h
-1BE4  25      	    dec  h
-1BE5  25      	    dec  h
-1BE6  25      	    dec  h
-1BE7  25      	    dec  h
-1BE8  F42525  	    call p,$2525
-1BEB  25      	    dec  h
-1BEC  FC2537  	    call m,$3725
-1BEF  3835    	    jr   c,$1C26
-1BF1  25      	    dec  h
-1BF2  25      	    dec  h
-1BF3  25      	    dec  h
-1BF4  25      	    dec  h
-1BF5  25      	    dec  h
-1BF6  25      	    dec  h
-1BF7  25      	    dec  h
-1BF8  F42525  	    call p,$2525
-1BFB  25      	    dec  h
-1BFC  F42525  	    call p,$2525
-1BFF  25      	    dec  h
-1C00  25      	    dec  h
-1C01  25      	    dec  h
-1C02  25      	    dec  h
-1C03  25      	    dec  h
-1C04  F42525  	    call p,$2525
-1C07  25      	    dec  h
-1C08  F625    	    or   $25
-1C0A  37      	    scf
-1C0B  3835    	    jr   c,$1C42
-1C0D  25      	    dec  h
-1C0E  25      	    dec  h
-1C0F  25      	    dec  h
-1C10  25      	    dec  h
-1C11  25      	    dec  h
-1C12  25      	    dec  h
-1C13  25      	    dec  h
-1C14  F42525  	    call p,$2525
-1C17  25      	    dec  h
-1C18  F42525  	    call p,$2525
-1C1B  25      	    dec  h
-1C1C  25      	    dec  h
-1C1D  25      	    dec  h
-1C1E  25      	    dec  h
-1C1F  25      	    dec  h
-1C20  F5      	    push af
-1C21  F5      	    push af
-1C22  F5      	    push af
-1C23  F5      	    push af
-1C24  F43535  	    call p,$3535
-1C27  35      	    dec  (hl)
-1C28  35      	    dec  (hl)
-1C29  25      	    dec  h
-1C2A  25      	    dec  h
-1C2B  25      	    dec  h
-1C2C  F5      	    push af
-1C2D  F5      	    push af
-1C2E  F5      	    push af
-1C2F  F5      	    push af
-1C30  F5      	    push af
-1C31  F5      	    push af
-1C32  F5      	    push af
-1C33  F5      	    push af
-1C34  F42525  	    call p,$2525
-1C37  25      	    dec  h
-1C38  FD25    	    dec  iyh
-1C3A  25      	    dec  h
-1C3B  25      	    dec  h
-1C3C  F42525  	    call p,$2525
-1C3F  25      	    dec  h
-1C40  F42525  	    call p,$2525
-1C43  25      	    dec  h
-1C44  25      	    dec  h
-1C45  25      	    dec  h
-1C46  25      	    dec  h
-1C47  25      	    dec  h
-1C48  F42525  	    call p,$2525
-1C4B  25      	    dec  h
-1C4C  F42525  	    call p,$2525
-1C4F  25      	    dec  h
-1C50  F42525  	    call p,$2525
-1C53  25      	    dec  h
-1C54  FF      	    rst  $38
-1C55  25      	    dec  h
-1C56  25      	    dec  h
-1C57  25      	    dec  h
-1C58  F42525  	    call p,$2525
-1C5B  25      	    dec  h
-1C5C  F42525  	    call p,$2525
-1C5F  25      	    dec  h
-1C60  25      	    dec  h
-1C61  25      	    dec  h
-1C62  25      	    dec  h
-1C63  25      	    dec  h
-1C64  F42525  	    call p,$2525
-1C67  25      	    dec  h
-1C68  F42525  	    call p,$2525
-1C6B  25      	    dec  h
-1C6C  F42525  	    call p,$2525
-1C6F  25      	    dec  h
-1C70  FD25    	    dec  iyh
-1C72  25      	    dec  h
-1C73  25      	    dec  h
-1C74  F42525  	    call p,$2525
-1C77  25      	    dec  h
-1C78  F42525  	    call p,$2525
-1C7B  25      	    dec  h
-1C7C  25      	    dec  h
-1C7D  25      	    dec  h
-1C7E  25      	    dec  h
-1C7F  25      	    dec  h
-1C80  F42525  	    call p,$2525
-1C83  25      	    dec  h
-1C84  F42525  	    call p,$2525
-1C87  25      	    dec  h
-1C88  F42525  	    call p,$2525
-1C8B  25      	    dec  h
-1C8C  F5      	    push af
-1C8D  F5      	    push af
-1C8E  F5      	    push af
-1C8F  F5      	    push af
-1C90  F5      	    push af
-1C91  F5      	    push af
-1C92  F5      	    push af
-1C93  F5      	    push af
-1C94  F5      	    push af
-1C95  F5      	    push af
-1C96  F5      	    push af
-1C97  F5      	    push af
-1C98  F5      	    push af
-1C99  F5      	    push af
-1C9A  F5      	    push af
-1C9B  F5      	    push af
-1C9C  F5      	    push af
-1C9D  F5      	    push af
-1C9E  F5      	    push af
-1C9F  F5      	    push af
-1CA0  F5      	    push af
-1CA1  F5      	    push af
-1CA2  F5      	    push af
-1CA3  F5      	    push af
-1CA4  F42525  	    call p,$2525
-1CA7  25      	    dec  h
-1CA8  25      	    dec  h
-1CA9  25      	    dec  h
-1CAA  25      	    dec  h
-1CAB  25      	    dec  h
-1CAC  25      	    dec  h
-1CAD  25      	    dec  h
-1CAE  25      	    dec  h
-1CAF  25      	    dec  h
-1CB0  25      	    dec  h
-1CB1  25      	    dec  h
-1CB2  25      	    dec  h
-1CB3  25      	    dec  h
-1CB4  25      	    dec  h
-1CB5  25      	    dec  h
-1CB6  25      	    dec  h
-1CB7  25      	    dec  h
-1CB8  25      	    dec  h
-1CB9  25      	    dec  h
-1CBA  25      	    dec  h
-1CBB  25      	    dec  h
-1CBC  25      	    dec  h
-1CBD  25      	    dec  h
-1CBE  25      	    dec  h
-1CBF  25      	    dec  h
-1CC0  25      	    dec  h
-                ;;; Another map?
-1CC1  25      	    dec  h
-1CC2  25      	    dec  h
-1CC3  25      	    dec  h
-1CC4  25      	    dec  h
-1CC5  25      	    dec  h
-1CC6  25      	    dec  h
-1CC7  25      	    dec  h
-1CC8  25      	    dec  h
-1CC9  25      	    dec  h
-1CCA  25      	    dec  h
-1CCB  25      	    dec  h
-1CCC  25      	    dec  h
-1CCD  25      	    dec  h
-1CCE  25      	    dec  h
-1CCF  25      	    dec  h
-1CD0  25      	    dec  h
-1CD1  25      	    dec  h
-1CD2  25      	    dec  h
-1CD3  25      	    dec  h
-1CD4  25      	    dec  h
-1CD5  25      	    dec  h
-1CD6  25      	    dec  h
-1CD7  25      	    dec  h
-1CD8  25      	    dec  h
-1CD9  25      	    dec  h
-1CDA  25      	    dec  h
-1CDB  25      	    dec  h
-1CDC  25      	    dec  h
-1CDD  25      	    dec  h
-1CDE  25      	    dec  h
-1CDF  25      	    dec  h
-1CE0  25      	    dec  h
-1CE1  25      	    dec  h
-1CE2  25      	    dec  h
-1CE3  25      	    dec  h
-1CE4  25      	    dec  h
-1CE5  25      	    dec  h
-1CE6  25      	    dec  h
-1CE7  25      	    dec  h
-1CE8  25      	    dec  h
-1CE9  25      	    dec  h
-1CEA  25      	    dec  h
-1CEB  25      	    dec  h
-1CEC  25      	    dec  h
-1CED  25      	    dec  h
-1CEE  25      	    dec  h
-1CEF  25      	    dec  h
-1CF0  25      	    dec  h
-1CF1  25      	    dec  h
-1CF2  25      	    dec  h
-1CF3  25      	    dec  h
-1CF4  25      	    dec  h
-1CF5  25      	    dec  h
-1CF6  25      	    dec  h
-1CF7  25      	    dec  h
-1CF8  25      	    dec  h
-1CF9  25      	    dec  h
-1CFA  25      	    dec  h
-1CFB  25      	    dec  h
-1CFC  F5      	    push af
-1CFD  F5      	    push af
-1CFE  F5      	    push af
-1CFF  F5      	    push af
-1D00  F5      	    push af
-1D01  F5      	    push af
-1D02  F5      	    push af
-1D03  F5      	    push af
-1D04  F5      	    push af
-1D05  F5      	    push af
-1D06  F5      	    push af
-1D07  F5      	    push af
-1D08  F5      	    push af
-1D09  F5      	    push af
-1D0A  F5      	    push af
-1D0B  F5      	    push af
-1D0C  F5      	    push af
-1D0D  F5      	    push af
-1D0E  F5      	    push af
-1D0F  F5      	    push af
-1D10  F5      	    push af
-1D11  F5      	    push af
-1D12  F5      	    push af
-1D13  F5      	    push af
-1D14  F42525  	    call p,$2525
-1D17  25      	    dec  h
-1D18  F42525  	    call p,$2525
-1D1B  25      	    dec  h
-1D1C  F42525  	    call p,$2525
-1D1F  25      	    dec  h
-1D20  F42525  	    call p,$2525
-1D23  25      	    dec  h
-1D24  F42525  	    call p,$2525
-1D27  25      	    dec  h
-1D28  F42525  	    call p,$2525
-1D2B  25      	    dec  h
-1D2C  F42525  	    call p,$2525
-1D2F  25      	    dec  h
-1D30  F42525  	    call p,$2525
-1D33  25      	    dec  h
-1D34  F42525  	    call p,$2525
-1D37  25      	    dec  h
-1D38  F42525  	    call p,$2525
-1D3B  25      	    dec  h
-1D3C  F42525  	    call p,$2525
-1D3F  25      	    dec  h
-1D40  F42525  	    call p,$2525
-1D43  25      	    dec  h
-1D44  F42525  	    call p,$2525
-1D47  25      	    dec  h
-1D48  F42525  	    call p,$2525
-1D4B  25      	    dec  h
-1D4C  F42525  	    call p,$2525
-1D4F  25      	    dec  h
-1D50  F42525  	    call p,$2525
-1D53  25      	    dec  h
-1D54  F42525  	    call p,$2525
-1D57  25      	    dec  h
-1D58  F42525  	    call p,$2525
-1D5B  25      	    dec  h
-1D5C  F42525  	    call p,$2525
-1D5F  25      	    dec  h
-1D60  F42525  	    call p,$2525
-1D63  25      	    dec  h
-1D64  F42525  	    call p,$2525
-1D67  25      	    dec  h
-1D68  F42525  	    call p,$2525
-1D6B  25      	    dec  h
-1D6C  F5      	    push af
-1D6D  F5      	    push af
-1D6E  F5      	    push af
-1D6F  F5      	    push af
-1D70  F5      	    push af
-1D71  F5      	    push af
-1D72  F5      	    push af
-1D73  F5      	    push af
-1D74  F5      	    push af
-1D75  F5      	    push af
-1D76  F5      	    push af
-1D77  F5      	    push af
-1D78  F5      	    push af
-1D79  F5      	    push af
-1D7A  F5      	    push af
-1D7B  F5      	    push af
-1D7C  F5      	    push af
-1D7D  F5      	    push af
-1D7E  F5      	    push af
-1D7F  F5      	    push af
-1D80  F5      	    push af
-1D81  F5      	    push af
-1D82  F5      	    push af
-1D83  F5      	    push af
-1D84  F42525  	    call p,$2525
-1D87  25      	    dec  h
-1D88  F42525  	    call p,$2525
-1D8B  25      	    dec  h
-1D8C  F42525  	    call p,$2525
-1D8F  25      	    dec  h
-1D90  25      	    dec  h
-1D91  25      	    dec  h
-1D92  25      	    dec  h
-1D93  25      	    dec  h
-1D94  F42525  	    call p,$2525
-1D97  25      	    dec  h
-1D98  F42525  	    call p,$2525
-1D9B  25      	    dec  h
-1D9C  F42525  	    call p,$2525
-1D9F  25      	    dec  h
-1DA0  25      	    dec  h
-1DA1  25      	    dec  h
-1DA2  25      	    dec  h
-1DA3  25      	    dec  h
-1DA4  F42525  	    call p,$2525
-1DA7  25      	    dec  h
-1DA8  F42525  	    call p,$2525
-1DAB  25      	    dec  h
-1DAC  25      	    dec  h
-1DAD  25      	    dec  h
-1DAE  25      	    dec  h
-1DAF  25      	    dec  h
-1DB0  F42525  	    call p,$2525
-1DB3  25      	    dec  h
-1DB4  F42525  	    call p,$2525
-1DB7  25      	    dec  h
-1DB8  F42525  	    call p,$2525
-1DBB  25      	    dec  h
-1DBC  25      	    dec  h
-1DBD  25      	    dec  h
-1DBE  25      	    dec  h
-1DBF  25      	    dec  h
-1DC0  F42525  	    call p,$2525
-1DC3  25      	    dec  h
-1DC4  F42525  	    call p,$2525
-1DC7  25      	    dec  h
-1DC8  25      	    dec  h
-1DC9  25      	    dec  h
-1DCA  25      	    dec  h
-1DCB  25      	    dec  h
-1DCC  F42525  	    call p,$2525
-1DCF  25      	    dec  h
-1DD0  F42525  	    call p,$2525
-1DD3  25      	    dec  h
-1DD4  F42525  	    call p,$2525
-1DD7  25      	    dec  h
-1DD8  25      	    dec  h
-1DD9  25      	    dec  h
-1DDA  25      	    dec  h
-1DDB  25      	    dec  h
-1DDC  F5      	    push af
-1DDD  F5      	    push af
-1DDE  F5      	    push af
-1DDF  F5      	    push af
-1DE0  F42525  	    call p,$2525
-1DE3  25      	    dec  h
-1DE4  25      	    dec  h
-1DE5  25      	    dec  h
-1DE6  25      	    dec  h
-1DE7  25      	    dec  h
-1DE8  F5      	    push af
-1DE9  F5      	    push af
-1DEA  F5      	    push af
-1DEB  F5      	    push af
-1DEC  F5      	    push af
-1DED  F5      	    push af
-1DEE  F5      	    push af
-1DEF  F5      	    push af
-1DF0  F43636  	    call p,$3636
-1DF3  3636    	    ld   (hl),$36
-1DF5  25      	    dec  h
-1DF6  25      	    dec  h
-1DF7  25      	    dec  h
-1DF8  F42525  	    call p,$2525
-1DFB  25      	    dec  h
-1DFC  25      	    dec  h
-1DFD  25      	    dec  h
-1DFE  25      	    dec  h
-1DFF  25      	    dec  h
-1E00  FD25    	    dec  iyh
-1E02  25      	    dec  h
-1E03  25      	    dec  h
-1E04  F42525  	    call p,$2525
-1E07  25      	    dec  h
-1E08  25      	    dec  h
-1E09  25      	    dec  h
-1E0A  25      	    dec  h
-1E0B  25      	    dec  h
-1E0C  F42525  	    call p,$2525
-1E0F  25      	    dec  h
-1E10  3625    	    ld   (hl),$25
-1E12  25      	    dec  h
-1E13  25      	    dec  h
-1E14  F42525  	    call p,$2525
-1E17  25      	    dec  h
-1E18  25      	    dec  h
-1E19  25      	    dec  h
-1E1A  25      	    dec  h
-1E1B  25      	    dec  h
-1E1C  FF      	    rst  $38
-1E1D  25      	    dec  h
-1E1E  25      	    dec  h
-1E1F  25      	    dec  h
-1E20  F42525  	    call p,$2525
-1E23  25      	    dec  h
-1E24  25      	    dec  h
-1E25  25      	    dec  h
-1E26  25      	    dec  h
-1E27  25      	    dec  h
-1E28  F9      	    ld   sp,hl
-1E29  25      	    dec  h
-1E2A  25      	    dec  h
-1E2B  25      	    dec  h
-1E2C  3625    	    ld   (hl),$25
-1E2E  25      	    dec  h
-1E2F  25      	    dec  h
-1E30  F42525  	    call p,$2525
-1E33  25      	    dec  h
-1E34  25      	    dec  h
-1E35  25      	    dec  h
-1E36  25      	    dec  h
-1E37  25      	    dec  h
-1E38  FD25    	    dec  iyh
-1E3A  25      	    dec  h
-1E3B  25      	    dec  h
-1E3C  F42525  	    call p,$2525
-1E3F  25      	    dec  h
-1E40  25      	    dec  h
-1E41  25      	    dec  h
-1E42  25      	    dec  h
-1E43  25      	    dec  h
-1E44  F42525  	    call p,$2525
-1E47  25      	    dec  h
-1E48  3625    	    ld   (hl),$25
-1E4A  25      	    dec  h
-1E4B  25      	    dec  h
-1E4C  F43535  	    call p,$3535
-1E4F  35      	    dec  (hl)
-1E50  35      	    dec  (hl)
-1E51  25      	    dec  h
-1E52  25      	    dec  h
-1E53  25      	    dec  h
-1E54  F5      	    push af
-1E55  F5      	    push af
-1E56  F5      	    push af
-1E57  F5      	    push af
-1E58  F42525  	    call p,$2525
-1E5B  25      	    dec  h
-1E5C  25      	    dec  h
-1E5D  25      	    dec  h
-1E5E  25      	    dec  h
-1E5F  25      	    dec  h
-1E60  F43636  	    call p,$3636
-1E63  3636    	    ld   (hl),$36
-1E65  25      	    dec  h
-1E66  25      	    dec  h
-1E67  25      	    dec  h
-1E68  F625    	    or   $25
-1E6A  37      	    scf
-1E6B  3835    	    jr   c,$1EA2
-1E6D  25      	    dec  h
-1E6E  25      	    dec  h
-1E6F  25      	    dec  h
-1E70  F42525  	    call p,$2525
-1E73  25      	    dec  h
-1E74  25      	    dec  h
-1E75  25      	    dec  h
-1E76  25      	    dec  h
-1E77  25      	    dec  h
-1E78  FD25    	    dec  iyh
-1E7A  25      	    dec  h
-1E7B  25      	    dec  h
-1E7C  F42525  	    call p,$2525
-1E7F  25      	    dec  h
-1E80  25      	    dec  h
-1E81  25      	    dec  h
-1E82  25      	    dec  h
-1E83  25      	    dec  h
-1E84  FC2537  	    call m,$3725
-1E87  3835    	    jr   c,$1EBE
-1E89  25      	    dec  h
-1E8A  25      	    dec  h
-1E8B  25      	    dec  h
-1E8C  F42525  	    call p,$2525
-1E8F  25      	    dec  h
-1E90  25      	    dec  h
-1E91  25      	    dec  h
-1E92  25      	    dec  h
-1E93  25      	    dec  h
-1E94  FF      	    rst  $38
-1E95  25      	    dec  h
-1E96  25      	    dec  h
-1E97  25      	    dec  h
-1E98  F42525  	    call p,$2525
-1E9B  25      	    dec  h
-1E9C  25      	    dec  h
-1E9D  25      	    dec  h
-1E9E  25      	    dec  h
-1E9F  25      	    dec  h
-1EA0  F625    	    or   $25
-1EA2  37      	    scf
-1EA3  3835    	    jr   c,$1EDA
-1EA5  25      	    dec  h
-1EA6  25      	    dec  h
-1EA7  25      	    dec  h
-1EA8  F42525  	    call p,$2525
-1EAB  25      	    dec  h
-1EAC  25      	    dec  h
-1EAD  25      	    dec  h
-1EAE  25      	    dec  h
-1EAF  25      	    dec  h
-1EB0  FD25    	    dec  iyh
-1EB2  25      	    dec  h
-1EB3  25      	    dec  h
-1EB4  F42525  	    call p,$2525
-1EB7  25      	    dec  h
-1EB8  25      	    dec  h
-1EB9  25      	    dec  h
-1EBA  25      	    dec  h
-1EBB  25      	    dec  h
-1EBC  F43535  	    call p,$3535
-1EBF  35      	    dec  (hl)
-1EC0  35      	    dec  (hl)
-1EC1  25      	    dec  h
-1EC2  25      	    dec  h
-1EC3  25      	    dec  h
-1EC4  F43535  	    call p,$3535
-1EC7  35      	    dec  (hl)
-1EC8  35      	    dec  (hl)
-1EC9  25      	    dec  h
-1ECA  25      	    dec  h
-1ECB  25      	    dec  h
-1ECC  F5      	    push af
-1ECD  F5      	    push af
-1ECE  F5      	    push af
-1ECF  F5      	    push af
-1ED0  F43535  	    call p,$3535
-1ED3  35      	    dec  (hl)
-1ED4  35      	    dec  (hl)
-1ED5  25      	    dec  h
-1ED6  25      	    dec  h
-1ED7  25      	    dec  h
-1ED8  F42525  	    call p,$2525
-1EDB  25      	    dec  h
-1EDC  25      	    dec  h
-1EDD  25      	    dec  h
-1EDE  25      	    dec  h
-1EDF  25      	    dec  h
-1EE0  F625    	    or   $25
-1EE2  37      	    scf
-1EE3  3835    	    jr   c,$1F1A
-1EE5  25      	    dec  h
-1EE6  25      	    dec  h
-1EE7  25      	    dec  h
-1EE8  F42525  	    call p,$2525
-1EEB  25      	    dec  h
-1EEC  F625    	    or   $25
-1EEE  37      	    scf
-1EEF  3835    	    jr   c,$1F26
-1EF1  25      	    dec  h
-1EF2  25      	    dec  h
-1EF3  25      	    dec  h
-1EF4  F42525  	    call p,$2525
-1EF7  25      	    dec  h
-1EF8  25      	    dec  h
-1EF9  25      	    dec  h
-1EFA  25      	    dec  h
-1EFB  25      	    dec  h
-1EFC  FC2537  	    call m,$3725
-1EFF  3835    	    jr   c,$1F36
-1F01  25      	    dec  h
-1F02  25      	    dec  h
-1F03  25      	    dec  h
-1F04  F42525  	    call p,$2525
-1F07  25      	    dec  h
-1F08  FC2537  	    call m,$3725
-1F0B  3835    	    jr   c,$1F42
-1F0D  25      	    dec  h
-1F0E  25      	    dec  h
-1F0F  25      	    dec  h
-1F10  F42525  	    call p,$2525
-1F13  25      	    dec  h
-1F14  25      	    dec  h
-1F15  25      	    dec  h
-1F16  25      	    dec  h
-1F17  25      	    dec  h
-1F18  F625    	    or   $25
-1F1A  37      	    scf
-1F1B  3835    	    jr   c,$1F52
-1F1D  25      	    dec  h
-1F1E  25      	    dec  h
-1F1F  25      	    dec  h
-1F20  F42525  	    call p,$2525
-1F23  25      	    dec  h
-1F24  F625    	    or   $25
-1F26  37      	    scf
-1F27  3835    	    jr   c,$1F5E
-1F29  25      	    dec  h
-1F2A  25      	    dec  h
-1F2B  25      	    dec  h
-1F2C  F5      	    push af
-1F2D  F5      	    push af
-1F2E  F5      	    push af
-1F2F  F5      	    push af
-1F30  F5      	    push af
-1F31  F5      	    push af
-1F32  F5      	    push af
-1F33  F5      	    push af
-1F34  F43535  	    call p,$3535
-1F37  35      	    dec  (hl)
-1F38  35      	    dec  (hl)
-1F39  25      	    dec  h
-1F3A  25      	    dec  h
-1F3B  25      	    dec  h
-1F3C  F5      	    push af
-1F3D  F5      	    push af
-1F3E  F5      	    push af
-1F3F  F5      	    push af
-1F40  F43535  	    call p,$3535
-1F43  35      	    dec  (hl)
-1F44  35      	    dec  (hl)
-1F45  25      	    dec  h
-1F46  25      	    dec  h
-1F47  25      	    dec  h
-1F48  F42525  	    call p,$2525
-1F4B  25      	    dec  h
-1F4C  F42525  	    call p,$2525
-1F4F  25      	    dec  h
-1F50  F42525  	    call p,$2525
-1F53  25      	    dec  h
-1F54  25      	    dec  h
-1F55  25      	    dec  h
-1F56  25      	    dec  h
-1F57  25      	    dec  h
-1F58  F42525  	    call p,$2525
-1F5B  25      	    dec  h
-1F5C  F42525  	    call p,$2525
-1F5F  25      	    dec  h
-1F60  25      	    dec  h
-1F61  25      	    dec  h
-1F62  25      	    dec  h
-1F63  25      	    dec  h
-1F64  F42525  	    call p,$2525
-1F67  25      	    dec  h
-1F68  F42525  	    call p,$2525
-1F6B  25      	    dec  h
-1F6C  F42525  	    call p,$2525
-1F6F  25      	    dec  h
-1F70  25      	    dec  h
-1F71  25      	    dec  h
-1F72  25      	    dec  h
-1F73  25      	    dec  h
-1F74  F42525  	    call p,$2525
-1F77  25      	    dec  h
-1F78  F42525  	    call p,$2525
-1F7B  25      	    dec  h
-1F7C  25      	    dec  h
-1F7D  25      	    dec  h
-1F7E  25      	    dec  h
-1F7F  25      	    dec  h
-1F80  F42525  	    call p,$2525
-1F83  25      	    dec  h
-1F84  F42525  	    call p,$2525
-1F87  25      	    dec  h
-1F88  F42525  	    call p,$2525
-1F8B  25      	    dec  h
-1F8C  25      	    dec  h
-1F8D  25      	    dec  h
-1F8E  25      	    dec  h
-1F8F  25      	    dec  h
-1F90  F42525  	    call p,$2525
-1F93  25      	    dec  h
-1F94  F42525  	    call p,$2525
-1F97  25      	    dec  h
-1F98  25      	    dec  h
-1F99  25      	    dec  h
-1F9A  25      	    dec  h
-1F9B  25      	    dec  h
-1F9C  F5      	    push af
-1F9D  F5      	    push af
-1F9E  F5      	    push af
-1F9F  F5      	    push af
-1FA0  F5      	    push af
-1FA1  F5      	    push af
-1FA2  F5      	    push af
-1FA3  F5      	    push af
-1FA4  F5      	    push af
-1FA5  F5      	    push af
-1FA6  F5      	    push af
-1FA7  F5      	    push af
-1FA8  F5      	    push af
-1FA9  F5      	    push af
-1FAA  F5      	    push af
-1FAB  F5      	    push af
-1FAC  F5      	    push af
-1FAD  F5      	    push af
-1FAE  F5      	    push af
-1FAF  F5      	    push af
-1FB0  F42525  	    call p,$2525
-1FB3  25      	    dec  h
-1FB4  25      	    dec  h
-1FB5  25      	    dec  h
-1FB6  25      	    dec  h
-1FB7  25      	    dec  h
-1FB8  25      	    dec  h
-1FB9  25      	    dec  h
-1FBA  25      	    dec  h
-1FBB  25      	    dec  h
-1FBC  25      	    dec  h
-1FBD  25      	    dec  h
-1FBE  25      	    dec  h
-1FBF  25      	    dec  h
-1FC0  25      	    dec  h
-1FC1  25      	    dec  h
-1FC2  25      	    dec  h
-1FC3  25      	    dec  h
-1FC4  25      	    dec  h
-1FC5  25      	    dec  h
-1FC6  25      	    dec  h
-1FC7  25      	    dec  h
-1FC8  25      	    dec  h
-1FC9  25      	    dec  h
-1FCA  25      	    dec  h
-1FCB  25      	    dec  h
-1FCC  25      	    dec  h
-1FCD  25      	    dec  h
-1FCE  25      	    dec  h
-1FCF  25      	    dec  h
-1FD0  25      	    dec  h
+                level_3_map:     ; next map at 1CC1 (784 bytes per screen)
+19B1               db   $25, $25, $25, $25, $25, $25, $25, $25
+19B9               db   $25, $25, $25, $25, $25, $25, $25, $25
+19C1               db   $25, $25, $25, $25, $25, $25, $25, $25
+19C9               db   $25, $25, $25, $25, $25, $25, $25, $25
+19D1               db   $25, $25, $25, $25, $25, $25, $25, $25
+19D9               db   $25, $25, $25, $25, $25, $25, $25, $25
+19E1               db   $25, $25, $25, $25, $25, $25, $25, $25
+19E9               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+19F1               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+19F9               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1A01               db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+1A09               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1A11               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1A19               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1A21               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1A29               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1A31               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1A39               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1A41               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1A49               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1A51               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1A59               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1A61               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F4
+1A69               db   $35, $35, $35, $35, $25, $25, $25, $F5
+1A71               db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+1A79               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1A81               db   $25, $25, $25, $F6, $25, $37, $38, $35
+1A89               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1A91               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1A99               db   $25, $25, $25, $F4, $25, $25, $25, $FC
+1AA1               db   $25, $37, $38, $35, $25, $25, $25, $F4
+1AA9               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1AB1               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1AB9               db   $25, $25, $25, $F6, $25, $37, $38, $35
+1AC1               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1AC9               db   $25, $25, $25, $F4, $35, $35, $35, $35
+1AD1               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1AD9               db   $35, $35, $35, $35, $25, $25, $25, $F4
+1AE1               db   $36, $36, $36, $36, $25, $25, $25, $F6
+1AE9               db   $25, $37, $38, $35, $25, $25, $25, $F4
+1AF1               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1AF9               db   $25, $25, $25, $F4, $25, $25, $25, $36
+1B01               db   $25, $25, $25, $FC, $25, $37, $38, $35
+1B09               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1B11               db   $25, $25, $25, $25, $25, $25, $25, $F9
+1B19               db   $25, $25, $25, $36, $25, $25, $25, $F6
+1B21               db   $25, $37, $38, $35, $25, $25, $25, $F4
+1B29               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1B31               db   $25, $25, $25, $F4, $25, $25, $25, $36
+1B39               db   $25, $25, $25, $F4, $35, $35, $35, $35
+1B41               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1B49               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F4
+1B51               db   $36, $36, $36, $36, $25, $25, $25, $F4
+1B59               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1B61               db   $25, $25, $25, $25, $25, $25, $25, $FD
+1B69               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1B71               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1B79               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1B81               db   $25, $25, $25, $FF, $25, $25, $25, $F4
+1B89               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1B91               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1B99               db   $25, $25, $25, $25, $25, $25, $25, $FD
+1BA1               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1BA9               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1BB1               db   $F5, $F5, $F5, $F4, $35, $35, $35, $35
+1BB9               db   $25, $25, $25, $25, $25, $25, $25, $F5
+1BC1               db   $F5, $F5, $F5, $F4, $25, $25, $25, $25
+1BC9               db   $25, $25, $25, $F4, $25, $25, $25, $F6
+1BD1               db   $25, $37, $38, $35, $25, $25, $25, $25
+1BD9               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1BE1               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1BE9               db   $25, $25, $25, $FC, $25, $37, $38, $35
+1BF1               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1BF9               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1C01               db   $25, $25, $25, $F4, $25, $25, $25, $F6
+1C09               db   $25, $37, $38, $35, $25, $25, $25, $25
+1C11               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1C19               db   $25, $25, $25, $25, $25, $25, $25, $F5
+1C21               db   $F5, $F5, $F5, $F4, $35, $35, $35, $35
+1C29               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1C31               db   $F5, $F5, $F5, $F4, $25, $25, $25, $FD
+1C39               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1C41               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1C49               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1C51               db   $25, $25, $25, $FF, $25, $25, $25, $F4
+1C59               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1C61               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1C69               db   $25, $25, $25, $F4, $25, $25, $25, $FD
+1C71               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1C79               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1C81               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1C89               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1C91               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1C99               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1CA1               db   $F5, $F5, $F5, $F4, $25, $25, $25, $25
+1CA9               db   $25, $25, $25, $25, $25, $25, $25, $25
+1CB1               db   $25, $25, $25, $25, $25, $25, $25, $25
+1CB9               db   $25, $25, $25, $25, $25, $25, $25, $25
+                level_4_map:     ; end of level data at 1FD0 (784 bytes per screen)
+1CC1               db   $25, $25, $25, $25, $25, $25, $25, $25
+1CC9               db   $25, $25, $25, $25, $25, $25, $25, $25
+1CD1               db   $25, $25, $25, $25, $25, $25, $25, $25
+1CD9               db   $25, $25, $25, $25, $25, $25, $25, $25
+1CE1               db   $25, $25, $25, $25, $25, $25, $25, $25
+1CE9               db   $25, $25, $25, $25, $25, $25, $25, $25
+1CF1               db   $25, $25, $25, $25, $25, $25, $25, $25
+1CF9               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1D01               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1D09               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1D11               db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+1D19               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1D21               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1D29               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1D31               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1D39               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1D41               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1D49               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1D51               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1D59               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1D61               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1D69               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1D71               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1D79               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1D81               db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
+1D89               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1D91               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1D99               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1DA1               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1DA9               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1DB1               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1DB9               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1DC1               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1DC9               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1DD1               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1DD9               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+1DE1               db   $25, $25, $25, $25, $25, $25, $25, $F5
+1DE9               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F4
+1DF1               db   $36, $36, $36, $36, $25, $25, $25, $F4
+1DF9               db   $25, $25, $25, $25, $25, $25, $25, $FD
+1E01               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1E09               db   $25, $25, $25, $F4, $25, $25, $25, $36
+1E11               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1E19               db   $25, $25, $25, $FF, $25, $25, $25, $F4
+1E21               db   $25, $25, $25, $25, $25, $25, $25, $F9
+1E29               db   $25, $25, $25, $36, $25, $25, $25, $F4
+1E31               db   $25, $25, $25, $25, $25, $25, $25, $FD
+1E39               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1E41               db   $25, $25, $25, $F4, $25, $25, $25, $36
+1E49               db   $25, $25, $25, $F4, $35, $35, $35, $35
+1E51               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+1E59               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1E61               db   $36, $36, $36, $36, $25, $25, $25, $F6
+1E69               db   $25, $37, $38, $35, $25, $25, $25, $F4
+1E71               db   $25, $25, $25, $25, $25, $25, $25, $FD
+1E79               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1E81               db   $25, $25, $25, $FC, $25, $37, $38, $35
+1E89               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1E91               db   $25, $25, $25, $FF, $25, $25, $25, $F4
+1E99               db   $25, $25, $25, $25, $25, $25, $25, $F6
+1EA1               db   $25, $37, $38, $35, $25, $25, $25, $F4
+1EA9               db   $25, $25, $25, $25, $25, $25, $25, $FD
+1EB1               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1EB9               db   $25, $25, $25, $F4, $35, $35, $35, $35
+1EC1               db   $25, $25, $25, $F4, $35, $35, $35, $35
+1EC9               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+1ED1               db   $35, $35, $35, $35, $25, $25, $25, $F4
+1ED9               db   $25, $25, $25, $25, $25, $25, $25, $F6
+1EE1               db   $25, $37, $38, $35, $25, $25, $25, $F4
+1EE9               db   $25, $25, $25, $F6, $25, $37, $38, $35
+1EF1               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1EF9               db   $25, $25, $25, $FC, $25, $37, $38, $35
+1F01               db   $25, $25, $25, $F4, $25, $25, $25, $FC
+1F09               db   $25, $37, $38, $35, $25, $25, $25, $F4
+1F11               db   $25, $25, $25, $25, $25, $25, $25, $F6
+1F19               db   $25, $37, $38, $35, $25, $25, $25, $F4
+1F21               db   $25, $25, $25, $F6, $25, $37, $38, $35
+1F29               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1F31               db   $F5, $F5, $F5, $F4, $35, $35, $35, $35
+1F39               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F4
+1F41               db   $35, $35, $35, $35, $25, $25, $25, $F4
+1F49               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1F51               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1F59               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1F61               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1F69               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1F71               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1F79               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1F81               db   $25, $25, $25, $F4, $25, $25, $25, $F4
+1F89               db   $25, $25, $25, $25, $25, $25, $25, $F4
+1F91               db   $25, $25, $25, $F4, $25, $25, $25, $25
+1F99               db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+1FA1               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+1FA9               db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F4
+1FB1               db   $25, $25, $25, $25, $25, $25, $25, $25
+1FB9               db   $25, $25, $25, $25, $25, $25, $25, $25
+1FC1               db   $25, $25, $25, $25, $25, $25, $25, $25
+1FC9               db   $25, $25, $25, $25, $25, $25, $25, $25
 
                 main_game_loop:
 1FD1  3A3980  	    ld   a,(screen_state)
