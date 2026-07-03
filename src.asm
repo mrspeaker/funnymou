@@ -1,7 +1,7 @@
      ram_start       = $8000
 
      credits         = $8023
-     is_playing      = $8030
+     is_playing      = $8030 ; mode 0=attract, 1=1P, 2=2P
      screen_state    = $8039 ; 10=ready, 40=go to gamble
      cur_screen      = $803B ; 1=splash;6=game etc
      score_lo        = $8044
@@ -16,6 +16,7 @@
      carrying_3      = $80A2 ; carrying food... dropped?
      carry_x         = $80A5
      carry_tile      = $80A6 ; what item player is carrying
+     ;; carry_tile_y   = $80A7 ; I bet it's x/y
      carry_y         = $80A8
 
      lives           = $8100
@@ -36,35 +37,97 @@
      cat3_enable     = $8506
      cat3_active     = $8507
 
-     cat1_bytes      = $8510 ; 29 bytes
+     cat1_ai_init    = $8508 ; one-shot AI-path-loaded flag
+     cat2_ai_init    = $850A
+     cat3_ai_init    = $850B
+
+ ;;; =============================
+ ;;; Enemy data structure 32 bytes
+ ;;; =============================
+ ;;; +$00 step/move counter
+ ;;; +$03 sprite-slot link (low byte of `$80xx` mirror addr: `$05`/`$0D`/`$11`/`$15`/`$19`)
+ ;;; +$04 base tile (+flip) -> sprite +1
+ ;;; +$07 AI state: 1=appear, 3/4=walk-chase, 5/6=caught/dying, 7?
+ ;;; +$08 X -> sprite +0 (HW-Y; ROT90)
+ ;;; +$09 Y -> sprite +3 (HW-X; ROT90)
+ ;;; +$0D..+$11 -> velocity/direction deltas (`$FF`/`$01`: ±1)
+ ;;; +$18/$19 AI waypoint-table pointer (level-indexed; via `$31CF`)
+ ;;; +$1A appear/spawn timer
+ ;;; +$1B busy/not-collidable lock (1 while appearing or dying)
+ ;;; +$1D/$1E secondary pointer (level-indexed)
+ ;;; ============ enemy record fields ============
+ ;;; Shared 32-byte record. New fields below, verified this session
+ ;;;  from the sprite commit ($309C), setup_cat_1 ($2B6E: cat_ai called with hl=base+7),
+ ;;;  the cat1 template ($2B75), and the managers' $31CF/$32F7 pointer loads:
+ ;;;    +3  slot-link (low byte of $80xx sprite addr, -> sprite +1)
+ ;;;    +4  base tile (+flip) -> sprite +1
+ ;;;    +7  AI state: 1=appear, 3/4=chase, 5/6=caught/dying, 7  (dispatched by cat_ai/snake_ai)
+ ;;;    +18 16-bit level-indexed ptr (cats: AI-waypoint table; snakes: spawn-delay table)
+ ;;;    +1B busy / not-collidable lock (1 while appearing or dying)
+ ;;;    +1D 16-bit level-indexed secondary ptr (cats, from shared table $2B28)
+ ;;;  catN_ai_init = page-85/86 one-shot "AI path loaded" guard flags.
+ ;; =================================================
+
+     cat1_bytes      = $8510 ; 32 bytes
+     cat1_slot       = $8513 ; +3  (=$05 -> sprite slot1 +1)
+     cat1_tile       = $8514 ; +4  base tile -> sprite +1
+     cat1_state      = $8517 ; +7  AI state
      cat1_x          = $8518
      cat1_y          = $8519
      cat1_fr         = $851A
      cat1_dir        = $851B ; 1 = L, 2 = R, 4 = U, 5 = d
+     cat1_ai_ptr     = $8528 ; +18 AI-waypoint ptr (from $2B5A via $31CF)
+     cat1_busy       = $852B ; +1B busy / no-collide lock
+     cat1_ptr2       = $852D ; +1D secondary ptr (from $2B28 via $31CF)
+
      cat2_bytes      = $8550 ; 29 bytes: to 856D
+     cat2_slot       = $8553
+     cat2_tile       = $8554
+     cat2_state      = $8557
      cat2_x          = $8558
      cat2_y          = $8559
      cat2_fr         = $855A
+     cat2_ai_ptr     = $8568 ; from $2BB0
+     cat2_busy       = $856B
+     cat2_ptr2       = $856D ; from $2B28
 
      cat3_bytes      = $8570 ; 29 bytes
      cat3_x          = $8578
      cat3_y          = $8579
      cat3_fr         = $857A
+     cat3_slot       = $8573
+     cat3_tile       = $8574
+     cat3_state      = $8577
+     cat3_ai_ptr     = $8588 ; from $2C06
+     cat3_busy       = $858B
+     cat3_ptr2       = $858D ; from $2B28
 
      snake1_enable   = $8600
      snake1_active   = $8601
      snake2_enable   = $8602
      snake2_active   = $8603
+     snake1_ai_init  = $8608
+     snake2_ai_init  = $8609
 
      snake1_bytes    = $8610 ; tee hee, snake bytes
+     snake1_slot     = $8613
+     snake1_tile     = $8614 ;
+     snake1_state    = $8617 ;
      snake1_x        = $8618
      snake1_y        = $8619
      snake1_fr       = $861A
+     snake1_dly_ptr  = $8628 ; +18 spawn-delay ptr (from spawn_delay_sa $3315 via $32F7)
+     snake1_busy     = $862B ; +1B
 
      snake2_bytes    = $8630
+     snake2_slot     = $8633
+     snake2_tile     = $8634
+     snake2_state    = $8637
      snake2_x        = $8638
      snake2_y        = $8639
      snake2_fr       = $863A
+     snake2_dly_ptr  = $8648 ; from spawn_delay_sb $332B
+     snake2_busy     = $864B
 
      bombs           = $867f
      bomb_placed     = $8680
@@ -92,7 +155,7 @@
      sound_enable    = $b003
      flip_scr_x      = $b006
      flip_scr_y      = $b007
-     watchdog        = $B800 ;
+     watchdog        = $B800
 
      hw_in_0         = $A000 ; 1 = L, 2 = R, 4 = down, 8 = up
      hw_in_1         = $A800 ; 0x4 = P1, 0x8 = P2
@@ -115,13 +178,12 @@
      TILE_BLANK      = $24
      TILE_WATER      = $37
      TILE_WATER_2    = $38
-     TILE_PLATFORM   = $F4
-     TILE_GAP        = $FE ; open water/gap: enemy death (cat/snake_water_die); player enter-hole ($294C); blocks walk
-     TILE_EXIT_HOLE  = $F5 ; over exit/hole -> sets player over-hole flag $842D ($28EB)
      TILE_BOULDER    = $39 ; boulder rest tile (paired with $3A); touching it spawns a falling boulder
+     TILE_PLATFORM   = $F4
+     TILE_EXIT_HOLE  = $F5 ; over exit/hole -> sets player over-hole flag $842D ($28EB)
+     TILE_GAP        = $FE ; open water/gap: enemy death (cat/snake_water_die); player enter-hole ($294C); blocks walk
 
  ;;; ============ RE: state / globals ============
- ;;; (reverse-engineered; see CLAUDE.md. is_playing=$8030 is game_mode,
  ;;;  screen_state=$8039 req_flags, cur_screen=$803B seq_state 0..8)
 
      dsw_raw         = $8020 ; raw DIP copy
@@ -195,57 +257,6 @@
      scripted_move   = $3D0A ; scripted player move (home-entry), block $80E0-$80E7
      boulder_update  = $41BC ; boulder: spawn-on-touch / fall / despawn (slot 7)
 
- ;;; ============ RE: enemy record fields ============
- ;;; Shared 32-byte record. funnymou already has: catN_bytes(+0), catN_x(+8),
- ;;;  catN_y(+9), catN_fr(+A), catN_dir(+B). New fields below, verified this session
- ;;;  from the sprite commit ($309C), setup_cat_1 ($2B6E: cat_ai called with hl=base+7),
- ;;;  the cat1 template ($2B75), and the managers' $31CF/$32F7 pointer loads:
- ;;;    +3  slot-link (low byte of $80xx sprite addr, -> sprite +1)
- ;;;    +4  base tile (+flip) -> sprite +1
- ;;;    +7  AI state: 1=appear, 3/4=chase, 5/6=caught/dying, 7  (dispatched by cat_ai/snake_ai)
- ;;;    +18 16-bit level-indexed ptr (cats: AI-waypoint table; snakes: spawn-delay table)
- ;;;    +1B busy / not-collidable lock (1 while appearing or dying)
- ;;;    +1D 16-bit level-indexed secondary ptr (cats, from shared table $2B28)
- ;;;  catN_ai_init = page-85/86 one-shot "AI path loaded" guard flags.
-
-     cat1_slot       = $8513 ; +3  (=$05 -> sprite slot1 +1)
-     cat1_tile       = $8514 ; +4  base tile -> sprite +1
-     cat1_state      = $8517 ; +7  AI state
-     cat1_ai_ptr     = $8528 ; +18 AI-waypoint ptr (from $2B5A via $31CF)
-     cat1_busy       = $852B ; +1B busy / no-collide lock
-     cat1_ptr2       = $852D ; +1D secondary ptr (from $2B28 via $31CF)
-     cat1_ai_init    = $8508 ; one-shot AI-path-loaded flag
-
-     cat2_slot       = $8553
-     cat2_tile       = $8554
-     cat2_state      = $8557
-     cat2_ai_ptr     = $8568 ; from $2BB0
-     cat2_busy       = $856B
-     cat2_ptr2       = $856D ; from $2B28
-     cat2_ai_init    = $850A
-
-     cat3_slot       = $8573
-     cat3_tile       = $8574
-     cat3_state      = $8577
-     cat3_ai_ptr     = $8588 ; from $2C06
-     cat3_busy       = $858B
-     cat3_ptr2       = $858D ; from $2B28
-     cat3_ai_init    = $850B
-
-     snake1_slot     = $8613 ; +3
-     snake1_tile     = $8614 ; +4
-     snake1_state    = $8617 ; +7
-     snake1_dly_ptr  = $8628 ; +18 spawn-delay ptr (from spawn_delay_sa $3315 via $32F7)
-     snake1_busy     = $862B ; +1B
-     snake1_ai_init  = $8608
-
-     snake2_slot     = $8633
-     snake2_tile     = $8634
-     snake2_state    = $8637
-     snake2_dly_ptr  = $8648 ; from spawn_delay_sb $332B
-     snake2_busy     = $864B
-     snake2_ai_init  = $8609
-
  ;;; ============ start of suprmous.x1 =============
 
 start:
@@ -306,7 +317,7 @@ start:
     push bc
     push de
     push hl
-    ex   af,af'
+    ex   af,af' ;'
     exx
     push af
     push bc
@@ -335,7 +346,7 @@ start:
     pop  bc
     pop  af
     exx
-    ex   af,af'
+    ex   af,af' ; '
     pop  hl
     pop  de
     pop  bc
@@ -591,10 +602,10 @@ start:
     ex   af,af'
     cp   $77
     jp   nz,$0314
-    ex   af,af'
+    ex   af,af' ; '
     ld   a,$E0
     ld   (watchdog),a
-    ex   af,af'
+    ex   af,af' ; '
     and  a
     jp   z,$0319
     ret
@@ -1047,9 +1058,9 @@ start:
     call $070A
     ret
     ld   b,$03
-    ex   af,af'
+    ex   af,af' ; '
     ld   a,$06
-    ex   af,af'
+    ex   af,af' ; '
     ld   a,(ix+$00)
     ld   c,a
     rrca
@@ -1070,18 +1081,18 @@ start:
     and  a
     jp   z,$0734
     ld   (de),a
-    ex   af,af'
+    ex   af,af' ; '
     ld   a,$01
-    ex   af,af'
+    ex   af,af' ; '
     ret
-    ex   af,af'
+    ex   af,af' ; '
     cp   $01
     jp   nz,$073D
-    ex   af,af'
+    ex   af,af' ; '
     ld   (de),a
     ret
     dec  a
-    ex   af,af'
+    ex   af,af' ; '
     ld   a,$24
     ld   (de),a
     ret
@@ -1535,7 +1546,7 @@ start:
     and  d
     and  d
     inc  h
-    ex   af,af'
+    ex   af,af' ; '
     inc  h
     inc  h
     inc  h
@@ -1958,7 +1969,7 @@ start:
     inc  h
     inc  h
     inc  h
-    ex   af,af'
+    ex   af,af' ; '
     inc  h
     inc  h
     inc  h
@@ -1986,7 +1997,7 @@ start:
     inc  h
     inc  h
     inc  h
-    inc  h
+	    inc  h
     inc  h
     ld   bc,$2424
     inc  h
@@ -3430,9 +3441,9 @@ start:
     ld   hl,$9043
     ld   b,$1C
     ld   c,$1C
-    ex   af,af'
+    ex   af,af' ; '
     call $1360
-    ex   af,af'
+    ex   af,af' ; '
     ld   de,$0020
     ld   hl,$9443
     ld   b,$1C
@@ -3481,8 +3492,9 @@ start:
     jr   nz,$1384
     ret
 
- ;; very chunky data
- level_1_map:
+ ;;; very chunky data
+ ;;; Looks like a lot of level data down to $1FD0 (3135 bytes)
+ level_1_map:     ; next map at 16A0 (783 bytes per screen?)
     dc   54, $25  ; two rows of blanks
      dc    5, $25  ; plus the top of col 3
     dc   24, $F5  ; 24 ladder tiles
@@ -3946,6 +3958,7 @@ start:
     dec  h
     dec  h
     dec  h
+ ;;; Another map?
     dec  h
     dec  h
     dec  h
@@ -4536,6 +4549,7 @@ start:
     dec  h
     dec  h
     dec  h
+ ;;; another map?
     dec  h
     dec  h
     dec  h
@@ -5126,6 +5140,7 @@ start:
     dec  h
     dec  h
     dec  h
+ ;;; Another map?
     dec  h
     dec  h
     dec  h

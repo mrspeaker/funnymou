@@ -1,7 +1,7 @@
                     ram_start       = $8000
 
                     credits         = $8023
-                    is_playing      = $8030
+                    is_playing      = $8030 ; mode 0=attract, 1=1P, 2=2P
                     screen_state    = $8039 ; 10=ready, 40=go to gamble
                     cur_screen      = $803B ; 1=splash;6=game etc
                     score_lo        = $8044
@@ -16,6 +16,7 @@
                     carrying_3      = $80A2 ; carrying food... dropped?
                     carry_x         = $80A5
                     carry_tile      = $80A6 ; what item player is carrying
+                    ;; carry_tile_y   = $80A7 ; I bet it's x/y
                     carry_y         = $80A8
 
                     lives           = $8100
@@ -36,35 +37,97 @@
                     cat3_enable     = $8506
                     cat3_active     = $8507
 
-                    cat1_bytes      = $8510 ; 29 bytes
+                    cat1_ai_init    = $8508 ; one-shot AI-path-loaded flag
+                    cat2_ai_init    = $850A
+                    cat3_ai_init    = $850B
+
+                ;;; =============================
+                ;;; Enemy data structure 32 bytes
+                ;;; =============================
+                ;;; +$00 step/move counter
+                ;;; +$03 sprite-slot link (low byte of `$80xx` mirror addr: `$05`/`$0D`/`$11`/`$15`/`$19`)
+                ;;; +$04 base tile (+flip) -> sprite +1
+                ;;; +$07 AI state: 1=appear, 3/4=walk-chase, 5/6=caught/dying, 7?
+                ;;; +$08 X -> sprite +0 (HW-Y; ROT90)
+                ;;; +$09 Y -> sprite +3 (HW-X; ROT90)
+                ;;; +$0D..+$11 -> velocity/direction deltas (`$FF`/`$01`: ±1)
+                ;;; +$18/$19 AI waypoint-table pointer (level-indexed; via `$31CF`)
+                ;;; +$1A appear/spawn timer
+                ;;; +$1B busy/not-collidable lock (1 while appearing or dying)
+                ;;; +$1D/$1E secondary pointer (level-indexed)
+                ;;; ============ enemy record fields ============
+                ;;; Shared 32-byte record. New fields below, verified this session
+                ;;;  from the sprite commit ($309C), setup_cat_1 ($2B6E: cat_ai called with hl=base+7),
+                ;;;  the cat1 template ($2B75), and the managers' $31CF/$32F7 pointer loads:
+                ;;;    +3  slot-link (low byte of $80xx sprite addr, -> sprite +1)
+                ;;;    +4  base tile (+flip) -> sprite +1
+                ;;;    +7  AI state: 1=appear, 3/4=chase, 5/6=caught/dying, 7  (dispatched by cat_ai/snake_ai)
+                ;;;    +18 16-bit level-indexed ptr (cats: AI-waypoint table; snakes: spawn-delay table)
+                ;;;    +1B busy / not-collidable lock (1 while appearing or dying)
+                ;;;    +1D 16-bit level-indexed secondary ptr (cats, from shared table $2B28)
+                ;;;  catN_ai_init = page-85/86 one-shot "AI path loaded" guard flags.
+                ;; =================================================
+
+                    cat1_bytes      = $8510 ; 32 bytes
+                    cat1_slot       = $8513 ; +3  (=$05 -> sprite slot1 +1)
+                    cat1_tile       = $8514 ; +4  base tile -> sprite +1
+                    cat1_state      = $8517 ; +7  AI state
                     cat1_x          = $8518
                     cat1_y          = $8519
                     cat1_fr         = $851A
                     cat1_dir        = $851B ; 1 = L, 2 = R, 4 = U, 5 = d
+                    cat1_ai_ptr     = $8528 ; +18 AI-waypoint ptr (from $2B5A via $31CF)
+                    cat1_busy       = $852B ; +1B busy / no-collide lock
+                    cat1_ptr2       = $852D ; +1D secondary ptr (from $2B28 via $31CF)
+
                     cat2_bytes      = $8550 ; 29 bytes: to 856D
+                    cat2_slot       = $8553
+                    cat2_tile       = $8554
+                    cat2_state      = $8557
                     cat2_x          = $8558
                     cat2_y          = $8559
                     cat2_fr         = $855A
+                    cat2_ai_ptr     = $8568 ; from $2BB0
+                    cat2_busy       = $856B
+                    cat2_ptr2       = $856D ; from $2B28
 
                     cat3_bytes      = $8570 ; 29 bytes
                     cat3_x          = $8578
                     cat3_y          = $8579
                     cat3_fr         = $857A
+                    cat3_slot       = $8573
+                    cat3_tile       = $8574
+                    cat3_state      = $8577
+                    cat3_ai_ptr     = $8588 ; from $2C06
+                    cat3_busy       = $858B
+                    cat3_ptr2       = $858D ; from $2B28
 
                     snake1_enable   = $8600
                     snake1_active   = $8601
                     snake2_enable   = $8602
                     snake2_active   = $8603
+                    snake1_ai_init  = $8608
+                    snake2_ai_init  = $8609
 
                     snake1_bytes    = $8610 ; tee hee, snake bytes
+                    snake1_slot     = $8613
+                    snake1_tile     = $8614 ;
+                    snake1_state    = $8617 ;
                     snake1_x        = $8618
                     snake1_y        = $8619
                     snake1_fr       = $861A
+                    snake1_dly_ptr  = $8628 ; +18 spawn-delay ptr (from spawn_delay_sa $3315 via $32F7)
+                    snake1_busy     = $862B ; +1B
 
                     snake2_bytes    = $8630
+                    snake2_slot     = $8633
+                    snake2_tile     = $8634
+                    snake2_state    = $8637
                     snake2_x        = $8638
                     snake2_y        = $8639
                     snake2_fr       = $863A
+                    snake2_dly_ptr  = $8648 ; from spawn_delay_sb $332B
+                    snake2_busy     = $864B
 
                     bombs           = $867f
                     bomb_placed     = $8680
@@ -92,7 +155,7 @@
                     sound_enable    = $b003
                     flip_scr_x      = $b006
                     flip_scr_y      = $b007
-                    watchdog        = $B800 ;
+                    watchdog        = $B800
 
                     hw_in_0         = $A000 ; 1 = L, 2 = R, 4 = down, 8 = up
                     hw_in_1         = $A800 ; 0x4 = P1, 0x8 = P2
@@ -115,13 +178,12 @@
                     TILE_BLANK      = $24
                     TILE_WATER      = $37
                     TILE_WATER_2    = $38
-                    TILE_PLATFORM   = $F4
-                    TILE_GAP        = $FE ; open water/gap: enemy death (cat/snake_water_die); player enter-hole ($294C); blocks walk
-                    TILE_EXIT_HOLE  = $F5 ; over exit/hole -> sets player over-hole flag $842D ($28EB)
                     TILE_BOULDER    = $39 ; boulder rest tile (paired with $3A); touching it spawns a falling boulder
+                    TILE_PLATFORM   = $F4
+                    TILE_EXIT_HOLE  = $F5 ; over exit/hole -> sets player over-hole flag $842D ($28EB)
+                    TILE_GAP        = $FE ; open water/gap: enemy death (cat/snake_water_die); player enter-hole ($294C); blocks walk
 
                 ;;; ============ RE: state / globals ============
-                ;;; (reverse-engineered; see CLAUDE.md. is_playing=$8030 is game_mode,
                 ;;;  screen_state=$8039 req_flags, cur_screen=$803B seq_state 0..8)
 
                     dsw_raw         = $8020 ; raw DIP copy
@@ -195,57 +257,6 @@
                     scripted_move   = $3D0A ; scripted player move (home-entry), block $80E0-$80E7
                     boulder_update  = $41BC ; boulder: spawn-on-touch / fall / despawn (slot 7)
 
-                ;;; ============ RE: enemy record fields ============
-                ;;; Shared 32-byte record. funnymou already has: catN_bytes(+0), catN_x(+8),
-                ;;;  catN_y(+9), catN_fr(+A), catN_dir(+B). New fields below, verified this session
-                ;;;  from the sprite commit ($309C), setup_cat_1 ($2B6E: cat_ai called with hl=base+7),
-                ;;;  the cat1 template ($2B75), and the managers' $31CF/$32F7 pointer loads:
-                ;;;    +3  slot-link (low byte of $80xx sprite addr, -> sprite +1)
-                ;;;    +4  base tile (+flip) -> sprite +1
-                ;;;    +7  AI state: 1=appear, 3/4=chase, 5/6=caught/dying, 7  (dispatched by cat_ai/snake_ai)
-                ;;;    +18 16-bit level-indexed ptr (cats: AI-waypoint table; snakes: spawn-delay table)
-                ;;;    +1B busy / not-collidable lock (1 while appearing or dying)
-                ;;;    +1D 16-bit level-indexed secondary ptr (cats, from shared table $2B28)
-                ;;;  catN_ai_init = page-85/86 one-shot "AI path loaded" guard flags.
-
-                    cat1_slot       = $8513 ; +3  (=$05 -> sprite slot1 +1)
-                    cat1_tile       = $8514 ; +4  base tile -> sprite +1
-                    cat1_state      = $8517 ; +7  AI state
-                    cat1_ai_ptr     = $8528 ; +18 AI-waypoint ptr (from $2B5A via $31CF)
-                    cat1_busy       = $852B ; +1B busy / no-collide lock
-                    cat1_ptr2       = $852D ; +1D secondary ptr (from $2B28 via $31CF)
-                    cat1_ai_init    = $8508 ; one-shot AI-path-loaded flag
-
-                    cat2_slot       = $8553
-                    cat2_tile       = $8554
-                    cat2_state      = $8557
-                    cat2_ai_ptr     = $8568 ; from $2BB0
-                    cat2_busy       = $856B
-                    cat2_ptr2       = $856D ; from $2B28
-                    cat2_ai_init    = $850A
-
-                    cat3_slot       = $8573
-                    cat3_tile       = $8574
-                    cat3_state      = $8577
-                    cat3_ai_ptr     = $8588 ; from $2C06
-                    cat3_busy       = $858B
-                    cat3_ptr2       = $858D ; from $2B28
-                    cat3_ai_init    = $850B
-
-                    snake1_slot     = $8613 ; +3
-                    snake1_tile     = $8614 ; +4
-                    snake1_state    = $8617 ; +7
-                    snake1_dly_ptr  = $8628 ; +18 spawn-delay ptr (from spawn_delay_sa $3315 via $32F7)
-                    snake1_busy     = $862B ; +1B
-                    snake1_ai_init  = $8608
-
-                    snake2_slot     = $8633
-                    snake2_tile     = $8634
-                    snake2_state    = $8637
-                    snake2_dly_ptr  = $8648 ; from spawn_delay_sb $332B
-                    snake2_busy     = $864B
-                    snake2_ai_init  = $8609
-
                 ;;; ============ start of suprmous.x1 =============
 
 0000          	start:
@@ -306,7 +317,7 @@ NMI_LOOP        NMI_LOOP:
 006C  C5      	    push bc
 006D  D5      	    push de
 006E  E5      	    push hl
-006F  08      	    ex   af,af'
+006F  08      	    ex   af,af' ;'
 0070  D9      	    exx
 0071  F5      	    push af
 0072  C5      	    push bc
@@ -335,7 +346,7 @@ NMI_LOOP        NMI_LOOP:
 0091  C1      	    pop  bc
 0092  F1      	    pop  af
 0093  D9      	    exx
-0094  08      	    ex   af,af'
+0094  08      	    ex   af,af' ; '
 0095  E1      	    pop  hl
 0096  D1      	    pop  de
 0097  C1      	    pop  bc
@@ -585,16 +596,16 @@ zeros               dc 97,0
 02F9  323D80  	    ld   (disp_timer),a
 02FC  FE7E    	    cp   $7E
 02FE  C20803  	    jp   nz,$0308
-0301  08      	    ex   af,af'
+0301  08      	    ex   af,af' ; '
 0302  3EA0    	    ld   a,$A0
 0304  3200B8  	    ld   (watchdog),a
-0307  08      	    ex   af,af'
+0307  08      	    ex   af,af' ; '
 0308  FE77    	    cp   $77
 030A  C21403  	    jp   nz,$0314
-030D  08      	    ex   af,af'
+030D  08      	    ex   af,af' ; '
 030E  3EE0    	    ld   a,$E0
 0310  3200B8  	    ld   (watchdog),a
-0313  08      	    ex   af,af'
+0313  08      	    ex   af,af' ; '
 0314  A7      	    and  a
 0315  CA1903  	    jp   z,$0319
 0318  C9      	    ret
@@ -1047,9 +1058,9 @@ zeros               dc   55,0
 0706  CD0A07  	    call $070A
 0709  C9      	    ret
 070A  0603    	    ld   b,$03
-070C  08      	    ex   af,af'
+070C  08      	    ex   af,af' ; '
 070D  3E06    	    ld   a,$06
-070F  08      	    ex   af,af'
+070F  08      	    ex   af,af' ; '
 0710  DD7E00  	    ld   a,(ix+$00)
 0713  4F      	    ld   c,a
 0714  0F      	    rrca
@@ -1070,18 +1081,18 @@ zeros               dc   55,0
 072A  A7      	    and  a
 072B  CA3407  	    jp   z,$0734
 072E  12      	    ld   (de),a
-072F  08      	    ex   af,af'
+072F  08      	    ex   af,af' ; '
 0730  3E01    	    ld   a,$01
-0732  08      	    ex   af,af'
+0732  08      	    ex   af,af' ; '
 0733  C9      	    ret
-0734  08      	    ex   af,af'
+0734  08      	    ex   af,af' ; '
 0735  FE01    	    cp   $01
 0737  C23D07  	    jp   nz,$073D
-073A  08      	    ex   af,af'
+073A  08      	    ex   af,af' ; '
 073B  12      	    ld   (de),a
 073C  C9      	    ret
 073D  3D      	    dec  a
-073E  08      	    ex   af,af'
+073E  08      	    ex   af,af' ; '
 073F  3E24    	    ld   a,$24
 0741  12      	    ld   (de),a
 0742  C9      	    ret
@@ -1535,7 +1546,7 @@ zeros               dc   55,0
 0A32  A2      	    and  d
 0A33  A2      	    and  d
 0A34  24      	    inc  h
-0A35  08      	    ex   af,af'
+0A35  08      	    ex   af,af' ; '
 0A36  24      	    inc  h
 0A37  24      	    inc  h
 0A38  24      	    inc  h
@@ -1958,7 +1969,7 @@ zeros               dc   55,0
 0BDA  24      	    inc  h
 0BDB  24      	    inc  h
 0BDC  24      	    inc  h
-0BDD  08      	    ex   af,af'
+0BDD  08      	    ex   af,af' ; '
 0BDE  24      	    inc  h
 0BDF  24      	    inc  h
 0BE0  24      	    inc  h
@@ -1986,7 +1997,7 @@ zeros               dc   55,0
 0BF8  24      	    inc  h
 0BF9  24      	    inc  h
 0BFA  24      	    inc  h
-0BFB  24      	    inc  h
+/0BFB  24      	    inc  h
 0BFC  24      	    inc  h
 0BFD  012424  	    ld   bc,$2424
 0C00  24      	    inc  h
@@ -3430,9 +3441,9 @@ zeros               dc   55,0
 1346  214390  	    ld   hl,$9043
 1349  061C    	    ld   b,$1C
 134B  0E1C    	    ld   c,$1C
-134D  08      	    ex   af,af'
+134D  08      	    ex   af,af' ; '
 134E  CD6013  	    call $1360
-1351  08      	    ex   af,af'
+1351  08      	    ex   af,af' ; '
 1352  112000  	    ld   de,$0020
 1355  214394  	    ld   hl,$9443
 1358  061C    	    ld   b,$1C
@@ -3481,8 +3492,9 @@ zeros               dc   55,0
 138E  20F4    	    jr   nz,$1384
 1390  C9      	    ret
 
-                ;; very chunky data
-                level_1_map:
+                ;;; very chunky data
+                ;;; Looks like a lot of level data down to $1FD0 (3135 bytes)
+                level_1_map:     ; next map at 16A0 (783 bytes per screen?)
 1391  25      	    dc   54, $25  ; two rows of blanks
 13B8                dc    5, $25  ; plus the top of col 3
 13CC  F5      	    dc   24, $F5  ; 24 ladder tiles
@@ -3946,6 +3958,7 @@ zeros               dc   55,0
 169E  25      	    dec  h
 169F  25      	    dec  h
 16A0  25      	    dec  h
+                ;;; Another map?
 16A1  25      	    dec  h
 16A2  25      	    dec  h
 16A3  25      	    dec  h
@@ -4536,6 +4549,7 @@ zeros               dc   55,0
 19AE  25      	    dec  h
 19AF  25      	    dec  h
 19B0  25      	    dec  h
+                ;;; another map?
 19B1  25      	    dec  h
 19B2  25      	    dec  h
 19B3  25      	    dec  h
@@ -5126,6 +5140,7 @@ zeros               dc   55,0
 1CBE  25      	    dec  h
 1CBF  25      	    dec  h
 1CC0  25      	    dec  h
+                ;;; Another map?
 1CC1  25      	    dec  h
 1CC2  25      	    dec  h
 1CC3  25      	    dec  h
@@ -6006,10 +6021,10 @@ zeros               dc   55,0
 2222  C27122  	    jp   nz,$2271
 2225  0C      	    inc  c
 2226  79      	    ld   a,c
-2227  08      	    ex   af,af'
+2227  08      	    ex   af,af' ; '
 2228  217E23  	    ld   hl,$237E
 222B  CD2E21  	    call $212E
-222E  08      	    ex   af,af'
+222E  08      	    ex   af,af' ; '
 222F  77      	    ld   (hl),a
 2230  114680  	    ld   de,score_hi
 2233  0F      	    rrca
@@ -6091,10 +6106,10 @@ zeros               dc   55,0
 22D8  7E      	    ld   a,(hl)
 22D9  C601    	    add  a,$01
 22DB  27      	    daa
-22DC  08      	    ex   af,af'
+22DC  08      	    ex   af,af' ; '
 22DD  218823  	    ld   hl,$2388
 22E0  CD2E21  	    call $212E
-22E3  08      	    ex   af,af'
+22E3  08      	    ex   af,af' ; '
 22E4  323780  	    ld   ($8037),a
 22E7  113780  	    ld   de,$8037
 22EA  0602    	    ld   b,$02
@@ -6349,10 +6364,10 @@ zeros               dc   55,0
 24A7  0F      	    rrca
 24A8  010F01  	    ld   bc,$010F
 24AB  6F      	    ld   l,a
-24AC  08      	    ex   af,af'
+24AC  08      	    ex   af,af' ; '
 24AD  04      	    inc  b
 24AE  106F    	    djnz $251F
-24B0  08      	    ex   af,af'
+24B0  08      	    ex   af,af' ; '
 24B1  0F      	    rrca
 24B2  02      	    ld   (bc),a
 24B3  4F      	    ld   c,a
@@ -6362,13 +6377,13 @@ zeros               dc   55,0
 24B7  0F      	    rrca
 24B8  010F01  	    ld   bc,$010F
 24BB  0F      	    rrca
-24BC  08      	    ex   af,af'
+24BC  08      	    ex   af,af' ; '
 24BD  0F      	    rrca
-24BE  08      	    ex   af,af'
+24BE  08      	    ex   af,af' ; '
 24BF  0F      	    rrca
 24C0  010F01  	    ld   bc,$010F
 24C3  6F      	    ld   l,a
-24C4  08      	    ex   af,af'
+24C4  08      	    ex   af,af' ; '
 24C5  3F      	    ccf
 24C6  02      	    ld   (bc),a
 24C7  1F      	    rra
@@ -6385,7 +6400,7 @@ zeros               dc   55,0
 24D5  6F      	    ld   l,a
 24D6  02      	    ld   (bc),a
 24D7  0F      	    rrca
-24D8  08      	    ex   af,af'
+24D8  08      	    ex   af,af' ; '
 24D9  0F      	    rrca
 24DA  013F01  	    ld   bc,$013F
 24DD  1F      	    rra
@@ -6425,7 +6440,7 @@ zeros               dc   55,0
 2504  C20D25  	    jp   nz,$250D
 2507  119B24  	    ld   de,$249B
 250A  C30125  	    jp   $2501
-250D  08      	    ex   af,af'
+250D  08      	    ex   af,af' ; '
 250E  13      	    inc  de
 250F  1A      	    ld   a,(de)
 2510  13      	    inc  de
@@ -6433,9 +6448,9 @@ zeros               dc   55,0
 2512  2B      	    dec  hl
 2513  73      	    ld   (hl),e
 2514  2B      	    dec  hl
-2515  08      	    ex   af,af'
+2515  08      	    ex   af,af' ; '
 2516  77      	    ld   (hl),a
-2517  08      	    ex   af,af'
+2517  08      	    ex   af,af' ; '
 2518  C37425  	    jp   $2574
 
                 get_player_tile_pos:
@@ -6506,10 +6521,10 @@ zeros               dc   55,0
 2598  3A1F84  	    ld   a,($841F)
 259B  FE01    	    cp   $01
 259D  CABC25  	    jp   z,$25BC
-25A0  08      	    ex   af,af'
+25A0  08      	    ex   af,af' ; '
 25A1  3E00    	    ld   a,$00
 25A3  321684  	    ld   ($8416),a
-25A6  08      	    ex   af,af'
+25A6  08      	    ex   af,af' ; '
 25A7  FE02    	    cp   $02
 25A9  CAC225  	    jp   z,$25C2
 25AC  FE00    	    cp   $00
@@ -8261,7 +8276,7 @@ _
 31ED  00      	    nop
 31EE  00      	    nop
 31EF  00      	    nop
-31F0  08      	    ex   af,af'
+31F0  08      	    ex   af,af' ; '
 31F1  14      	    inc  d
 31F2  04      	    inc  b
 31F3  00      	    nop
@@ -10201,7 +10216,7 @@ _
 3F34  3E09    	    ld   a,$09
 3F36  214081  	    ld   hl,food_returned
 3F39  010000  	    ld   bc,$0000
-3F3C  08      	    ex   af,af'
+3F3C  08      	    ex   af,af' ; '
 3F3D  7E      	    ld   a,(hl)
 3F3E  A7      	    and  a
 3F3F  C44C3F  	    call nz,$3F4C
@@ -10209,7 +10224,7 @@ _
 3F43  23      	    inc  hl
 3F44  0C      	    inc  c
 3F45  0C      	    inc  c
-3F46  08      	    ex   af,af'
+3F46  08      	    ex   af,af' ; '
 3F47  3D      	    dec  a
 3F48  C23C3F  	    jp   nz,$3F3C
 3F4B  C9      	    ret
@@ -11026,7 +11041,7 @@ _
 44FF  15      	    dec  d
 4500  00      	    nop
 4501  00      	    nop
-4502  08      	    ex   af,af'
+4502  08      	    ex   af,af' ; '
 4503  00      	    nop
 4504  00      	    nop
 4505  1000    	    djnz $4507
@@ -11034,7 +11049,7 @@ _
 4508  05      	    dec  b
 4509  00      	    nop
 450A  00      	    nop
-450B  08      	    ex   af,af'
+450B  08      	    ex   af,af' ; '
 450C  00      	    nop
 450D  00      	    nop
 450E  04      	    inc  b
