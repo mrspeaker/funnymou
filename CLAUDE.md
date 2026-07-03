@@ -242,7 +242,7 @@ Bases: **`$8510`, `$8550`, `$8570`** (cats A/B/C, page-$85 manager `$2A51`) and
 | +$00 | step/move counter |
 | +$03 | sprite-slot link (low byte of `$80xx` mirror addr: `$05`/`$0D`/`$11`/`$15`/`$19`) |
 | +$04 | base tile (+flip) → sprite +1 |
-| +$07 | **AI state**: 1=appear, 3/4=walk-chase, 5/6=caught/dying, 7 |
+| +$07 | **AI state**: 1=appear/emerge (→3 when emerge-ctr `+$13`≥`$80`), 3=active chase (only active state), 4=dying/return start, 5/6/7=return-home→respawn |
 | +$08 | **X** (game-logic, joystick axis) → sprite +0 (HW-Y; ROT90). funnymou `cat1_x`=`$8518` |
 | +$09 | **Y** (game-logic) → sprite +3 (HW-X; ROT90). funnymou `cat1_y`=`$8519` |
 | +$0D..+$11 | velocity/direction deltas (`$FF`/`$01` = ±1) |
@@ -434,9 +434,14 @@ global level gate `$803E`.
 
 ### Shared per-enemy engine — `$2C3E` (cats) / `$333F` (snakes)
 Dispatches on the enemy's **state field (record +$07)**:
-`1`=appear (increments an emerge counter, promotes to state 3 at ≥`$80`),
-`3/4`=**active maze chase** (the interesting part),
-`4/5/6/7`=eaten → animate → return-home → respawn (handlers `$30DD/$311C/$3150/$3184`).
+`1`=appear/emerge (handler `$2C70`) — plays the rise-out animation and increments the **emerge
+counter at record `+$13`** once per frame; the instant it reaches **`$80`** (128, ≈2 s) it
+**promotes to state 3** (`$2C98`: clears `+$14`, writes state=`$03`). This is the *only*
+"starts chasing" transition — there is **no persistent walk-vs-chase mode toggle**.
+`3`=**active maze chase** (the interesting part — handler `$2CB6`; the *only* active state).
+`4`=dying/return-home start, `5/6/7`=animate → return-home → respawn (handlers
+`$30DD/$311C/$3150/$3184`). *(Correction: state 4 is **not** a second chase state — the
+dispatch sends it to the dying handler `$30DD`.)*
 
 ### The chase algorithm (state 3)
 Per enemy, once it is grid-aligned at a maze cell:
@@ -457,11 +462,16 @@ Per enemy, once it is grid-aligned at a maze cell:
    *hardware* sprite X/Y bytes; under ROT90 they hold game-Y/game-X respectively — see §5. The
    enemy compares its own matching sprite byte, so the chase is self-consistent either way.)
 
-2. **Semi-random imperfection.** A per-enemy counter is incremented each pass; when it hits an
-   excluded value the chase call is skipped and the enemy drifts. The RNG source is the Z80
+2. **Semi-random imperfection (per-junction chase-vs-drift).** The re-steer only happens at a
+   maze **junction/control tile**, and even there it is gated by the enemy's own **step counter
+   (record `+$00`)**: the junction handler does `ld a,(bc); and mask; cp excluded; call nz,$2D0E`
+   — so it re-aims at the player *unless* the counter hits the excluded value, in which case it
+   skips the re-aim and keeps walking straight. Each junction type has its own mask/excluded
+   value: `$10`-tile `(cnt&3)==0` (`$2D5B`), `$30`-tile `(cnt&3)==2` (`$2D72`), `$50`-tile
+   `(cnt&7)==5` (`$2D89`), `$70`-tile `(cnt&7)==7` (`$2DA3`). This isn't a mode change — it's a
+   per-junction dice roll that makes the beeline imperfect. The other RNG source is the Z80
    **R (refresh) register**: `ld a,r; and $03` at `$2CEC` (also `$2E24`, `$2E74`;
-   snake twins `$33DB`, `$3509`). Used both to "wander instead of chase" and to pick a
-   turn when blocked.
+   snake twins `$33DB`, `$3509`), used to pick a turn when blocked.
 
 3. **Wall / maze checks.** Helper **`$30B3`** (a per-actor clone of `$251B`) converts the
    enemy's own X/Y into a VRAM tile address (`$9000`+). Each per-direction mover
@@ -721,7 +731,11 @@ at the table's first byte rather than an equate.)
 - Snake manager (`$3206`) internals were inferred as a twin of the cat manager — verify
   directly, and confirm what actually distinguishes cats from snakes (graphics only, or
   behaviour — e.g. the different wall-code set `$FE`/`$E1-$E4`).
-- Difference between enemy states 3 and 4 (both "active"); and states 5/6/7 animation details.
+- ~~Difference between enemy states 3 and 4~~ **RESOLVED**: only **3** is active chase (`$2CB6`);
+  **4** is the dying/return-home start (`$30DD`). State 1→3 promotes when the emerge counter
+  (record `+$13`) reaches `$80`; there is no persistent walk-vs-chase mode (chase-vs-drift is a
+  per-junction dice roll on the step counter `+$00` — see §6). Remaining: states 5/6/7 animation
+  details.
 - Sound command values (writes to `$B800`) → map to audio-CPU behaviors (`fm.6`).
 - The attract-demo script (`attract_demo_script` `$249B`-`$24FC`, now `db` data) decoding: it's
   `$0F`-prefixed FF-terminated byte pairs consumed from `$2507` (`ld de,attract_demo_script`) —
