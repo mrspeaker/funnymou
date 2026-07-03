@@ -263,7 +263,7 @@ per enemy, a `[enable, spawned]` byte pair used as the "present"/spawn guard:
 ### ROM record templates
 | ROM | Size | → RAM | Actor |
 |-----|------|-------|-------|
-| `$246C` | `$2E` | `$8400` | Player |
+| `$246C` (`player_init_template`) | `$2E` | `$8400` | Player |
 | `$2B75` | `$1D` | `$8510` | Cat A |
 | `$2BCB` | `$1D` | `$8550` | Cat B |
 | `$2C21` | `$1D` | `$8570` | Cat C |
@@ -533,8 +533,9 @@ $1391-$1FD0 : DATA  ** 4 MAZE TILEMAPS ** — banks of $310 bytes (=28x28) each:
                     level_1_map=$1391, $16A1, $19B1, $1CC1  (selected by ($8101 & 3),
                     blitted 28x28 to VRAM $9043)
 $1FD1-$3FB3 : CODE  main engine (state dispatch $1FD1, actor/AI engine, collisions)
-                    embedded data: $2342-$2390 display list; $246C-$249A player init record;
-                    $249B-$24FC FF-terminated attract-demo movement script; misc delta tables
+                    embedded data: $2342-$2390 display list; player_init_template $246C-$2499
+                    (46B, ldir'd to $8400) + pad $249A; attract_demo_script $249B-$24FC
+                    (FF-terminated joystick script, $0F-prefixed byte pairs); misc delta tables
 $3FB4-$407C : DATA  VRAM-position pointer tables (ix=$3FB4/$3FC6, stride $12/$20) + small jump table
 $407D-$44FD : CODE  score/status display + game logic
 $44FE-$4558 : DATA  parameter + VRAM-address tables + direction map
@@ -722,7 +723,9 @@ at the table's first byte rather than an equate.)
   behaviour — e.g. the different wall-code set `$FE`/`$E1-$E4`).
 - Difference between enemy states 3 and 4 (both "active"); and states 5/6/7 animation details.
 - Sound command values (writes to `$B800`) → map to audio-CPU behaviors (`fm.6`).
-- The attract-demo script format at `$249B` (FF-terminated byte pairs).
+- The attract-demo script (`attract_demo_script` `$249B`-`$24FC`, now `db` data) decoding: it's
+  `$0F`-prefixed FF-terminated byte pairs consumed from `$2507` (`ld de,attract_demo_script`) —
+  confirm what the second byte of each pair encodes (direction/duration?).
 
 ### How to extend
 1. Pick a routine/region from §7 or an open question.

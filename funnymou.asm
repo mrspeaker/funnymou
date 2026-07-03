@@ -3103,125 +3103,32 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2464  3200B8  	    ld   (watchdog),a
 2467  C9      	    ret
 
-
+                ;;; called several times
 2468  CD4742  	    call $4247
 246B  C9      	    ret
-246C  010000  	    ld   bc,$0000
-246F  00      	    nop
-2470  00      	    nop
-2471  00      	    nop
-2472  74      	    ld   (hl),h
-2473  C20000  	    jp   nz,$0000
-2476  FF      	    rst  $38
-2477  FE01    	    cp   $01
-2479  02      	    ld   (bc),a
-247A  0102FF  	    ld   bc,$FF02
-247D  FE05    	    cp   $05
-247F  00      	    nop
-2480  00      	    nop
-2481  00      	    nop
-2482  00      	    nop
-2483  00      	    nop
-2484  00      	    nop
-2485  00      	    nop
-2486  00      	    nop
-2487  00      	    nop
-2488  00      	    nop
-2489  00      	    nop
-248A  00      	    nop
-248B  010000  	    ld   bc,$0000
-248E  00      	    nop
-248F  00      	    nop
-2490  9B      	    sbc  a,e
-2491  24      	    inc  h
-2492  00      	    nop
-2493  00      	    nop
-2494  00      	    nop
-2495  00      	    nop
-2496  00      	    nop
-2497  00      	    nop
-2498  00      	    nop
-2499  00      	    nop
-249A  00      	    nop
-249B  0F      	    rrca
-249C  010F01  	    ld   bc,$010F
-249F  04      	    inc  b
-24A0  100F    	    djnz $24B1
-24A2  02      	    ld   (bc),a
-24A3  0F      	    rrca
-24A4  02      	    ld   (bc),a
-24A5  0F      	    rrca
-24A6  02      	    ld   (bc),a
-24A7  0F      	    rrca
-24A8  010F01  	    ld   bc,$010F
-24AB  6F      	    ld   l,a
-24AC  08      	    ex   af,af' ; '
-24AD  04      	    inc  b
-24AE  106F    	    djnz $251F
-24B0  08      	    ex   af,af' ; '
-24B1  0F      	    rrca
-24B2  02      	    ld   (bc),a
-24B3  4F      	    ld   c,a
-24B4  02      	    ld   (bc),a
-24B5  2F      	    cpl
-24B6  02      	    ld   (bc),a
-24B7  0F      	    rrca
-24B8  010F01  	    ld   bc,$010F
-24BB  0F      	    rrca
-24BC  08      	    ex   af,af' ; '
-24BD  0F      	    rrca
-24BE  08      	    ex   af,af' ; '
-24BF  0F      	    rrca
-24C0  010F01  	    ld   bc,$010F
-24C3  6F      	    ld   l,a
-24C4  08      	    ex   af,af' ; '
-24C5  3F      	    ccf
-24C6  02      	    ld   (bc),a
-24C7  1F      	    rra
-24C8  02      	    ld   (bc),a
-24C9  0F      	    rrca
-24CA  02      	    ld   (bc),a
-24CB  04      	    inc  b
-24CC  100F    	    djnz $24DD
-24CE  010410  	    ld   bc,$1004
-24D1  0F      	    rrca
-24D2  04      	    inc  b
-24D3  0F      	    rrca
-24D4  02      	    ld   (bc),a
-24D5  6F      	    ld   l,a
-24D6  02      	    ld   (bc),a
-24D7  0F      	    rrca
-24D8  08      	    ex   af,af' ; '
-24D9  0F      	    rrca
-24DA  013F01  	    ld   bc,$013F
-24DD  1F      	    rra
-24DE  010F01  	    ld   bc,$010F
-24E1  0F      	    rrca
-24E2  010F04  	    ld   bc,$040F
-24E5  0F      	    rrca
-24E6  02      	    ld   (bc),a
-24E7  0F      	    rrca
-24E8  02      	    ld   (bc),a
-24E9  0F      	    rrca
-24EA  02      	    ld   (bc),a
-24EB  0F      	    rrca
-24EC  04      	    inc  b
-24ED  0F      	    rrca
-24EE  04      	    inc  b
-24EF  0F      	    rrca
-24F0  04      	    inc  b
-24F1  0F      	    rrca
-24F2  04      	    inc  b
-24F3  FF      	    rst  $38
-24F4  FF      	    rst  $38
-24F5  FF      	    rst  $38
-24F6  FF      	    rst  $38
-24F7  FF      	    rst  $38
-24F8  FF      	    rst  $38
-24F9  FF      	    rst  $38
-24FA  FF      	    rst  $38
-24FB  FF      	    rst  $38
-24FC  FF      	    rst  $38
+
+                player_init_template:  ; ldir'd to player record $8400 (46 = $2E bytes)
+246C               db   $01, $00, $00, $00, $00, $00, $74, $C2
+2474               db   $00, $00, $FF, $FE, $01, $02, $01, $02
+247C               db   $FF, $FE, $05, $00, $00, $00, $00, $00
+2484               db   $00, $00, $00, $00, $00, $00, $00, $01
+248C               db   $00, $00, $00, $00, $9B, $24, $00, $00
+2494               db   $00, $00, $00, $00, $00, $00
+249A               db   $00           ; pad
+                attract_demo_script:  ; FF-terminated joystick script for attract demo
+249B               db   $0F, $01, $0F, $01, $04, $10, $0F, $02
+24A3               db   $0F, $02, $0F, $02, $0F, $01, $0F, $01
+24AB               db   $6F, $08, $04, $10, $6F, $08, $0F, $02
+24B3               db   $4F, $02, $2F, $02, $0F, $01, $0F, $01
+24BB               db   $0F, $08, $0F, $08, $0F, $01, $0F, $01
+24C3               db   $6F, $08, $3F, $02, $1F, $02, $0F, $02
+24CB               db   $04, $10, $0F, $01, $04, $10, $0F, $04
+24D3               db   $0F, $02, $6F, $02, $0F, $08, $0F, $01
+24DB               db   $3F, $01, $1F, $01, $0F, $01, $0F, $01
+24E3               db   $0F, $04, $0F, $02, $0F, $02, $0F, $02
+24EB               db   $0F, $04, $0F, $04, $0F, $04, $0F, $04
+24F3               db   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+24FB               db   $FF, $FF
 24FD  23      	    inc  hl
 24FE  5E      	    ld   e,(hl)
 24FF  23      	    inc  hl
@@ -3229,7 +3136,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2501  1A      	    ld   a,(de)
 2502  FEFF    	    cp   $FF
 2504  C20D25  	    jp   nz,$250D
-2507  119B24  	    ld   de,$249B
+2507  119B24  	    ld   de,attract_demo_script
 250A  C30125  	    jp   $2501
 250D  08      	    ex   af,af' ; '
 250E  13      	    inc  de
@@ -3271,7 +3178,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 253C  A7      	    and  a
 253D  C25425  	    jp   nz,$2554
 2540  110084  	    ld   de,$8400
-2543  216C24  	    ld   hl,$246C
+2543  216C24  	    ld   hl,player_init_template
 2546  012E00  	    ld   bc,$002E
 2549  EDB0    	    ldir
 254B  3EC9    	    ld   a,$C9

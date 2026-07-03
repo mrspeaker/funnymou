@@ -3103,125 +3103,32 @@ start:
     ld   (watchdog),a
     ret
 
-
+ ;;; called several times
     call $4247
     ret
-    ld   bc,$0000
-    nop
-    nop
-    nop
-    ld   (hl),h
-    jp   nz,$0000
-    rst  $38
-    cp   $01
-    ld   (bc),a
-    ld   bc,$FF02
-    cp   $05
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld   bc,$0000
-    nop
-    nop
-    sbc  a,e
-    inc  h
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rrca
-    ld   bc,$010F
-    inc  b
-    djnz $24B1
-    ld   (bc),a
-    rrca
-    ld   (bc),a
-    rrca
-    ld   (bc),a
-    rrca
-    ld   bc,$010F
-    ld   l,a
-    ex   af,af' ; '
-    inc  b
-    djnz $251F
-    ex   af,af' ; '
-    rrca
-    ld   (bc),a
-    ld   c,a
-    ld   (bc),a
-    cpl
-    ld   (bc),a
-    rrca
-    ld   bc,$010F
-    rrca
-    ex   af,af' ; '
-    rrca
-    ex   af,af' ; '
-    rrca
-    ld   bc,$010F
-    ld   l,a
-    ex   af,af' ; '
-    ccf
-    ld   (bc),a
-    rra
-    ld   (bc),a
-    rrca
-    ld   (bc),a
-    inc  b
-    djnz $24DD
-    ld   bc,$1004
-    rrca
-    inc  b
-    rrca
-    ld   (bc),a
-    ld   l,a
-    ld   (bc),a
-    rrca
-    ex   af,af' ; '
-    rrca
-    ld   bc,$013F
-    rra
-    ld   bc,$010F
-    rrca
-    ld   bc,$040F
-    rrca
-    ld   (bc),a
-    rrca
-    ld   (bc),a
-    rrca
-    ld   (bc),a
-    rrca
-    inc  b
-    rrca
-    inc  b
-    rrca
-    inc  b
-    rrca
-    inc  b
-    rst  $38
-    rst  $38
-    rst  $38
-    rst  $38
-    rst  $38
-    rst  $38
-    rst  $38
-    rst  $38
-    rst  $38
-    rst  $38
+
+ player_init_template:  ; ldir'd to player record $8400 (46 = $2E bytes)
+    db   $01, $00, $00, $00, $00, $00, $74, $C2
+    db   $00, $00, $FF, $FE, $01, $02, $01, $02
+    db   $FF, $FE, $05, $00, $00, $00, $00, $00
+    db   $00, $00, $00, $00, $00, $00, $00, $01
+    db   $00, $00, $00, $00, $9B, $24, $00, $00
+    db   $00, $00, $00, $00, $00, $00
+    db   $00           ; pad
+ attract_demo_script:  ; FF-terminated joystick script for attract demo
+    db   $0F, $01, $0F, $01, $04, $10, $0F, $02
+    db   $0F, $02, $0F, $02, $0F, $01, $0F, $01
+    db   $6F, $08, $04, $10, $6F, $08, $0F, $02
+    db   $4F, $02, $2F, $02, $0F, $01, $0F, $01
+    db   $0F, $08, $0F, $08, $0F, $01, $0F, $01
+    db   $6F, $08, $3F, $02, $1F, $02, $0F, $02
+    db   $04, $10, $0F, $01, $04, $10, $0F, $04
+    db   $0F, $02, $6F, $02, $0F, $08, $0F, $01
+    db   $3F, $01, $1F, $01, $0F, $01, $0F, $01
+    db   $0F, $04, $0F, $02, $0F, $02, $0F, $02
+    db   $0F, $04, $0F, $04, $0F, $04, $0F, $04
+    db   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+    db   $FF, $FF
     inc  hl
     ld   e,(hl)
     inc  hl
@@ -3229,7 +3136,7 @@ start:
     ld   a,(de)
     cp   $FF
     jp   nz,$250D
-    ld   de,$249B
+    ld   de,attract_demo_script
     jp   $2501
     ex   af,af' ; '
     inc  de
@@ -3271,7 +3178,7 @@ start:
     and  a
     jp   nz,$2554
     ld   de,$8400
-    ld   hl,$246C
+    ld   hl,player_init_template
     ld   bc,$002E
     ldir
     ld   a,$C9
