@@ -166,17 +166,16 @@
                     TILES_H = $1B
 
                     TILE_BLANK      = $24
-                    __              = $25
+                    TILE_CLEAR      = $25
                     TILE_WATER      = $37
                     TILE_WATER_2    = $38
                     TILE_BOULDER    = $39 ; boulder rest tile (paired with $3A); touching it spawns a falling boulder
                     TILE_PLATFORM   = $F4
                     TILE_EXIT_HOLE  = $F5 ; over exit/hole -> sets player over-hole flag $842D ($28EB)
-                    _H              = $F5 ; ladder! (why exit_hole?)
                     TILE_GAP        = $FE ; open water/gap: enemy death (cat/snake_water_die); player enter-hole ($294C); blocks walk
 
-                ;;; ============ RE: state / globals ============
-                ;;;  screen_state=$8039 req_flags, cur_screen=$803B seq_state 0..8)
+
+                ;;; ============ state / globals ============
 
                     dsw_raw         = $8020 ; raw DIP copy
                     in_a800         = $8021 ; raw coin/start input (per frame)
@@ -3491,30 +3490,35 @@ zeros               dc   55,0
                 ;;; Looks like a lot of level data down to $1FD0 (3136 bytes)
                 ;;; 27 cells per column, running top-to-bottom, right to left
                 level_1_map:     ; next map at 16A1 (784 bytes per screen)
-1391        	    dc   27, __  ; col 27, blanks
-xxxx        	    dc   27, __  ; col 26, blanks
-13B8                dc    5, __  ; plus the top of col 3
-13CC  F5      	    dc   24, _H  ; 24 ladder tiles
-13E4  F42525  	    db   $f4
-13E5                db   __, __, __, $f4, __, __, __
-13EC  F42525  	    db   $f4, $25, $25, $25, $25, $25, $25, $25
-13F4  F42525  	    db   $f4, $25, $25, $25, $25, $25, $25, $25
-13FC  F42525  	    db   $f4, $25, $25, $25, $f4, $25, $25, $25
-1404  F42525  	    db   $f4, $25, $25, $25, $f4, $25, $25, $25
-140C  25      	    db   $25, $25, $25, $25, $f4, $25, $25, $25
-1414  25      	    db   $25, $25, $25, $25, $f4, $25, $25, $25
-141C  F42525  	    db   $f4, $25, $25, $25, $f4, $25, $25, $25
-1424  F42525  	    db   $f4, $25, $25, $25, $25, $25, $25, $25
-142C  F42525  	    db   $f4, $25, $25, $25, $25, $25, $25, $25
-1434  F42525  	    db   $f4, $25, $25, $25, $f4, $25, $25, $25
-143C  F5      	    db   $f5, $f5, $f5, $f5
-1440  F43535  	    call p,$3535
-1443  35      	    dec  (hl)
-1444  35      	    dec  (hl)
-1445  25      	    dec  h
-1446  25      	    dec  h
-1447  25      	    dec  h
-1448  F43535  	    call p,$3535
+1391                db   $25, $25, $25, $25, $25, $25, $25, $25
+XXXX                db   $25, $25, $25, $25, $25, $25, $25, $25
+XXXX                db   $25, $25, $25, $25, $25, $25, $25, $25
+XXXX                db   $25, $25, $25, $25, $25, $25, $25, $25
+XXXX                db   $25, $25, $25, $25, $25, $25, $25, $25
+XXXX                db   $25, $25, $25, $25, $25, $25, $25, $25
+XXXX        	    db   $25, $25, $25, $25, $25, $25, $25, $25
+                ;;; Right ladder column
+XXXX                db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+XXXX                db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+XXXX                db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
+
+13E4        	    db   $25, $25, $25, $F4, $25, $25, $25, $25
+13EC         	    db   $25, $25, $25, $F4, $25, $25, $25, $25
+13F4         	    db   $25, $25, $25, $F4, $25, $25, $25, $f4
+13FC        	    db   $25, $25, $25, $F4, $25, $25, $25, $f4
+
+1404        	    db   $25, $25, $25, $25, $25, $25, $25, $f4
+140C         	    db   $25, $25, $25, $25, $25, $25, $25, $f4
+1414         	    db   $25, $25, $25, $f4, $25, $25, $25, $f4
+141C         	    db   $25, $25, $25, $f4, $25, $25, $25, $25
+
+1424         	    db   $25, $25, $25, $f4, $25, $25, $25, $25
+142C        	    db   $25, $25, $25, $f4, $25, $25, $25, $f4
+1434         	    db   $25, $25, $25, $f5, $f5, $f5, $f5, $f4
+143C        	    db   $35, $35, $35, $35, $25, $25, $25, $f4
+
+1448  3535  	    db   $35, $35
 144B  35      	    dec  (hl)
 144C  35      	    dec  (hl)
 144D  25      	    dec  h
@@ -4538,6 +4542,7 @@ xxxx        	    dc   27, __  ; col 26, blanks
 19A6  25      	    dec  h
 19A7  25      	    dec  h
 19A8  25      	    dec  h
+
 19A9  25      	    dec  h
 19AA  25      	    dec  h
 19AB  25      	    dec  h
@@ -4546,6 +4551,7 @@ xxxx        	    dc   27, __  ; col 26, blanks
 19AE  25      	    dec  h
 19AF  25      	    dec  h
 19B0  25      	    dec  h
+
                 ;;; another map?
 19B1  25      	    dec  h
 19B2  25      	    dec  h

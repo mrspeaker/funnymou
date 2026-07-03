@@ -166,17 +166,16 @@
      TILES_H = $1B
 
      TILE_BLANK      = $24
-     __              = $25
+     TILE_CLEAR      = $25
      TILE_WATER      = $37
      TILE_WATER_2    = $38
      TILE_BOULDER    = $39 ; boulder rest tile (paired with $3A); touching it spawns a falling boulder
      TILE_PLATFORM   = $F4
      TILE_EXIT_HOLE  = $F5 ; over exit/hole -> sets player over-hole flag $842D ($28EB)
-     _H              = $F5 ; ladder! (why exit_hole?)
      TILE_GAP        = $FE ; open water/gap: enemy death (cat/snake_water_die); player enter-hole ($294C); blocks walk
 
- ;;; ============ RE: state / globals ============
- ;;;  screen_state=$8039 req_flags, cur_screen=$803B seq_state 0..8)
+
+ ;;; ============ state / globals ============
 
      dsw_raw         = $8020 ; raw DIP copy
      in_a800         = $8021 ; raw coin/start input (per frame)
@@ -3491,30 +3490,35 @@ start:
  ;;; Looks like a lot of level data down to $1FD0 (3136 bytes)
  ;;; 27 cells per column, running top-to-bottom, right to left
  level_1_map:     ; next map at 16A1 (784 bytes per screen)
-  dc   27, __  ; col 27, blanks
-  dc   27, __  ; col 26, blanks
-     dc    5, __  ; plus the top of col 3
-    dc   24, _H  ; 24 ladder tiles
-    db   $f4
-     db   __, __, __, $f4, __, __, __
-    db   $f4, $25, $25, $25, $25, $25, $25, $25
-    db   $f4, $25, $25, $25, $25, $25, $25, $25
-    db   $f4, $25, $25, $25, $f4, $25, $25, $25
-    db   $f4, $25, $25, $25, $f4, $25, $25, $25
-    db   $25, $25, $25, $25, $f4, $25, $25, $25
-    db   $25, $25, $25, $25, $f4, $25, $25, $25
-    db   $f4, $25, $25, $25, $f4, $25, $25, $25
-    db   $f4, $25, $25, $25, $25, $25, $25, $25
-    db   $f4, $25, $25, $25, $25, $25, $25, $25
-    db   $f4, $25, $25, $25, $f4, $25, $25, $25
-    db   $f5, $f5, $f5, $f5
-    call p,$3535
-    dec  (hl)
-    dec  (hl)
-    dec  h
-    dec  h
-    dec  h
-    call p,$3535
+     db   $25, $25, $25, $25, $25, $25, $25, $25
+     db   $25, $25, $25, $25, $25, $25, $25, $25
+     db   $25, $25, $25, $25, $25, $25, $25, $25
+     db   $25, $25, $25, $25, $25, $25, $25, $25
+     db   $25, $25, $25, $25, $25, $25, $25, $25
+     db   $25, $25, $25, $25, $25, $25, $25, $25
+  db   $25, $25, $25, $25, $25, $25, $25, $25
+ ;;; Right ladder column
+     db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
+     db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+     db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
+     db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
+
+  db   $25, $25, $25, $F4, $25, $25, $25, $25
+   db   $25, $25, $25, $F4, $25, $25, $25, $25
+   db   $25, $25, $25, $F4, $25, $25, $25, $f4
+  db   $25, $25, $25, $F4, $25, $25, $25, $f4
+
+  db   $25, $25, $25, $25, $25, $25, $25, $f4
+   db   $25, $25, $25, $25, $25, $25, $25, $f4
+   db   $25, $25, $25, $f4, $25, $25, $25, $f4
+   db   $25, $25, $25, $f4, $25, $25, $25, $25
+
+   db   $25, $25, $25, $f4, $25, $25, $25, $25
+  db   $25, $25, $25, $f4, $25, $25, $25, $f4
+   db   $25, $25, $25, $f5, $f5, $f5, $f5, $f4
+  db   $35, $35, $35, $35, $25, $25, $25, $f4
+
+  db   $35, $35
     dec  (hl)
     dec  (hl)
     dec  h
@@ -4538,6 +4542,7 @@ start:
     dec  h
     dec  h
     dec  h
+
     dec  h
     dec  h
     dec  h
@@ -4546,6 +4551,7 @@ start:
     dec  h
     dec  h
     dec  h
+
  ;;; another map?
     dec  h
     dec  h
