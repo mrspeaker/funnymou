@@ -2,11 +2,11 @@
 
 This repo is a **reverse-engineering / documentation project** for the arcade game
 **Funny Mouse** (`funnymou` in MAME). The goal is to annotate the disassembly
-(`funnymou.asm`) with meaningful labels and comments, with a current focus on the
+(`explore_funny.asm`) with meaningful labels and comments, with a current focus on the
 **enemy (cat) AI**.
 
 > This file is the living knowledge base. When you learn something new about the dump,
-> record it here (and, where useful, add the label to `funnymou.asm` — see
+> record it here (and, where useful, add the label to `explore_funny.asm` — see
 > [Labeling workflow](#labeling-workflow)). Cite ROM addresses (`$xxxx`) as evidence.
 
 ---
@@ -14,14 +14,14 @@ This repo is a **reverse-engineering / documentation project** for the arcade ga
 ## 1. What this game is
 
 - **Funny Mouse** is a bootleg/variant of **Super Mouse** running on **"The Pit"**
-  hardware (Zaccaria/Taito-era Z80 board). See `funnymou.org` for the MAME ROM/driver
+  hardware (Zaccaria/Taito-era Z80 board). See `explore_funny.org` for the MAME ROM/driver
   notes and `thepit/` for the MAME driver source (`thepit.cpp`, `thepit.h`,
   `thepit_v.cpp`) — these are the authoritative hardware reference.
 - **Gameplay = a maze game with a carry-and-return mechanic.** The player is a **mouse**
   that must **pick up the pieces of "food" scattered in the maze and carry them back to its
   home base**, all while being chased by enemies — **cats** and **snakes**. Merely collecting
   a food piece is not enough; it must be *returned home*. The level is complete once **all
-  food has been returned**. Eating certain special maze tiles spawns a power/event object.
+  food has been returned**.
   The player can also **drop bombs** (button1): a bomb is dropped, then a second press
   detonates it and the explosion kills anything it touches (see §5 — traced to `$100F`).
   **Boulders** sit at the tops of the edge ladders: when the player touches one it falls and
@@ -33,10 +33,25 @@ This repo is a **reverse-engineering / documentation project** for the arcade ga
 ### Files
 | Path | What it is |
 |------|-----------|
-| `funnymou.asm` | The disassembly being documented (~11.7k lines). **The main working file.** |
+| `funnymou.asm` | **The buildable master (~11.7k lines).** Assembles to a **hash-correct** ROM via `build.sh`. This is the file to annotate. See [Build & edit rules](#build--edit-rules) below. |
+| `explore_funny.asm` | Earlier plain-source annotation **scratch** file (column-1 source, NOT wired to the build). Findings get folded from here into `funnymou.asm`. |
+| `build.sh` | `cut -c 16- funnymou.asm > src.asm; zmac -c -n src.asm; split -b4k` → shasum-compares each chunk to `dump/suprmous.x1..x5`. |
 | `funnymou.org` | MAME ROM defs + `thepit_main_map` + preliminary memory map. |
 | `dump/` | Raw ROM/PROM images (`sm.6`, `suprmous.x*`, `*.clr`). |
-| `thepit/` | MAME driver source for the hardware (video, I/O, DIPs, sprite format). |
+| `thepit/` | MAME driver source for the hardware (`thepit.cpp`/`.h`, `thepit_v.cpp`). Authoritative HW ref. Confirms `funnymou` runs **ROT90** (`thepit.cpp:1474`). |
+
+### Build & edit rules
+`funnymou.asm` is a **zmac listing baked into the source**: columns **1–15** of every line are an
+`ADDR  HEXBYTES<tab>` prefix that `build.sh` **strips** (`cut -c 16-`) before assembling. So:
+- **All real content must start at column ≥ 16.** A comment/directive starting before col 16
+  gets its first 15 chars chopped and breaks the build. Existing equates use 20 leading spaces —
+  match that.
+- Comments, `name = $addr` equates, and label renames emit **no bytes** → the ROM stays
+  byte-identical *as long as it still assembles*. **Verify every change with `./build.sh`**
+  (all 5 shasum pairs must match).
+- **Prefer funnymou.asm's existing names/style** (`player_x`, `cat1_x`, `setup_cat_1`,
+  `draw_cur_level_map`, …). They are often *more* correct than the CLAUDE.md/`explore_funny.asm`
+  names — e.g. the ROT90 X/Y issue in §5. Verify a finding against code before bulk-renaming.
 
 ---
 
@@ -66,7 +81,7 @@ See §7 for the code/data region map.
 
 ## 3. Hardware / memory map
 
-Main CPU: **Z80**. Source: `funnymou.org` + `thepit/thepit_v.cpp`.
+Main CPU: **Z80**. Source: `explore_funny.org` + `thepit/thepit_v.cpp`.
 
 | Range | Contents |
 |-------|----------|
@@ -154,7 +169,7 @@ Calls in order:
 **`$2A51`** (cat manager) · **`$3206`** (snake manager) · **`$2539`** (player update) ·
 **`$394B`** (enemy "eaten"/return-home + score) · `$23D3` (**level-complete check `$2429` + end-level timer**; see §5) ·
 **`$392A`** (player↔enemy collision/death) · `$116D` (bomb-explosion collision) · `$100F` (bomb update) ·
-`$41BC` (event object update).
+`$41BC` (**boulder** update — `boulder_update`).
 
 ### Two-player alternation
 `$8030` = mode (0=attract, 1=1P, 2=2P). `$8031` = current player. On death/turn-end in a
@@ -180,9 +195,9 @@ So game code only ever writes sprites into `$8000-$801F`.
 | 4 | `$8010-$8013` | Cat C | `$8570` | `$309C` |
 | 5 | `$8014-$8017` | Snake A | `$8610` | `$309C` |
 | 6 | `$8018-$801B` | Snake B | `$8630` | `$309C` |
-| 7 | `$801C-$801F` | **Bomb** *or* **event object** (mutually exclusive) | `$8680` / `$85C0` | `$10D6` / `$4232` |
+| 7 | `$801C-$801F` | **Bomb** *or* **boulder** (mutually exclusive) | `$8680` / `$85C0` | `$10D6` / `$4232` |
 
-So there are up to **3 cats + 2 snakes** (5 enemies) + the player's bomb + a power/event object.
+So there are up to **3 cats + 2 snakes** (5 enemies) + the player's bomb + a falling boulder.
 The two enemy types share the same per-actor engine but run under different managers:
 cats (A/B/C) under manager A (`$2A51`), snakes (A/B) under manager B (`$3206`).
 
@@ -196,9 +211,9 @@ cats (A/B/C) under manager A (`$2A51`), snakes (A/B) under manager B (`$3206`).
 | +$01 | `$8401` | input bits (from `$A000`, or demo script in attract) |
 | +$02 | `$8402` | frame counter (bit0 = half-rate gate) |
 | +$04 | `$8404` | facing direction (1/2/4/8) |
-| +$06 | `$8406` | **Y** position |
-| +$07 | `$8407` | **X** position |
-| +$08 / +$09 | `$8408`/`$8409` | current Y / X velocity |
+| +$06 | `$8406` | **X** position (joystick L/R; committed to sprite **+0 / HW-Y** — screen is ROT90) |
+| +$07 | `$8407` | **Y** position (joystick U/D; committed to sprite **+3 / HW-X** — screen is ROT90) |
+| +$08 / +$09 | `$8408`/`$8409` | current X / Y velocity (match `$8406`/`$8407`) |
 | +$0B..+$11 | | velocity constants (±2 per axis) |
 | +$12 | `$8412` | color → sprite +2 |
 | +$13 | `$8413` | final tile byte (orient|frame) → sprite +1 |
@@ -214,8 +229,13 @@ cats (A/B/C) under manager A (`$2A51`), snakes (A/B) under manager B (`$3206`).
 | +$2D | `$842D` | "over exit/hole" flag (maze tile `$F5`) |
 
 Player position is committed to sprite slot 0 by `$28BB`:
-`$8406→$8000`(Y), `$8413→$8001`(tile), `$8412→$8002`(color), `$8407→$8003`(X).
-**`$8000`/`$8003` (player sprite Y/X) is what the enemies chase** (see §6).
+`$8406→$8000`, `$8413→$8001`(tile), `$8412→$8002`(color), `$8407→$8003`.
+**The screen is ROT90** (MAME `thepit.cpp:1474` — `funnymou … ROT90`), so game-space **X**
+(`$8406`, joystick L/R) is written to the hardware **Y** sprite byte (`$8000`, sprite +0),
+and game-space **Y** (`$8407`) to the hardware **X** byte (`$8003`, sprite +3). Verified from
+the movement code: `move_player_left`/`right` ($2710/$2752) modify `$8406` (clamped `$14..$D4`),
+`move_player_down`/`up` ($2794/$27D6) modify `$8407`.
+**`$8000`/`$8003` (player sprite bytes = game-X / game-Y) is what the enemies chase** (see §6).
 
 ### Enemy record (32 = `$20` bytes each — same layout for cats and snakes)
 Bases: **`$8510`, `$8550`, `$8570`** (cats A/B/C, page-$85 manager `$2A51`) and
@@ -227,8 +247,8 @@ Bases: **`$8510`, `$8550`, `$8570`** (cats A/B/C, page-$85 manager `$2A51`) and
 | +$03 | sprite-slot link (low byte of `$80xx` mirror addr: `$05`/`$0D`/`$11`/`$15`/`$19`) |
 | +$04 | base tile (+flip) → sprite +1 |
 | +$07 | **AI state**: 1=appear, 3/4=walk-chase, 5/6=caught/dying, 7 |
-| +$08 | **Y** → sprite +0 |
-| +$09 | **X** → sprite +3 |
+| +$08 | **X** (game-logic, joystick axis) → sprite +0 (HW-Y; ROT90). funnymou `cat1_x`=`$8518` |
+| +$09 | **Y** (game-logic) → sprite +3 (HW-X; ROT90). funnymou `cat1_y`=`$8519` |
 | +$0D..+$11 | velocity/direction deltas (`$FF`/`$01` = ±1) |
 | +$18/$19 | 16-bit AI waypoint-table pointer (level-indexed; via `$31CF`) |
 | +$1A | appear/spawn timer |
@@ -256,7 +276,7 @@ per enemy, a `[enable, spawned]` byte pair used as the "present"/spawn guard:
 | `$2B5A`/`$2BB0`/`$2C06` | — | rec+$18 | per-enemy AI waypoint tables (via `$31CF`) |
 | `$2B28` | — | rec+$1D | shared secondary table (via `$31CF`) |
 
-### Bomb (`$8680`) and event/power object (`$85C0`)
+### Bomb (`$8680`) and boulder (`$85C0`)
 Both draw into slot 7 (mutually exclusive). **The `$8680` object is the player's BOMB** —
 logic `$100F` (update) / `$116D` (explosion collision). Confirmed in-listing:
 
@@ -264,10 +284,10 @@ logic `$100F` (update) / `$116D` (explosion collision). Confirmed in-listing:
   dead/respawning (`$841F`==2/0). If a bomb is already live (`$8680≠0`) → run the live-bomb
   update `$10ED`; else, if the supply `$867F>0`, handle a new drop at `$1046`.
 - **Drop (button press)** `$1046`: reads `$8401 & $10` (button1); returns if not pressed or if
-  the event object is active (`$85C1≠0`). Gated by a maze-tile check near the player
+  a boulder is active (`boulder_req` `$85C1≠0`). Gated by a maze-tile check near the player
   (`$251B`→addr, `+$FFE2`, tile ≥ `$F0`). On success: decrement supply `$867F` (`$1063`),
   redraw the on-screen bomb-count row (`$106C`, tiles at `$91C3`/color `$95C3`), then `$109E`
-  seeds the bomb at the player's position (`$8684`=Y from `$8406`, `$8685`=X from `$8407`,
+  seeds the bomb at the player's position (`$8684`=X from `$8406`, `$8685`=Y from `$8407`,
   `$8686`=tile `$3C`, `$8687`=color `$86`, `$8680`=1) and latches a sound.
 - **Arm + detonate (second press)** `$10ED`: a timer `$868A` counts up to `$14` (20 frames);
   only then does a second `$8401 & $10` press (`$1101`) set `$868B`=1 to start the explosion.
@@ -286,25 +306,36 @@ Fields recap: `$867F`=bomb supply, `$8680`=active flag, `$8684`/`$8685`=Y/X, `$8
 `$8687`=color, `$8683`=explosion-lethal flag, `$8688`/`$8689`=explosion frame/stage,
 `$868A`=arming timer, `$868B`=detonate flag.
 
-> NOTE: this object was previously mislabeled "hawk", then "boulder". It is neither — the
-> maze **boulder** (rests atop the edge ladders, released by player touch, falls and squashes)
-> is a *separate* mechanic and has **not yet been located** in the code (see §10).
+> NOTE: the `$8680` object was previously mislabeled "hawk" then "boulder"; it is the **bomb**.
+> The actual **boulder** is the `$85C0` slot-7 object described next (previously mislabeled the
+> "power-pellet / clear-enemies pickup"). Both errors on that object — that it "sweeps
+> horizontally" and that it clears all enemies with no overlap test — were artifacts of reading
+> it in the wrong frame; under **ROT90** it *falls vertically* and *squashes on overlap*.
 
-Event object — the **power-pellet / clear-enemies pickup** (`$85C0` block, slot 7). Two power
-pellets (tiles `$39`/`$3A`) sit at **fixed maze cells** (redrawn at `$9065`/`$9085`/`$9385`/`$93A5`
-until eaten; per-pellet consumed flags `$8180`/`$8181`). Eating one (`$2923`→`$2935`) spawns the
-object **at the player's position** (`$85C2`=Y from `$8406`, `$85C3`=X from `$8407`; skipped if a
-bomb is live or it is already active). Handler `$41BF` (reached via `$41BC`) copies
-`$85C1-$85C3`→`$85C4-$85C6`, plays sound `$95`, then each frame advances **X only** (`$85C6 += 2`
-until `$E0`, then despawns) at constant Y — it sweeps horizontally across the row. Commits to
-slot 7 (`$801C`) as tile `$37`, color `$05`.
+Boulder — the **falling boulder** (`$85C0` block, slot 7). Two boulders rest at **fixed edge
+cells** (tiles `$39`/`$3A` = `TILE_BOULDER`; redrawn at `$9065`/`$9085` and `$9385`/`$93A5`
+until triggered; consumed flags `$8180`/`$8181`, one per screen half). The player **touches**
+one (`$2923`→`$2935`, tile `$39`/`$3A`): sets `boulder_req` `$85C1`=1 and stashes the player's
+`$8406`/`$8407` in `$85C2`/`$85C3` (skipped if a bomb is live or a boulder is already active).
 
-While active, **`$3ACC`** (`event_clear_enemies`, called from the eaten SM `$394B`) **clears the
-board of enemies** — *not* a chase trigger. For every enabled, non-busy enemy (cats
-`$8501`/`$8505`/`$8507`, snakes `$8601`/`$8603`) it writes the same "sent-home dying" record as a
-water-death: state (+$07)=`$04`, splash tile (+$04)=`$1C` (cat) / `$2C` (snake), busy-lock
-(+$1B)=`$01`. There is no per-enemy overlap test — all enemies are affected at once (via templates
-`$3B26` cats / `$3B64` snakes).
+Handler **`boulder_update` `$41BC`**: on the first active frame it copies `$85C1-$85C3`→
+`$85C4-$85C6`, plays sound `$95`, sets `boulder` `$85C0`=1, and picks/erases the triggered edge
+cell by `player_x ≷ $80` (`$41EF`). Then each frame it advances **`boulder_y` `$85C6 += 2`**
+(until `$E0`, then despawns) while **`boulder_x` `$85C5` stays constant**. Commit to slot 7
+(`$801C`): `$85C5`→sprite +0 (HW-Y), `$85C6`→sprite +3 (HW-X), tile `$37`, color `$05`. **Because
+the screen is ROT90, `$85C5` (constant) is the physical *horizontal* and `$85C6` (increasing) is
+the physical *vertical* — so the boulder falls straight DOWN in a fixed column** (`$85C6`
+increases exactly as `player_y` does when you push down).
+
+**Squash on hit — `boulder_squash` `$3ACC`** (called from the eaten SM `$394B`; no-ops unless
+`boulder`≠0). For each enabled, non-busy enemy (cats `$8501`/`$8505`/`$8507`, snakes
+`$8601`/`$8603`) it calls **`boulder_vs_enemy` `$3B74`**: an **AABB overlap test** of the falling
+boulder sprite (`$801C`) against that enemy's sprite (`iy`), comparing sprite +3 and +0 within a
+window; **only on overlap** does it `jp (hl)` into the kill template (`$3B26` cats / `$3B64`
+snakes) → state (+$07)=`$04`, splash tile (+$04)=`$1C`/`$2C`, busy-lock (+$1B)=`$01`. The
+**player sprite is never tested**, so the boulder never hurts the player. (Earlier this was
+wrongly described as clearing *all* enemies with no overlap test — `$3B74` *is* the per-enemy
+overlap test.)
 
 ### Maze hazards: bridges & sliding platforms (player tile-interaction dispatcher)
 When the player is committed each frame (`$28BB` region), a chain of small helpers checks the
@@ -315,7 +346,7 @@ per-tile effect. Confirmed tile → effect:
 |------|--------|--------|
 | `$F5` | `$28E2` | set `$842D` "over exit/hole" flag |
 | `$FE` | `$294C` | player enters hole → `$841F=4` |
-| `$39`/`$3A` | `$2923` | spawn power/event object (`$85C1`) |
+| `$39`/`$3A` | `$2923` | **release boulder** (`TILE_BOULDER`) → `boulder_req` `$85C1`=1 |
 | `$FC` | `$29A1` | trigger **bridge** subsystem (`$80C0=1`) |
 | `$F9` | `$29AF` | advance **sliding-platform** subsystem (`$80A2`) |
 | `$DC-$EF` | `$29C8` | **pick up food piece** (`$8120` slot 0→2, carried); see §5 food subsystem |
@@ -328,7 +359,8 @@ tile blocks (source tables `$3BD7`/`$3BDD`) into VRAM. So the player crossing a 
 (`$FC`) makes the bridge open — an enemy over the opened span is over "water" and dies.
 
 **Sliding platform — `$407D`** (block `$80A0-$80A8`, draws into **sprite slot 2** via `$4092`).
-On activation it snaps to the player (`$80A5`=Y from `$8406`, `$80A8`=X from `$8407`+`$F0`),
+On activation it snaps to the player (`$80A5`=X from `$8406`, `$80A8`=Y from `$8407`+`$F0`;
+"slides horizontally" below is on the *physical* ROT90 screen — game-Y `$80A8++` = physical X),
 picks its tile/color from an orientation table (`$809F` vs `$7A/$7B/$7C/$7D/$7E` → `$4106`),
 then in state `$80A2=2` **slides horizontally** (`$80A8 += 2` per frame at `$415C`, timed by
 `$80A3`) across the gap to the far side (state 3 finalises via `$3EF2`/`$3EB2`). The player
@@ -431,7 +463,9 @@ Per enemy, once it is grid-aligned at a maze cell:
    ...
    2D35: ld a,($8000)   ; player sprite Y ; sets dir bits $01/$02/$00 on the other axis
    ```
-   Directions are a **bitmask $01/$02/$04/$08** (four cardinals).
+   Directions are a **bitmask $01/$02/$04/$08** (four cardinals). (`$8003`/`$8000` are the
+   *hardware* sprite X/Y bytes; under ROT90 they hold game-Y/game-X respectively — see §5. The
+   enemy compares its own matching sprite byte, so the chase is self-consistent either way.)
 
 2. **Semi-random imperfection.** A per-enemy counter is incremented each pass; when it hits an
    excluded value the chase call is skipped and the enemy drifts. The RNG source is the Z80
@@ -470,11 +504,19 @@ Per enemy, once it is grid-aligned at a maze cell:
   `$2B5A`/`$2BB0`/`$2C06`) give per-enemy waypoint/behavior data that changes with the level.
 
 ### Supporting subsystems (enemy-related but not movement AI)
-- **`$394B`** — "eaten" state machine: when the power/event object is active and the player
-  overlaps an active enemy, mark it eaten (state 4→…), drive it home by scanning the tilemap
-  for the home tile `$37`, play sounds, and award escalating BCD points (`$8041`).
+- **`$394B`** — enemy death/return-home driver (the `enemy_eaten_sm` label is a misnomer; there
+  is **no** "player eats enemy" mechanic). Each frame it dispatches per-enemy return handlers
+  (`$3A08`/`$3A15`/`$3A22`/`$3A50`/`$3A5D`) then calls `boulder_squash` `$3ACC`. For an enemy
+  already in the dying state (+$07=`$04`, set by water / bomb / boulder) the return handler drives
+  it toward the home tile `$37` (verified: `cp $37` at `$3A35`/`$3A70` in the return sub `$3A08`),
+  plays sounds, and awards escalating BCD points (`$8041`). Note `$37` is *also* funnymou's
+  `TILE_WATER` — the tile the player drowns on (`cp TILE_WATER ; fell in water` at `$2663`);
+  the same graphic serves as maze water and the enemy-return target (tile codes are gfx indices).
 - **`$392A`** — player↔enemy collision/death: AABB overlap test (`$395E`) of each enemy sprite
-  against the player sprite `$8000`; on a hit (when not powered) set player death `$841F=2`.
+  against the player sprite `$8000`; on a hit set player death `$841F=2`. (`$395E` is structurally
+  the twin of `boulder_vs_enemy` `$3B74` — same AABB test, but this one kills the *player*, not the
+  enemy. There is no "powered/invincible" player state — enemies are killed only by water, bomb,
+  or boulder.)
 
 ### One-line summary
 > Each enemy (cat or snake) greedily chases the player's on-screen sprite (`$8000`/`$8003`),
@@ -561,7 +603,7 @@ $4928-$4FFF : unmapped padding / dump end
 
 ## 9. Labeling workflow
 
-`funnymou.asm` supports equates at the top (one is already present):
+`explore_funny.asm` supports equates at the top (one is already present):
 ```
     watchdog            = $B800 ; watchdog
 ```
@@ -582,8 +624,8 @@ spriteram       = $9840   ; 8x4 sprites
 ; --- sprite mirror & actors ---
 sprite_mirror   = $8000   ; 8x4, DMA'd to spriteram each frame by copy_sprites
 player_ws       = $8400   ; player workspace (template player_tmpl=$246C)
-plr_y           = $8406
-plr_x           = $8407
+plr_x           = $8406   ; joystick L/R axis (funnymou.asm: player_x). ROT90 -> sprite +0 (HW-Y)
+plr_y           = $8407   ; joystick U/D axis (funnymou.asm: player_y). ROT90 -> sprite +3 (HW-X)
 plr_state       = $841F   ; 0 respawn 1 play 2 dead 4 enter-hole 5 at-hole
 cat_ctrl_85     = $8500   ; [enable,spawned] pairs (cats A/B/C)
 cat_rec_a       = $8510
@@ -592,7 +634,7 @@ cat_rec_c       = $8570
 snake_ctrl_86   = $8600   ; [enable,spawned] pairs (snakes A/B)
 snake_rec_a     = $8610
 snake_rec_b     = $8630
-event_obj       = $85C0   ; power/fruit object (slot 7)
+boulder         = $85C0   ; falling boulder active flag (slot 7); boulder_x=$85C5 boulder_y=$85C6
 bomb            = $8680   ; player bomb object (slot 7); drop+detonate via button1
 bomb_supply     = $867F   ; remaining bombs (=5 at each life start, $206C)
 bomb_lethal     = $8683   ; explosion active/lethal flag (checked by bomb_collide)
@@ -650,8 +692,9 @@ enemy_eaten_sm  = $394B
 player_vs_enemy = $392A
 bomb_update     = $100F   ; drop ($1046) / arm+detonate ($10ED) / explode ($110D)
 bomb_collide    = $116D   ; explosion AABB vs player + each cat/snake (enemy->state 6)
-event_update    = $41BF   ; power-pellet object: spawn/move/despawn (slot 7)
-event_clear_enemies = $3ACC ; while pellet active: send every enemy to dying/return state $04
+boulder_update  = $41BC   ; boulder: spawn-on-touch / fall (boulder_y+=2, ROT90=>down) / despawn
+boulder_squash  = $3ACC   ; while boulder active: AABB-test it vs each enemy (boulder_vs_enemy=$3B74)
+boulder_vs_enemy = $3B74  ; AABB falling boulder ($801C) vs one enemy -> squash (state $04) on overlap
 ```
 
 ---
@@ -661,7 +704,8 @@ event_clear_enemies = $3ACC ; while pellet active: send every enemy to dying/ret
 - **Enemy record scratch fields** +$01/+$02/+$05/+$06/+$0A/+$0B/+$13/+$14 — not yet pinned.
 - **Maze "control tile" encoding**: confirm exactly how junction tiles (`$14/$34/…`,
   `$22/$42/…`) encode allowed directions, and the full wall/path/item tile legend
-  (`$37`=enemy home, `$39/$3A`=power tile, `$F4`/`$EF`=cat walls, `$E1-$E4`=snake walls,
+  (`$37`=water (funnymou `TILE_WATER`; player drowns) & enemy return-home scan target,
+  `$39/$3A`=`TILE_BOULDER` (boulder rest cell; touch → boulder falls), `$F4`/`$EF`=cat walls, `$E1-$E4`=snake walls,
   `$FE`=open water/gap (enemy death; player enter-hole), `$F5`=exit/hole, `$FC`=bridge,
   `$F9`=sliding-platform, `$FF`=home-entry — see the §5 tile-effect table).
 - **Bridge & sliding-platform enemy death** — *resolved* (see §6 step 4 / §5). Player-side
@@ -680,10 +724,16 @@ event_clear_enemies = $3ACC ; while pellet active: send every enemy to dying/ret
 - **Player bomb subsystem** — *located* (`$100F`/`$116D`/`$8680`, see §5). Remaining detail:
   the exact meaning of the drop-gate maze-tile check (`$251B`+`$FFE2`, tile ≥ `$F0`) and
   the full explosion-stage tile/animation table (`$110D`).
-- **Boulder mechanics** — *not yet located*. The maze boulder (rests atop the edge ladders,
-  released by player touch, falls and squashes) is distinct from the bomb; find its object
-  record, trigger (player-touch), fall logic, and squash/death test. (The `$8680` object is
-  the bomb, **not** the boulder — do not conflate them.)
+- **Boulder mechanics** — *resolved* (see §5, "Bomb and boulder"). It is the `$85C0` slot-7
+  object formerly mislabeled the "power-pellet / clear-enemies pickup". Player touches tile
+  `$39`/`$3A` (`TILE_BOULDER`) → `boulder_req` `$85C1`; `boulder_update` `$41BC` makes it **fall
+  straight down** (`boulder_y` `$85C6 += 2`/frame → sprite +3, which under ROT90 is physical
+  vertical; `boulder_x` `$85C5` constant); `boulder_squash` `$3ACC` → `boulder_vs_enemy` `$3B74`
+  AABB-tests it against each enemy and squashes (state `$04`) only the ones it overlaps; the
+  player sprite is never tested, so it can't hurt the player. (The `$8680` object is the **bomb**,
+  a separate button-triggered mechanic — do not conflate them.) *Remaining nuance*: confirm the
+  two spawn cells sit literally atop the edge ladders (only proven to be one-per-screen-half via
+  `player_x ≷ $80`), and pin the `$85C2`/`$85C3` spawn-temp vs `$85C4` init-flag fields.
 - **`$8480` bonus subsystem** field semantics (handler `$4247`).
 - Snake manager (`$3206`) internals were inferred as a twin of the cat manager — verify
   directly, and confirm what actually distinguishes cats from snakes (graphics only, or
@@ -695,4 +745,4 @@ event_clear_enemies = $3ACC ; while pellet active: send every enemy to dying/ret
 ### How to extend
 1. Pick a routine/region from §7 or an open question.
 2. Grep its address as an operand; re-decode by hand if it sits after a data block (§2).
-3. Add confirmed `name = $addr` equates + comments to `funnymou.asm`, and update this file.
+3. Add confirmed `name = $addr` equates + comments to `explore_funny.asm`, and update this file.

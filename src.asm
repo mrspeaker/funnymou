@@ -24,8 +24,8 @@
 
      player_bytes    = $8400 ;
      controls        = $8401 ; 1=L, 2=R, 4=D, 8=U, 10=fire
-     player_x        = $8406
-     player_y        = $8407
+     player_x        = $8406 ; joystick L/R axis; -> sprite +0 (HW Y: screen rotated 90)
+     player_y        = $8407 ; joystick U/D axis; -> sprite +3 (HW X: screen rotated 90)
      player_sp_x     = $8408 ; fe = -2 left, 02 = 2 right
      player_sp_y     = $8409 ; fe = -2 up, 02 = 2 down
 
@@ -116,6 +116,135 @@
      TILE_WATER      = $37
      TILE_WATER_2    = $38
      TILE_PLATFORM   = $F4
+     TILE_GAP        = $FE ; open water/gap: enemy death (cat/snake_water_die); player enter-hole ($294C); blocks walk
+     TILE_EXIT_HOLE  = $F5 ; over exit/hole -> sets player over-hole flag $842D ($28EB)
+     TILE_BOULDER    = $39 ; boulder rest tile (paired with $3A); touching it spawns a falling boulder
+
+ ;;; ============ RE: state / globals ============
+ ;;; (reverse-engineered; see CLAUDE.md. is_playing=$8030 is game_mode,
+ ;;;  screen_state=$8039 req_flags, cur_screen=$803B seq_state 0..8)
+
+     dsw_raw         = $8020 ; raw DIP copy
+     in_a800         = $8021 ; raw coin/start input (per frame)
+     cur_player      = $8031 ; 0=P1, 1=P2
+     req_level_done  = $8032 ; level-complete pending (ingame -> dispatcher)
+     req_death       = $8033 ; player-death pending (ingame -> dispatcher)
+     p1_done         = $8034 ; P1 finished / out of lives
+     p2_done         = $8035 ; P2 finished / out of lives
+     flip_state      = $8036 ; current screen-flip mirror
+     first_turn      = $8038 ; first-turn-of-game flag
+     is_2player      = $803C ; 1 = 2P game
+     disp_timer      = $803D ; down-counter for timed screens
+     endlevel_active = $803E ; level-end / freeze gate (also gates enemy spawn/move)
+     endlevel_ctr    = $803F ; level-end sub-counter
+     score_add_trig  = $8040 ; score-add trigger
+     score_add       = $8041 ; amount to add (BCD3, $8041-$8043)
+     food_state      = $8120 ; 9x1 per-piece: 0 uncollected, 2 carried, 1 returned
+     food_returned   = $8140 ; 9x2 fill-from-front log; all set => level clear
+     boulder         = $85C0 ; boulder active flag (slot 7: a boulder is falling)
+     boulder_req     = $85C1 ; trigger request (set when player touches TILE_BOULDER $39/$3A)
+     boulder_x       = $85C5 ; frozen horizontal pos -> sprite +0 (constant during fall)
+     boulder_y       = $85C6 ; falling vertical pos -> sprite +3 (+=2/frame; ROT90 => physical DOWN)
+     bomb_lethal     = $8683 ; explosion active/lethal flag (checked by bomb_collide)
+
+ ;;; ============ RE: engine routines ============
+ ;;; already labelled: main_loop=$0100 (nmi service), init_game_RAM_test=$07F1
+ ;;;  (boot selftest), main_game_loop=$1FD1 (fg loop / consumes screen_state),
+ ;;;  draw_cur_level_map=$130B (load maze), get_player_tile_pos=$251B (pos->vram),
+ ;;;  get_tile_pos=$30B3 (actor pos->vram)
+
+     copy_sprites    = $062C ; DMA sprite_mirror ($8000) -> sprite_ram each frame
+     score_add_apply = $063B ; apply pending score_add to score
+     read_inputs     = $0743 ; read joystick / coin inputs
+     ingame_update   = $23A0 ; per-frame game pipeline (cats,snakes,player,bombs,...)
+     level_end_seq   = $23D3 ; run check_level_done, else end timer -> req_level_done
+     check_level_done = $2429 ; all 9 food_returned set? -> start end-of-level seq
+     player_update   = $2539 ; player state machine
+
+     cat_mgr         = $2A51 ; cat manager (cats A/B/C)
+     cat_ai          = $2C3E ; per-enemy state engine (cats)
+     enemy_rand_dir  = $2CEC ; ld a,r random-direction source
+     enemy_chase     = $2D0E ; steer toward player sprite ($8000/$8003)
+     cat_water_die   = $2DD0 ; cat on $FE tile -> state 4, splash tile $1C, sound $95
+
+     snake_mgr       = $3206 ; snake manager (snakes A/B)
+     spawn_delay_sa  = $3315 ; level-indexed spawn-delay table (snake A)
+     spawn_delay_sb  = $332B ; level-indexed spawn-delay table (snake B)
+     snake_ai        = $333F ; per-enemy state engine (snakes)
+     snake_water_die = $34B5 ; snake on $FE tile -> state 4, splash tile $2C, sound $95
+
+     player_vs_enemy = $392A ; AABB player sprite vs each enemy -> player death
+     enemy_eaten_sm  = $394B ; eaten enemy: drive home, award escalating points
+     boulder_squash  = $3ACC ; while boulder active: AABB-test it vs each enemy, squash the ones it overlaps
+     boulder_vs_enemy = $3B74 ; AABB overlap test: falling boulder ($801C) vs one enemy sprite -> kill on hit
+
+     bomb_update     = $100F ; drop / arm+detonate / explode dispatch
+     bomb_collide    = $116D ; explosion AABB vs player + each cat/snake
+
+     food_pickup     = $29C8 ; player over food tile ($DC-$EF) -> mark carried (0->2)
+     food_maze_redraw = $3E29 ; repaint maze food from food_state (drops carried 2->0)
+     food_set_state  = $3EB2 ; find food at vram cell (hl), write reg c -> food_state
+     food_return_add = $3EF2 ; append carried-home piece to food_returned, +500 pts
+     food_log_redraw = $3F36 ; repaint all food_returned entries to VRAM
+     food_maze_erase = $3F62 ; blank carried (state 2) food cells (tile $25/$87)
+     food_pos_tbl    = $3FC6 ; per-maze food vram-cell pointer table (stride $12, 9x2)
+     food_return_home = $4167 ; home-entry: log carried piece + food_state 2->1
+
+     platform_update = $407D ; sliding platform (slot 2), block $80A0-$80A8
+     bridge_update   = $3BFF ; bridge open/close tile animation, block $80C0-$80C7
+     scripted_move   = $3D0A ; scripted player move (home-entry), block $80E0-$80E7
+     boulder_update  = $41BC ; boulder: spawn-on-touch / fall / despawn (slot 7)
+
+ ;;; ============ RE: enemy record fields ============
+ ;;; Shared 32-byte record. funnymou already has: catN_bytes(+0), catN_x(+8),
+ ;;;  catN_y(+9), catN_fr(+A), catN_dir(+B). New fields below, verified this session
+ ;;;  from the sprite commit ($309C), setup_cat_1 ($2B6E: cat_ai called with hl=base+7),
+ ;;;  the cat1 template ($2B75), and the managers' $31CF/$32F7 pointer loads:
+ ;;;    +3  slot-link (low byte of $80xx sprite addr, -> sprite +1)
+ ;;;    +4  base tile (+flip) -> sprite +1
+ ;;;    +7  AI state: 1=appear, 3/4=chase, 5/6=caught/dying, 7  (dispatched by cat_ai/snake_ai)
+ ;;;    +18 16-bit level-indexed ptr (cats: AI-waypoint table; snakes: spawn-delay table)
+ ;;;    +1B busy / not-collidable lock (1 while appearing or dying)
+ ;;;    +1D 16-bit level-indexed secondary ptr (cats, from shared table $2B28)
+ ;;;  catN_ai_init = page-85/86 one-shot "AI path loaded" guard flags.
+
+     cat1_slot       = $8513 ; +3  (=$05 -> sprite slot1 +1)
+     cat1_tile       = $8514 ; +4  base tile -> sprite +1
+     cat1_state      = $8517 ; +7  AI state
+     cat1_ai_ptr     = $8528 ; +18 AI-waypoint ptr (from $2B5A via $31CF)
+     cat1_busy       = $852B ; +1B busy / no-collide lock
+     cat1_ptr2       = $852D ; +1D secondary ptr (from $2B28 via $31CF)
+     cat1_ai_init    = $8508 ; one-shot AI-path-loaded flag
+
+     cat2_slot       = $8553
+     cat2_tile       = $8554
+     cat2_state      = $8557
+     cat2_ai_ptr     = $8568 ; from $2BB0
+     cat2_busy       = $856B
+     cat2_ptr2       = $856D ; from $2B28
+     cat2_ai_init    = $850A
+
+     cat3_slot       = $8573
+     cat3_tile       = $8574
+     cat3_state      = $8577
+     cat3_ai_ptr     = $8588 ; from $2C06
+     cat3_busy       = $858B
+     cat3_ptr2       = $858D ; from $2B28
+     cat3_ai_init    = $850B
+
+     snake1_slot     = $8613 ; +3
+     snake1_tile     = $8614 ; +4
+     snake1_state    = $8617 ; +7
+     snake1_dly_ptr  = $8628 ; +18 spawn-delay ptr (from spawn_delay_sa $3315 via $32F7)
+     snake1_busy     = $862B ; +1B
+     snake1_ai_init  = $8608
+
+     snake2_slot     = $8633
+     snake2_tile     = $8634
+     snake2_state    = $8637
+     snake2_dly_ptr  = $8648 ; from spawn_delay_sb $332B
+     snake2_busy     = $864B
+     snake2_ai_init  = $8609
 
  ;;; ============ start of suprmous.x1 =============
 
@@ -152,7 +281,7 @@ start:
     inc  hl
     djnz $002D
     ld   a,(dip_switch)
-    ld   ($8020),a
+    ld   (dsw_raw),a
     ld   b,a
     and  $07
     ld   ($8025),a
@@ -217,12 +346,12 @@ start:
 
      dc 97,0
 
- ;; dunno if it's main loop. called from NMI
+ ;; called from NMI
  main_loop:
      nop
      nop
      nop
-    call $0743
+    call read_inputs
     call $0629
     ld   a,(is_playing)
     and  a
@@ -246,7 +375,7 @@ start:
     daa
     ld   (credits),a
     ld   a,$01
-    ld   ($803C),a
+    ld   (is_2player),a
     ld   a,($8026)
     and  a
     jp   nz,$0150
@@ -270,7 +399,7 @@ start:
     daa
     ld   (credits),a
     ld   a,$00
-    ld   ($803C),a
+    ld   (is_2player),a
     ld   a,($8026)
     and  a
     jp   nz,$0189
@@ -296,16 +425,16 @@ start:
     inc  l
     djnz __i02
     ld   a,$00
-    ld   ($8031),a
-    ld   ($8032),a
-    ld   ($8033),a
-    ld   ($8034),a
-    ld   ($8035),a
-    ld   ($8036),a
+    ld   (cur_player),a
+    ld   (req_level_done),a
+    ld   (req_death),a
+    ld   (p1_done),a
+    ld   (p2_done),a
+    ld   (flip_state),a
     ld   ($803A),a
     ld   a,$F0
-    ld   ($803D),a
-    ld   hl,$8040
+    ld   (disp_timer),a
+    ld   hl,score_add_trig
     ld   a,$00
     ld   b,$0A
     ld   (hl),a
@@ -319,7 +448,7 @@ start:
     ld   a,$E0
     ld   (watchdog),a
     ld   a,$01
-    ld   ($8038),a
+    ld   (first_turn),a
     ld   a,(screen_state)
     set  4,a
     ld   (screen_state),a
@@ -376,7 +505,7 @@ start:
     djnz $023D
     ret
 
-    ld   a,($8033)
+    ld   a,(req_death)
     and  a
     jp   z,$025E
     ld   a,(cur_screen)
@@ -387,7 +516,7 @@ start:
     cp   SCR_GAMBLE
     jp   z,$0288
     jp   $0288
-    ld   a,($8032)
+    ld   a,(req_level_done)
     and  a
     jp   z,$02AA
     ld   a,(cur_screen)
@@ -397,22 +526,22 @@ start:
     jp   z,$0288
     jp   $0288
     ld   a,$00
-    ld   ($8033),a
-    ld   ($8032),a
+    ld   (req_death),a
+    ld   (req_level_done),a
     ld   a,(screen_state)
     set  5,a
     ld   (screen_state),a
     jp   $0229
     ld   a,$00
-    ld   ($8033),a
-    ld   ($8032),a
+    ld   (req_death),a
+    ld   (req_level_done),a
     ld   a,(screen_state)
     set  7,a
     ld   (screen_state),a
     ret
     ld   a,$00
-    ld   ($8033),a
-    ld   ($8032),a
+    ld   (req_death),a
+    ld   (req_level_done),a
     ld   a,(screen_state)
     set  6,a
     ld   (screen_state),a
@@ -431,10 +560,10 @@ start:
     ret
  game_in_progress:
     call $0638
-    ld   a,($8033)
+    ld   a,(req_death)
     and  a
     jp   nz,$0398
-    ld   a,($8032)
+    ld   a,(req_level_done)
     and  a
     jp   nz,$04E0
     ld   a,(cur_screen)
@@ -451,9 +580,9 @@ start:
     ret
 
  _scr_game_over_2:
-    ld   a,($803D)
+    ld   a,(disp_timer)
     dec  a
-    ld   ($803D),a
+    ld   (disp_timer),a
     cp   $7E
     jp   nz,$0308
     ex   af,af'
@@ -479,34 +608,34 @@ start:
     set  2,a
     ld   (screen_state),a
     ret
-    ld   a,($8031)
+    ld   a,(cur_player)
     and  a
     jp   nz,$0353
     ld   a,$01
-    ld   ($8034),a
-    ld   a,($8035)
+    ld   (p1_done),a
+    ld   a,(p2_done)
     and  a
     jp   nz,$0321
     ld   a,$01
-    ld   ($8031),a
+    ld   (cur_player),a
     ld   a,(screen_state)
     set  4,a
     ld   (screen_state),a
     ret
     ld   a,$01
-    ld   ($8035),a
-    ld   a,($8034)
+    ld   (p2_done),a
+    ld   a,(p1_done)
     and  a
     jp   nz,$0321
     ld   a,$00
-    ld   ($8031),a
+    ld   (cur_player),a
     ld   a,(screen_state)
     set  4,a
     ld   (screen_state),a
     ret
-    ld   a,($803D)
+    ld   a,(disp_timer)
     dec  a
-    ld   ($803D),a
+    ld   (disp_timer),a
     cp   $3E
     jp   z,$0383
     cp   $37
@@ -534,12 +663,12 @@ start:
     jp   z,_scr_gamble_1
     ret
  _scr_gamble_1:
-    ld   a,($8031)
+    ld   a,(cur_player)
     and  a
     jp   z,$04C1
     jp   $048B
  _scr_game_1:
-    ld   a,($803C)
+    ld   a,(is_2player)
     and  a
     jp   nz,$041D
     ld   hl,lives
@@ -555,8 +684,8 @@ start:
     and  a
     jp   z,$03E9
     ld   a,$00
-    ld   ($8033),a
-    ld   ($8032),a
+    ld   (req_death),a
+    ld   (req_level_done),a
     ld   a,(screen_state)
     set  4,a
     ld   (screen_state),a
@@ -567,8 +696,8 @@ start:
     ld   (flip_scr_x),a
     ld   (flip_scr_y),a
     ld   a,$01
-    ld   ($8034),a
-    ld   ($8035),a
+    ld   (p1_done),a
+    ld   (p2_done),a
     ld   hl,lives
     ld   b,$84
     ld   a,$00
@@ -580,8 +709,8 @@ start:
     cp   h
     jp   nz,$03FF
     ld   a,$00
-    ld   ($8033),a
-    ld   ($8032),a
+    ld   (req_death),a
+    ld   (req_level_done),a
     ld   a,(screen_state)
     set  3,a
     ld   (screen_state),a
@@ -591,7 +720,7 @@ start:
     cp   (hl)
     jp   z,$0427
     dec  (hl)
-    ld   a,($8031)
+    ld   a,(cur_player)
     and  a
     jp   z,$043C
     ld   hl,lives
@@ -606,22 +735,22 @@ start:
     ld   a,(lives)
     and  a
     jp   nz,$0473
-    ld   a,($8031)
+    ld   a,(cur_player)
     and  a
     jp   z,$045D
     ld   a,$01
-    ld   ($8035),a
+    ld   (p2_done),a
     jp   $0462
     ld   a,$01
-    ld   ($8034),a
+    ld   (p1_done),a
     ld   a,$00
-    ld   ($8033),a
-    ld   ($8032),a
+    ld   (req_death),a
+    ld   (req_level_done),a
     ld   a,(screen_state)
     set  3,a
     ld   (screen_state),a
     ret
-    ld   a,($8031)
+    ld   a,(cur_player)
     and  a
     jp   z,$0484
     ld   a,(lives_copy)
@@ -635,31 +764,31 @@ start:
     and  a
     jp   nz,$04A0
     ld   a,$00
-    ld   ($8036),a
+    ld   (flip_state),a
     ld   (flip_scr_x),a
     ld   (flip_scr_y),a
     jp   $04AB
     ld   a,$01
-    ld   ($8036),a
+    ld   (flip_state),a
     ld   (flip_scr_x),a
     ld   (flip_scr_y),a
     ld   a,$00
-    ld   ($8033),a
-    ld   ($8032),a
+    ld   (req_death),a
+    ld   (req_level_done),a
     ld   a,$01
-    ld   ($8031),a
+    ld   (cur_player),a
     ld   a,(screen_state)
     set  4,a
     ld   (screen_state),a
     ret
     ld   a,$00
-    ld   ($8033),a
-    ld   ($8032),a
+    ld   (req_death),a
+    ld   (req_level_done),a
     ld   a,$00
-    ld   ($8036),a
+    ld   (flip_state),a
     ld   (flip_scr_x),a
     ld   (flip_scr_y),a
-    ld   ($8031),a
+    ld   (cur_player),a
     ld   a,(screen_state)
     set  4,a
     ld   (screen_state),a
@@ -671,8 +800,8 @@ start:
     jp   z,$04EE
     ret
     ld   a,$00
-    ld   ($8032),a
-    ld   ($8033),a
+    ld   (req_level_done),a
+    ld   (req_death),a
     ld   a,$08
     ld   (cur_screen),a
     ld   a,(screen_state)
@@ -689,7 +818,7 @@ start:
     ld   (hl),a
     inc  l
     djnz $0514
-    ld   a,($8031)
+    ld   a,(cur_player)
     and  a
     jp   z,$052D
     ld   hl,lives
@@ -702,8 +831,8 @@ start:
     ld   bc,$00FF
     ldir
     ld   a,$00
-    ld   ($8032),a
-    ld   ($8033),a
+    ld   (req_level_done),a
+    ld   (req_death),a
     ld   a,(screen_state)
     set  6,a
     ld   (screen_state),a
@@ -768,7 +897,7 @@ start:
     inc  h
     inc  e
     inc  c
-    jr   $062C
+    jr   copy_sprites
     ld   c,$2E
     ld   (bc),a
     inc  c
@@ -802,12 +931,12 @@ start:
     nop
     nop
     nop
-    ld   a,($8040)
+    ld   a,(score_add_trig)
     and  a
     ret  z
     xor  a
-    ld   ($8040),a
-    ld   a,($8031)
+    ld   (score_add_trig),a
+    ld   a,(cur_player)
     and  a
     jp   nz,$0653
     ld   hl,score_lo
@@ -815,7 +944,7 @@ start:
     jp   $0658
     ld   hl,$8047
     ld   c,$01
-    ld   de,$8041
+    ld   de,score_add
     ld   b,$03
     xor  a
     ld   a,(de)
@@ -958,7 +1087,7 @@ start:
     ret
 
 
-    ld   iy,$8020
+    ld   iy,dsw_raw
     ld   a,(hw_in_1)
     ld   (iy+$01),a
     ld   c,a
@@ -2903,7 +3032,7 @@ start:
     add  a,(hl)
     add  a,(hl)
 
-    ld   a,($803E)
+    ld   a,(endlevel_active)
     and  a
     jp   nz,$1038
     ld   a,($841F)
@@ -2915,7 +3044,7 @@ start:
     ld   a,(bomb_placed)
     and  a
     jp   nz,$10ED
-    ld   ($8683),a
+    ld   (bomb_lethal),a
     ld   a,(bombs)
     and  a
     ret  z
@@ -2927,7 +3056,7 @@ start:
     inc  hl
     djnz $103F
     jp   $10D6
-    ld   a,($85C1)
+    ld   a,(boulder_req)
     and  a
     ret  nz
     ld   a,(controls)
@@ -2982,7 +3111,7 @@ start:
 
  ;; (after?) set bomb?
     ld   a,$00
-    ld   ($8683),a
+    ld   (bomb_lethal),a
     ld   ($8681),a
     ld   ($8682),a
     ld   ($8688),a
@@ -3063,7 +3192,7 @@ start:
     ld   a,$87
     ld   ($8687),a
     ld   a,$01
-    ld   ($8683),a
+    ld   (bomb_lethal),a
     ld   a,$88
     ld   (watchdog),a
     jp   $10D6
@@ -3081,7 +3210,7 @@ start:
     jp   $1038
     nop
     nop
-    ld   a,($8683)
+    ld   a,(bomb_lethal)
     and  a
     ret  z
     ld   a,(int_enable)
@@ -3090,7 +3219,7 @@ start:
     ld   a,($841F)
     cp   $01
     jp   nz,$118C
-    ld   a,($803E)
+    ld   a,(endlevel_active)
     and  a
     jp   nz,$118C
     call $119F
@@ -3134,7 +3263,7 @@ start:
     ld   a,($8501)
     and  a
     ret  z
-    ld   a,($852B)
+    ld   a,(cat1_busy)
     and  a
     ret  nz
     ld   ix,$801C
@@ -3144,9 +3273,9 @@ start:
     ld   de,$0E1C
     ld   hl,$0E1C
     jp   $11BF
-    ld   hl,$8517
+    ld   hl,cat1_state
     ld   (hl),$06
-    ld   hl,$852B
+    ld   hl,cat1_busy
     ld   (hl),$01
     jp   $1286
     ld   a,($8503)
@@ -3170,7 +3299,7 @@ start:
     ld   a,($8504)
     and  a
     ret  z
-    ld   a,($856B)
+    ld   a,(cat2_busy)
     and  a
     ret  nz
     ld   ix,$801C
@@ -3180,15 +3309,15 @@ start:
     ld   de,$0E1C
     ld   hl,$0E1C
     jp   $11BF
-    ld   hl,$8557
+    ld   hl,cat2_state
     ld   (hl),$06
-    ld   hl,$856B
+    ld   hl,cat2_busy
     ld   (hl),$01
     jp   $1286
     ld   a,($8507)
     and  a
     ret  z
-    ld   a,($858B)
+    ld   a,(cat3_busy)
     and  a
     ret  nz
     ld   ix,$801C
@@ -3198,9 +3327,9 @@ start:
     ld   de,$0E1C
     ld   hl,$0E1C
     jp   $11BF
-    ld   hl,$8577
+    ld   hl,cat3_state
     ld   (hl),$06
-    ld   hl,$858B
+    ld   hl,cat3_busy
     ld   (hl),$01
     ld   a,$83
     ld   (watchdog),a
@@ -3210,7 +3339,7 @@ start:
     ld   a,($8601)
     and  a
     ret  z
-    ld   a,($862B)
+    ld   a,(snake1_busy)
     and  a
     ret  nz
     ld   ix,$801C
@@ -3220,15 +3349,15 @@ start:
     ld   de,$0C18
     ld   hl,$0C18
     jp   $11BF
-    ld   hl,$8617
+    ld   hl,snake1_state
     ld   (hl),$06
-    ld   hl,$862B
+    ld   hl,snake1_busy
     ld   (hl),$01
     jp   $12E6
     ld   a,($8603)
     and  a
     ret  z
-    ld   a,($864B)
+    ld   a,(snake2_busy)
     and  a
     ret  nz
     ld   ix,$801C
@@ -3238,9 +3367,9 @@ start:
     ld   de,$0C18
     ld   hl,$0C18
     jp   $11BF
-    ld   hl,$8637
+    ld   hl,snake2_state
     ld   (hl),$06
-    ld   hl,$864B
+    ld   hl,snake2_busy
     ld   (hl),$01
     ld   a,$82
     ld   (watchdog),a
@@ -3248,7 +3377,7 @@ start:
     call $12F1
     ret
     xor  a
-    ld   hl,$8040
+    ld   hl,score_add_trig
     ld   (hl),$01
     ld   c,$00
     ld   e,$00
@@ -5631,7 +5760,7 @@ start:
     ld   (hl),a
     inc  hl
     djnz $2029
-    ld   a,($8031)
+    ld   a,(cur_player)
     and  a
     jp   nz,$203A
     ld   hl,lives_copy
@@ -5643,13 +5772,13 @@ start:
     call $2082
     call $209D
     call draw_cur_level_map
-    call $3E29
+    call food_maze_redraw
     call $3F34
     call $417B
     call $4227
     ld   a,$A0
     ld   (watchdog),a
-    ld   hl,$8040
+    ld   hl,score_add_trig
     ld   a,$00
     ld   b,$04
     ld   (hl),a
@@ -5677,7 +5806,7 @@ start:
     inc  de
     pop  bc
     djnz $208A
-    ld   a,($8031)
+    ld   a,(cur_player)
     inc  a
     ld   ($9182),a
     ret
@@ -5833,8 +5962,8 @@ start:
     ld   hl,$2359
     call $212E
     xor  a
-    ld   ($8033),a
-    ld   ($8032),a
+    ld   (req_death),a
+    ld   (req_level_done),a
     ld   a,$02
     ld   (cur_screen),a
     ld   a,(screen_state)
@@ -5849,8 +5978,8 @@ start:
     ld   hl,$2359
     call $212E
     xor  a
-    ld   ($8033),a
-    ld   ($8032),a
+    ld   (req_death),a
+    ld   (req_level_done),a
     ld   a,$03
     ld   (cur_screen),a
     ld   a,(screen_state)
@@ -5868,11 +5997,11 @@ start:
     ld   a,(is_playing)
     cp   $01
     jp   z,$2240
-    ld   a,($8035)
+    ld   a,(p2_done)
     ld   c,$01
     and  a
     jp   z,$2226
-    ld   a,($8034)
+    ld   a,(p1_done)
     and  a
     jp   nz,$2271
     inc  c
@@ -5891,7 +6020,7 @@ start:
     ld   de,score_hi
     call $213F
     xor  a
-    ld   ($8036),a
+    ld   (flip_state),a
     ld   (sound_enable),a
     ld   hl,flip_scr_x
     ld   (hl),a
@@ -5903,7 +6032,7 @@ start:
     inc  hl
     djnz $2258
     ld   a,$80
-    ld   ($803D),a
+    ld   (disp_timer),a
     ld   a,$04
     ld   (cur_screen),a
     ld   a,(screen_state)
@@ -5920,11 +6049,11 @@ start:
     call $213F
     jp   $2246
     call $20EC
-    ld   a,($8038)
+    ld   a,(first_turn)
     and  a
     jp   z,$22AE
     xor  a
-    ld   ($8038),a
+    ld   (first_turn),a
     ld   hl,$9361
     ld   de,$FFE0
     call $22A4
@@ -5938,7 +6067,7 @@ start:
     ld   (hl),$00
     ret
 
-    ld   a,($8031)
+    ld   a,(cur_player)
     and  a
     jp   z,$22BE
     ld   a,($8027)
@@ -5951,7 +6080,7 @@ start:
     ld   (hl),a
     ld   hl,$237E
     call $212E
-    ld   a,($8031)
+    ld   a,(cur_player)
     inc  a
     ld   (hl),a
     dec  a
@@ -5974,12 +6103,12 @@ start:
     ld   a,$05
     ld   (cur_screen),a
     ld   a,$40
-    ld   ($803D),a
+    ld   (disp_timer),a
     ld   a,(screen_state)
     res  4,a
     ld   (screen_state),a
     jp   $1FD1
-    ld   a,($8031)
+    ld   a,(cur_player)
     ld   hl,lives_copy
     and  a
     jp   z,$2312
@@ -6071,42 +6200,42 @@ start:
     ld   a,($841F)
     cp   $02
     jp   z,$23C5
-    ld   a,($803E)
+    ld   a,(endlevel_active)
     and  a
     jp   nz,$23C9
-    call $407D
-    call $3BFF
-    call $3D0A
-    call $2A51
-    call $3206
-    call $2539
-    call $394B
-    call $23D3
-    call $392A
-    call $116D
-    call $100F
-    call $41BC
+    call platform_update
+    call bridge_update
+    call scripted_move
+    call cat_mgr
+    call snake_mgr
+    call player_update
+    call enemy_eaten_sm
+    call level_end_seq
+    call player_vs_enemy
+    call bomb_collide
+    call bomb_update
+    call boulder_update
     ret
 
-    call $2539
+    call player_update
     ret
-    call $2A51
-    call $3206
-    call $23D3
+    call cat_mgr
+    call snake_mgr
+    call level_end_seq
     ret
 
-    ld   a,($8033)
+    ld   a,(req_death)
     and  a
     ret  nz
     ld   a,($841F)
     cp   $02
     ret  z
-    ld   a,($803E)
+    ld   a,(endlevel_active)
     and  a
-    jp   z,$2429
-    ld   a,($803F)
+    jp   z,check_level_done
+    ld   a,(endlevel_ctr)
     inc  a
-    ld   ($803F),a
+    ld   (endlevel_ctr),a
     cp   $02
     jp   z,$2406
     cp   $04
@@ -6129,12 +6258,12 @@ start:
     ret
     ld   a,$00
     ld   ($8480),a
-    ld   ($803E),a
-    ld   ($803F),a
+    ld   (endlevel_active),a
+    ld   (endlevel_ctr),a
     ld   a,$01
-    ld   ($8032),a
+    ld   (req_level_done),a
     ret
-    ld   hl,$8140
+    ld   hl,food_returned
     ld   a,$00
     ld   b,$09
     cp   (hl)
@@ -6143,27 +6272,27 @@ start:
     inc  hl
     djnz $2430
     ld   d,$00
-    ld   a,($862B)
+    ld   a,(snake1_busy)
     and  a
     jp   nz,$2449
     ld   a,$06
-    ld   ($8617),a
+    ld   (snake1_state),a
     ld   a,$08
     add  a,d
     daa
     ld   d,a
-    ld   a,($864B)
+    ld   a,(snake2_busy)
     and  a
     jp   nz,$245A
     ld   a,$06
-    ld   ($8637),a
+    ld   (snake2_state),a
     ld   a,$08
     add  a,d
     daa
     ld   d,a
     call $3A8C
     ld   a,$01
-    ld   ($803E),a
+    ld   (endlevel_active),a
     ld   a,$E0
     ld   (watchdog),a
     ret
@@ -6444,7 +6573,7 @@ mthing
     ld   (player_x),a
     ld   (player_y),a
     ld   a,$01
-    ld   ($8033),a
+    ld   (req_death),a
     ret
 
     ld   hl,$8420
@@ -6511,7 +6640,7 @@ mthing
     ld   a,$A0
     ld   (watchdog),a
     ret
-    call $3D0A
+    call scripted_move
     ret
 
  move_player:
@@ -6572,7 +6701,7 @@ mthing
     ld   bc,$0002
     push hl
     add  hl,bc
-    ld   a,$FE
+    ld   a,TILE_GAP
     cp   (hl)
     jp   z,$2737
     ld   a,$EF
@@ -6603,7 +6732,7 @@ mthing
     ld   bc,$FFC2
     push hl
     add  hl,bc
-    ld   a,$FE
+    ld   a,TILE_GAP
     cp   (hl)
     jp   z,$2779
     ld   a,$EF
@@ -6635,7 +6764,7 @@ mthing
     ld   bc,$FFE3
     push hl
     add  hl,bc
-    ld   a,$FE
+    ld   a,TILE_GAP
     cp   (hl)
     jp   z,$27BB
     ld   a,$EF
@@ -6666,7 +6795,7 @@ mthing
     ld   bc,$FFE1
     push hl
     add  hl,bc
-    ld   a,$FE
+    ld   a,TILE_GAP
     cp   (hl)
     jp   z,$27FD
     ld   a,$EF
@@ -6788,7 +6917,7 @@ mthing
     ld   bc,$FFE2
     add  hl,bc
     ld   a,(hl)
-    cp   $F5
+    cp   TILE_EXIT_HOLE
     jp   nz,$28F5
     ld   a,$01
     ld   ($842D),a
@@ -6809,7 +6938,7 @@ mthing
     call $29AF
     pop  hl
     push hl
-    call $29C8
+    call food_pickup
     pop  hl
     ld   a,($80E0)
     and  a
@@ -6822,18 +6951,18 @@ mthing
     ld   bc,$FFE1
     add  hl,bc
     ld   a,(hl)
-    cp   $39
+    cp   TILE_BOULDER
     jp   z,$2930
     cp   $3A
     ret  nz
     ld   a,(bomb_placed)
     and  a
     ret  nz
-    ld   a,($85C1)
+    ld   a,(boulder_req)
     and  a
     ret  nz
     ld   a,$01
-    ld   ($85C1),a
+    ld   (boulder_req),a
     ld   a,(player_x)
     ld   ($85C2),a
     ld   a,(player_y)
@@ -6842,7 +6971,7 @@ mthing
     ld   bc,$FFE2
     add  hl,bc
     ld   a,(hl)
-    cp   $FE
+    cp   TILE_GAP
     ret  nz
     ld   a,$04
     ld   ($841F),a
@@ -6914,7 +7043,7 @@ mthing
     cp   $F0
     ret  nc
     ld   c,$02
-    call $3EB2
+    call food_set_state
     ld   ($809C),hl
     ld   a,(hl)
     ld   d,$7A
@@ -6954,8 +7083,8 @@ mthing
     push de
     push bc
     push af
-    call $3F62
-    ld   hl,$8040
+    call food_maze_erase
+    ld   hl,score_add_trig
     ld   de,$2A4E
     ld   b,$03
     ld   (hl),$01
@@ -6978,15 +7107,15 @@ mthing
     nop
     ld   (bc),a
     nop
-    ld   hl,$8508
+    ld   hl,cat1_ai_init
     ld   a,(hl)
     and  a
     jp   nz,$2A70
     ld   (hl),$01
-    ld   hl,$8528
+    ld   hl,cat1_ai_ptr
     ld   bc,$2B5A
     call $31CF
-    ld   hl,$852D
+    ld   hl,cat1_ptr2
     ld   bc,$2B28
     call $31CF
     call $2B1F
@@ -6997,15 +7126,15 @@ mthing
     ld   a,(de)
     and  a
     call z,$2AF1
-    ld   hl,$850A
+    ld   hl,cat2_ai_init
     ld   a,(hl)
     and  a
     jp   nz,$2A9D
     ld   (hl),$01
-    ld   hl,$8568
+    ld   hl,cat2_ai_ptr
     ld   bc,$2BB0
     call $31CF
-    ld   hl,$856D
+    ld   hl,cat2_ptr2
     ld   bc,$2B28
     call $31CF
     call $2B1F
@@ -7015,15 +7144,15 @@ mthing
     ld   a,(de)
     and  a
     call z,$2AF1
-    ld   hl,$850B
+    ld   hl,cat3_ai_init
     ld   a,(hl)
     and  a
     jp   nz,$2ACA
     ld   (hl),$01
-    ld   hl,$8588
+    ld   hl,cat3_ai_ptr
     ld   bc,$2C06
     call $31CF
-    ld   hl,$858D
+    ld   hl,cat3_ptr2
     ld   bc,$2B28
     call $31CF
     call $2B1F
@@ -7110,7 +7239,7 @@ mthing
     ld   a,(hl) ; 8501: cat1_active
     and  a
     jp   nz,$2B6E
-    ld   a,($803E)
+    ld   a,(endlevel_active)
     and  a
     ret  nz
     ld   (hl),$01
@@ -7132,8 +7261,8 @@ mthing
     jr   nc,$2B6A
     djnz $2B6C
     djnz $2B6E
-    ld   hl,$8517
-    call $2C3E
+    ld   hl,cat1_state
+    call cat_ai
     ret
 
  cat1_init_data:
@@ -7147,7 +7276,7 @@ mthing
     ld   a,(hl)
     and  a
     jp   nz,$2BC4
-    ld   a,($803E)
+    ld   a,(endlevel_active)
     and  a
     ret  nz
     ld   (hl),$01
@@ -7173,8 +7302,8 @@ mthing
     jr   z,$2BC5
     jr   z,$2BC7
     djnz $2BC8
-    ld   hl,$8557
-    call $2C3E
+    ld   hl,cat2_state
+    call cat_ai
     ret
 
  cat2_init_data:
@@ -7209,7 +7338,7 @@ mthing
     ld   a,(hl)
     and  a
     jp   nz,$2C1A
-    ld   a,($803E)
+    ld   a,(endlevel_active)
     and  a
     ret  nz
     ld   (hl),$01
@@ -7232,8 +7361,8 @@ mthing
     jr   nc,$2C16
     djnz $2C18
     djnz $2C1A
-    ld   hl,$8577
-    call $2C3E
+    ld   hl,cat3_state
+    call cat_ai
     ret
 
  cat3_init_data:
@@ -7286,7 +7415,7 @@ mthing
     cp   $07
     jp   z,$3184
     ret
-    ld   a,($803E)
+    ld   a,(endlevel_active)
     and  a
     ret  nz
     ex   de,hl
@@ -7433,7 +7562,7 @@ mthing
     ld   a,(bc)
     and  $03
     cp   $00
-    call nz,$2D0E
+    call nz,enemy_chase
     ex   de,hl
     ld   hl,$000D
     add  hl,de
@@ -7444,7 +7573,7 @@ mthing
     ld   a,(bc)
     and  $03
     cp   $02
-    call nz,$2D0E
+    call nz,enemy_chase
     ex   de,hl
     ld   hl,$000D
     add  hl,de
@@ -7455,7 +7584,7 @@ mthing
     ld   a,(bc)
     and  $07
     cp   $05
-    call nz,$2D0E
+    call nz,enemy_chase
     ex   de,hl
     ld   hl,$000D
     add  hl,de
@@ -7469,7 +7598,7 @@ mthing
     ld   a,(bc)
     and  $07
     cp   $07
-    call nz,$2D0E
+    call nz,enemy_chase
     ex   de,hl
     ld   hl,$000D
     add  hl,de
@@ -7492,7 +7621,7 @@ mthing
     call get_tile_pos
     ld   bc,$FFE2
     add  hl,bc
-    ld   a,$FE
+    ld   a,TILE_GAP
     cp   (hl)
     jp   nz,$2DF2
     dec  de
@@ -7806,7 +7935,7 @@ mthing
     jp   nz,$3011
     ld   (hl),$01
     ret
-    cp   $FE
+    cp   TILE_GAP
     ret  nz
     ld   (hl),$FF
     ret
@@ -8157,26 +8286,26 @@ mthing
     nop
     nop
     nop
-    ld   hl,$8608
+    ld   hl,snake1_ai_init
     ld   a,(hl)
     and  a
     jp   nz,$321C
     ld   (hl),$01
-    ld   hl,$8628
-    ld   bc,$3315
+    ld   hl,snake1_dly_ptr
+    ld   bc,spawn_delay_sa
     call $32F7
     ld   de,snake1_enable
     ld   hl,$8629
     ld   a,(de)
     and  a
     call z,$3256
-    ld   hl,$8609
+    ld   hl,snake2_ai_init
     ld   a,(hl)
     and  a
     jp   nz,$323A
     ld   (hl),$01
-    ld   hl,$8648
-    ld   bc,$332B
+    ld   hl,snake2_dly_ptr
+    ld   bc,spawn_delay_sb
     call $32F7
     ld   de,$8602
     ld   hl,$8649
@@ -8216,7 +8345,7 @@ mthing
     ld   a,(hl)
     and  a
     jp   nz,$328B
-    ld   a,($803E)
+    ld   a,(endlevel_active)
     and  a
     ret  nz
     ld   (hl),$01
@@ -8227,8 +8356,8 @@ mthing
     ld   a,$86
     ld   (watchdog),a
     ret
-    ld   hl,$8617
-    call $333F
+    ld   hl,snake1_state
+    call snake_ai
     ret
 
  snake1_init_data:
@@ -8264,7 +8393,7 @@ mthing
     ld   a,(hl)
     and  a
     jp   nz,$32D0
-    ld   a,($803E)
+    ld   a,(endlevel_active)
     and  a
     ret  nz
     ld   (hl),$01
@@ -8275,8 +8404,8 @@ mthing
     ld   a,$86
     ld   (watchdog),a
     ret
-    ld   hl,$8637
-    call $333F
+    ld   hl,snake2_state
+    call snake_ai
     ret
 
  snake2_init_data:
@@ -8372,7 +8501,7 @@ mthing
     cp   $07
     jp   z,$38C2
     ret
-    ld   a,($803E)
+    ld   a,(endlevel_active)
     and  a
     ret  nz
     ex   de,hl
@@ -8572,7 +8701,7 @@ mthing
     call $37CA
     ld   bc,$FFE2
     add  hl,bc
-    ld   a,$FE
+    ld   a,TILE_GAP
     cp   (hl)
     jp   nz,$34D7
     dec  de
@@ -9248,7 +9377,7 @@ mthing
     ld   a,($841F)
     cp   $01
     ret  nz
-    ld   a,($803E)
+    ld   a,(endlevel_active)
     and  a
     ret  nz
     call $3981
@@ -9262,7 +9391,7 @@ mthing
     call $3A22
     call $3A50
     call $3A5D
-    call $3ACC
+    call boulder_squash
     ret
     ld   a,(ix+$03)
     ld   b,(iy+$03)
@@ -9288,7 +9417,7 @@ mthing
     ld   a,($8501)
     and  a
     ret  z
-    ld   a,($852B)
+    ld   a,(cat1_busy)
     and  a
     ret  nz
     ld   ix,ram_start
@@ -9299,7 +9428,7 @@ mthing
     ld   a,($8504)
     and  a
     ret  z
-    ld   a,($856B)
+    ld   a,(cat2_busy)
     and  a
     ret  nz
     ld   ix,ram_start
@@ -9310,7 +9439,7 @@ mthing
     ld   a,($8507)
     and  a
     ret  z
-    ld   a,($858B)
+    ld   a,(cat3_busy)
     and  a
     ret  nz
     ld   ix,ram_start
@@ -9321,7 +9450,7 @@ mthing
     ld   a,($8601)
     and  a
     ret  z
-    ld   a,($862B)
+    ld   a,(snake1_busy)
     and  a
     ret  nz
     ld   ix,ram_start
@@ -9332,7 +9461,7 @@ mthing
     ld   a,($8603)
     and  a
     ret  z
-    ld   a,($864B)
+    ld   a,(snake2_busy)
     and  a
     ret  nz
     ld   ix,ram_start
@@ -9340,19 +9469,19 @@ mthing
     ld   de,$050A
     ld   hl,$050A
     jp   $395E
-    ld   hl,$8517
+    ld   hl,cat1_state
     ld   a,(hl)
     cp   $04
     ret  nz
     ld   de,$8007
     jp   $3A2C
-    ld   hl,$8557
+    ld   hl,cat2_state
     ld   a,(hl)
     cp   $04
     ret  nz
     ld   de,$800F
     jp   $3A2C
-    ld   hl,$8577
+    ld   hl,cat3_state
     ld   a,(hl)
     cp   $04
     ret  nz
@@ -9374,13 +9503,13 @@ mthing
     ld   d,$04
     call $3BBD
     ret
-    ld   hl,$8617
+    ld   hl,snake1_state
     ld   a,(hl)
     cp   $04
     ret  nz
     ld   de,$8017
     jp   $3A67
-    ld   hl,$8637
+    ld   hl,snake2_state
     ld   a,(hl)
     cp   $04
     ret  nz
@@ -9404,32 +9533,32 @@ mthing
     ld   d,$08
     call $3BBD
     ld   d,$04
-    ld   a,($852B)
+    ld   a,(cat1_busy)
     and  a
     jp   nz,$3AA5
     call $3BBD
-    ld   hl,$8517
+    ld   hl,cat1_state
     ld   (hl),$06
-    ld   hl,$852B
+    ld   hl,cat1_busy
     ld   (hl),$01
-    ld   a,($856B)
+    ld   a,(cat2_busy)
     and  a
     jp   nz,$3AB9
     call $3BBD
-    ld   hl,$8557
+    ld   hl,cat2_state
     ld   (hl),$06
-    ld   hl,$856B
+    ld   hl,cat2_busy
     ld   (hl),$01
-    ld   a,($858B)
+    ld   a,(cat3_busy)
     and  a
     ret  nz
     call $3BBD
-    ld   hl,$8577
+    ld   hl,cat3_state
     ld   (hl),$06
-    ld   hl,$858B
+    ld   hl,cat3_busy
     ld   (hl),$01
     ret
-    ld   a,($85C0)
+    ld   a,(boulder)
     and  a
     ret  z
     call $3AE1
@@ -9441,33 +9570,33 @@ mthing
     ld   a,($8501)
     and  a
     ret  z
-    ld   a,($852B)
+    ld   a,(cat1_busy)
     and  a
     ret  nz
     ld   iy,$8004
     ld   hl,$3B26
-    ld   de,$8517
-    jp   $3B74
+    ld   de,cat1_state
+    jp   boulder_vs_enemy
     ld   a,($8505)
     and  a
     ret  z
-    ld   a,($856B)
+    ld   a,(cat2_busy)
     and  a
     ret  nz
     ld   iy,$800C
     ld   hl,$3B26
-    ld   de,$8557
-    jp   $3B74
+    ld   de,cat2_state
+    jp   boulder_vs_enemy
     ld   a,($8507)
     and  a
     ret  z
-    ld   a,($858B)
+    ld   a,(cat3_busy)
     and  a
     ret  nz
     ld   iy,$8010
     ld   hl,$3B26
-    ld   de,$8577
-    jp   $3B74
+    ld   de,cat3_state
+    jp   boulder_vs_enemy
     ld   hl,$FFFD
     add  hl,de
     ld   (hl),$1C
@@ -9480,23 +9609,23 @@ mthing
     ld   a,($8601)
     and  a
     ret  z
-    ld   a,($862B)
+    ld   a,(snake1_busy)
     and  a
     ret  nz
     ld   iy,$8014
     ld   hl,$3B64
-    ld   de,$8617
-    jp   $3B74
+    ld   de,snake1_state
+    jp   boulder_vs_enemy
     ld   a,($8603)
     and  a
     ret  z
-    ld   a,($864B)
+    ld   a,(snake2_busy)
     and  a
     ret  nz
     ld   iy,$8018
     ld   hl,$3B64
-    ld   de,$8637
-    jp   $3B74
+    ld   de,snake2_state
+    jp   boulder_vs_enemy
     ld   hl,$FFFD
     add  hl,de
     ld   (hl),$2C
@@ -9559,7 +9688,7 @@ mthing
     ret
 
     xor  a
-    ld   hl,$8040
+    ld   hl,score_add_trig
     ld   (hl),$01
     ld   c,$00
     ld   e,$00
@@ -9728,23 +9857,23 @@ mthing
     db   $fd
     rst  $38
     db   $fd
-    cp   $FE
-    cp   $FE
+    cp   TILE_GAP
+    cp   TILE_GAP
     cp   $FD
     rst  $38
     db   $fd
-    cp   $FE
-    cp   $FE
+    cp   TILE_GAP
+    cp   TILE_GAP
     cp   $FD
     rst  $38
     db   $fd
-    cp   $FE
-    cp   $FE
+    cp   TILE_GAP
+    cp   TILE_GAP
     cp   $FD
     rst  $38
     db   $fd
-    cp   $FE
-    cp   $FE
+    cp   TILE_GAP
+    cp   TILE_GAP
     cp   $FD
     rst  $38
     dec  iyh
@@ -9925,8 +10054,8 @@ mthing
     ret
 
 
-    ld   hl,$8120
-    ld   ix,$3FC6
+    ld   hl,food_state
+    ld   ix,food_pos_tbl
     ld   iy,$400E
     ld   de,$0012
     ld   a,(cur_map)
@@ -9994,8 +10123,8 @@ mthing
 
 
     exx
-    ld   hl,$8120
-    ld   ix,$3FC6
+    ld   hl,food_state
+    ld   ix,food_pos_tbl
     ld   b,$09
     ld   de,$0012
     ld   a,(cur_map)
@@ -10028,7 +10157,7 @@ mthing
     exx
     ret
 
-    ld   hl,$8140
+    ld   hl,food_returned
     ld   bc,$0000
     ld   a,(hl)
     and  a
@@ -10048,7 +10177,7 @@ mthing
     ld   (hl),d
     set  2,h
     ld   (hl),e
-    ld   hl,$8040
+    ld   hl,score_add_trig
     ld   de,$3F31
     ld   b,$03
     ld   (hl),$01
@@ -10070,7 +10199,7 @@ mthing
 
 
     ld   a,$09
-    ld   hl,$8140
+    ld   hl,food_returned
     ld   bc,$0000
     ex   af,af'
     ld   a,(hl)
@@ -10101,8 +10230,8 @@ mthing
     ret
 
 
-    ld   hl,$8120
-    ld   ix,$3FC6
+    ld   hl,food_state
+    ld   ix,food_pos_tbl
     ld   de,$0012
     ld   a,(cur_map)
     and  $03
@@ -10395,7 +10524,7 @@ mthing
     cp   $02
     jp   z,$4148
     cp   $03
-    jp   z,$4167
+    jp   z,food_return_home
     jp   $4084
     ld   a,(player_x)
     add  a,$00
@@ -10420,10 +10549,10 @@ mthing
     ld   e,(hl)
     inc  hl
     ld   d,(hl)
-    call $3EF2
+    call food_return_add
     ld   hl,($809C)
     ld   c,$01
-    call $3EB2
+    call food_set_state
     jp   $4084
 
 
@@ -10455,10 +10584,10 @@ mthing
     ld   ($97A5),a
     ret
     call $48EF
-    ld   a,($85C1)
+    ld   a,(boulder_req)
     and  a
     jp   nz,$41D3
-    ld   ($85C0),a
+    ld   (boulder),a
     ld   hl,$85C4
     ld   b,$0C
     ld   (hl),a
@@ -10470,15 +10599,15 @@ mthing
     ld   a,($85C4)
     and  a
     jp   nz,$4217
-    ld   hl,$85C1
+    ld   hl,boulder_req
     ld   de,$85C4
     ld   bc,$0003
     ldir
     ld   a,$95
     ld   (watchdog),a
     ld   a,$01
-    ld   ($85C0),a
-    ld   a,($85C5)
+    ld   (boulder),a
+    ld   a,(boulder_x)
     cp   $80
     jp   c,$4207
     ld   a,$25
@@ -10493,22 +10622,22 @@ mthing
     ld   a,$01
     ld   ($8181),a
     jp   $4232
-    ld   a,($85C6)
+    ld   a,(boulder_y)
     cp   $E0
     jp   nc,$4227
     add  a,$02
-    ld   ($85C6),a
+    ld   (boulder_y),a
     jp   $4232
 
 
-    ld   hl,$85C0
+    ld   hl,boulder
     ld   b,$10
     ld   a,$00
     ld   (hl),a
     inc  hl
     djnz $422E
     ld   hl,$801C
-    ld   a,($85C5)
+    ld   a,(boulder_x)
     ld   (hl),a
     inc  hl
     ld   a,$37
@@ -10517,7 +10646,7 @@ mthing
     ld   a,$05
     ld   (hl),a
     inc  hl
-    ld   a,($85C6)
+    ld   a,(boulder_y)
     ld   (hl),a
     ret
 
@@ -10581,9 +10710,9 @@ mthing
     ld   l,a
     jr   nc,$42B8
     inc  h
-    ld   de,$8041
+    ld   de,score_add
     ld   a,$01
-    ld   ($8040),a
+    ld   (score_add_trig),a
     ld   bc,$0003
     ldir
     ld   a,$80
@@ -10619,7 +10748,7 @@ mthing
     inc  hl
     ld   (hl),a
     ld   a,$01
-    ld   ($8033),a
+    ld   (req_death),a
     ret
 
  ;;
@@ -10748,7 +10877,7 @@ mthing
     or   h
     jr   nz,$4404
     ld   a,$01
-    ld   ($8032),a
+    ld   (req_level_done),a
     ld   a,$A0
     ld   (watchdog),a
     xor  a
@@ -11043,7 +11172,7 @@ mthing
     ld   a,$00
     ld   ($8060),a
     ld   a,$01
-    ld   ($8033),a
+    ld   (req_death),a
     ld   a,$E0
     ld   (watchdog),a
     ret
@@ -11331,7 +11460,7 @@ mthing
     ld   a,$00
     ld   ($8068),a
     ld   a,$01
-    ld   ($8033),a
+    ld   (req_death),a
     ret
     inc  hl
     ld   a,(hl)
