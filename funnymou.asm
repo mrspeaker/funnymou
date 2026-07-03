@@ -1441,12 +1441,12 @@ zeros               dc   55,0
 09BE  214390  	    ld   hl,$9043
 09C1  061C    	    ld   b,$1C
 09C3  0E1D    	    ld   c,$1D
-09C5  11EF09  	    ld   de,very_chunky_data_2
+09C5  11EF09  	    ld   de,intermission_screen
 09C8  CDDC09  	    call $09DC
 09CB  214394  	    ld   hl,$9443
 09CE  061C    	    ld   b,$1C
 09D0  0E1D    	    ld   c,$1D
-09D2  11FF0C  	    ld   de,$0CFF
+09D2  11FF0C  	    ld   de,intermission_screen_color
 09D5  CDDC09  	    call $09DC
 09D8  CD6209  	    call $0962
 09DB  C9      	    ret
@@ -1466,1573 +1466,204 @@ zeros               dc   55,0
 09EB  C2DC09  	    jp   nz,$09DC
 09EE  C9      	    ret
 
-                very_chunky_data_2:
-09EF  24      	    inc  h
-09F0  24      	    inc  h
-09F1  24      	    inc  h
-09F2  24      	    inc  h
-09F3  24      	    inc  h
-09F4  24      	    inc  h
-09F5  24      	    inc  h
-09F6  24      	    inc  h
-09F7  24      	    inc  h
-09F8  24      	    inc  h
-09F9  A1      	    and  c
-09FA  A2      	    and  d
-09FB  A2      	    and  d
-09FC  24      	    inc  h
-09FD  00      	    nop
-09FE  24      	    inc  h
-09FF  24      	    inc  h
-0A00  24      	    inc  h
-0A01  00      	    nop
-0A02  24      	    inc  h
-0A03  24      	    inc  h
-0A04  24      	    inc  h
-0A05  00      	    nop
-0A06  24      	    inc  h
-0A07  24      	    inc  h
-0A08  24      	    inc  h
-0A09  00      	    nop
-0A0A  24      	    inc  h
-0A0B  24      	    inc  h
-0A0C  24      	    inc  h
-0A0D  24      	    inc  h
-0A0E  24      	    inc  h
-0A0F  24      	    inc  h
-0A10  24      	    inc  h
-0A11  24      	    inc  h
-0A12  24      	    inc  h
-0A13  9B      	    sbc  a,e
-0A14  9C      	    sbc  a,h
-0A15  9D      	    sbc  a,l
-0A16  A2      	    and  d
-0A17  A2      	    and  d
-0A18  24      	    inc  h
-0A19  00      	    nop
-0A1A  24      	    inc  h
-0A1B  24      	    inc  h
-0A1C  24      	    inc  h
-0A1D  00      	    nop
-0A1E  24      	    inc  h
-0A1F  24      	    inc  h
-0A20  24      	    inc  h
-0A21  00      	    nop
-0A22  24      	    inc  h
-0A23  24      	    inc  h
-0A24  24      	    inc  h
-0A25  00      	    nop
-0A26  24      	    inc  h
-0A27  24      	    inc  h
-0A28  24      	    inc  h
-0A29  24      	    inc  h
-0A2A  24      	    inc  h
-0A2B  24      	    inc  h
-0A2C  24      	    inc  h
-0A2D  24      	    inc  h
-0A2E  24      	    inc  h
-0A2F  9E      	    sbc  a,(hl)
-0A30  9F      	    sbc  a,a
-0A31  A0      	    and  b
-0A32  A2      	    and  d
-0A33  A2      	    and  d
-0A34  24      	    inc  h
-0A35  08      	    ex   af,af' ; '
-0A36  24      	    inc  h
-0A37  24      	    inc  h
-0A38  24      	    inc  h
-0A39  04      	    inc  b
-0A3A  24      	    inc  h
-0A3B  24      	    inc  h
-0A3C  24      	    inc  h
-0A3D  0624    	    ld   b,$24
-0A3F  24      	    inc  h
-0A40  24      	    inc  h
-0A41  02      	    ld   (bc),a
-0A42  24      	    inc  h
-0A43  24      	    inc  h
-0A44  24      	    inc  h
-0A45  24      	    inc  h
-0A46  24      	    inc  h
-0A47  24      	    inc  h
-0A48  24      	    inc  h
-0A49  24      	    inc  h
-0A4A  24      	    inc  h
-0A4B  9B      	    sbc  a,e
-0A4C  9C      	    sbc  a,h
-0A4D  9D      	    sbc  a,l
-0A4E  A2      	    and  d
-0A4F  A2      	    and  d
-0A50  24      	    inc  h
-0A51  24      	    inc  h
-0A52  24      	    inc  h
-0A53  24      	    inc  h
-0A54  24      	    inc  h
-0A55  24      	    inc  h
-0A56  24      	    inc  h
-0A57  24      	    inc  h
-0A58  24      	    inc  h
-0A59  24      	    inc  h
-0A5A  24      	    inc  h
-0A5B  24      	    inc  h
-0A5C  24      	    inc  h
-0A5D  24      	    inc  h
-0A5E  24      	    inc  h
-0A5F  24      	    inc  h
-0A60  24      	    inc  h
-0A61  24      	    inc  h
-0A62  24      	    inc  h
-0A63  24      	    inc  h
-0A64  24      	    inc  h
-0A65  24      	    inc  h
-0A66  24      	    inc  h
-0A67  9E      	    sbc  a,(hl)
-0A68  9F      	    sbc  a,a
-0A69  A0      	    and  b
-0A6A  A2      	    and  d
-0A6B  A2      	    and  d
-0A6C  48      	    ld   c,b
-0A6D  49      	    ld   c,c
-0A6E  4A      	    ld   c,d
-0A6F  24      	    inc  h
-0A70  24      	    inc  h
-0A71  24      	    inc  h
-0A72  24      	    inc  h
-0A73  24      	    inc  h
-0A74  92      	    sub  d
-0A75  93      	    sub  e
-0A76  94      	    sub  h
-0A77  24      	    inc  h
-0A78  24      	    inc  h
-0A79  24      	    inc  h
-0A7A  24      	    inc  h
-0A7B  24      	    inc  h
-0A7C  24      	    inc  h
-0A7D  24      	    inc  h
-0A7E  24      	    inc  h
-0A7F  24      	    inc  h
-0A80  24      	    inc  h
-0A81  24      	    inc  h
-0A82  24      	    inc  h
-0A83  24      	    inc  h
-0A84  24      	    inc  h
-0A85  A1      	    and  c
-0A86  A2      	    and  d
-0A87  A2      	    and  d
-0A88  4B      	    ld   c,e
-0A89  4C      	    ld   c,h
-0A8A  4D      	    ld   c,l
-0A8B  24      	    inc  h
-0A8C  24      	    inc  h
-0A8D  A7      	    and  a
-0A8E  24      	    inc  h
-0A8F  24      	    inc  h
-0A90  95      	    sub  l
-0A91  96      	    sub  (hl)
-0A92  97      	    sub  a
-0A93  24      	    inc  h
-0A94  24      	    inc  h
-0A95  A7      	    and  a
-0A96  24      	    inc  h
-0A97  24      	    inc  h
-0A98  24      	    inc  h
-0A99  A4      	    and  h
-0A9A  A6      	    and  (hl)
-0A9B  A6      	    and  (hl)
-0A9C  A6      	    and  (hl)
-0A9D  A6      	    and  (hl)
-0A9E  A6      	    and  (hl)
-0A9F  A6      	    and  (hl)
-0AA0  A6      	    and  (hl)
-0AA1  A6      	    and  (hl)
-0AA2  A2      	    and  d
-0AA3  A2      	    and  d
-0AA4  4E      	    ld   c,(hl)
-0AA5  4F      	    ld   c,a
-0AA6  50      	    ld   d,b
-0AA7  24      	    inc  h
-0AA8  24      	    inc  h
-0AA9  24      	    inc  h
-0AAA  24      	    inc  h
-0AAB  24      	    inc  h
-0AAC  98      	    sbc  a,b
-0AAD  99      	    sbc  a,c
-0AAE  9A      	    sbc  a,d
-0AAF  24      	    inc  h
-0AB0  24      	    inc  h
-0AB1  24      	    inc  h
-0AB2  24      	    inc  h
-0AB3  24      	    inc  h
-0AB4  A4      	    and  h
-0AB5  A3      	    and  e
-0AB6  A6      	    and  (hl)
-0AB7  A6      	    and  (hl)
-0AB8  A6      	    and  (hl)
-0AB9  A6      	    and  (hl)
-0ABA  A6      	    and  (hl)
-0ABB  A6      	    and  (hl)
-0ABC  A6      	    and  (hl)
-0ABD  A6      	    and  (hl)
-0ABE  A2      	    and  d
-0ABF  A2      	    and  d
-0AC0  48      	    ld   c,b
-0AC1  49      	    ld   c,c
-0AC2  4A      	    ld   c,d
-0AC3  24      	    inc  h
-0AC4  48      	    ld   c,b
-0AC5  49      	    ld   c,c
-0AC6  4A      	    ld   c,d
-0AC7  24      	    inc  h
-0AC8  92      	    sub  d
-0AC9  93      	    sub  e
-0ACA  94      	    sub  h
-0ACB  24      	    inc  h
-0ACC  92      	    sub  d
-0ACD  93      	    sub  e
-0ACE  94      	    sub  h
-0ACF  A4      	    and  h
-0AD0  A3      	    and  e
-0AD1  A3      	    and  e
-0AD2  A6      	    and  (hl)
-0AD3  A8      	    xor  b
-0AD4  A9      	    xor  c
-0AD5  A9      	    xor  c
-0AD6  A9      	    xor  c
-0AD7  AA      	    xor  d
-0AD8  A6      	    and  (hl)
-0AD9  A6      	    and  (hl)
-0ADA  A2      	    and  d
-0ADB  A2      	    and  d
-0ADC  4B      	    ld   c,e
-0ADD  4C      	    ld   c,h
-0ADE  4D      	    ld   c,l
-0ADF  24      	    inc  h
-0AE0  4B      	    ld   c,e
-0AE1  4C      	    ld   c,h
-0AE2  4D      	    ld   c,l
-0AE3  24      	    inc  h
-0AE4  95      	    sub  l
-0AE5  96      	    sub  (hl)
-0AE6  97      	    sub  a
-0AE7  24      	    inc  h
-0AE8  95      	    sub  l
-0AE9  96      	    sub  (hl)
-0AEA  97      	    sub  a
-0AEB  A3      	    and  e
-0AEC  A3      	    and  e
-0AED  A3      	    and  e
-0AEE  A6      	    and  (hl)
-0AEF  AB      	    xor  e
-0AF0  24      	    inc  h
-0AF1  24      	    inc  h
-0AF2  24      	    inc  h
-0AF3  AC      	    xor  h
-0AF4  A6      	    and  (hl)
-0AF5  A6      	    and  (hl)
-0AF6  A2      	    and  d
-0AF7  A2      	    and  d
-0AF8  4E      	    ld   c,(hl)
-0AF9  4F      	    ld   c,a
-0AFA  50      	    ld   d,b
-0AFB  24      	    inc  h
-0AFC  4E      	    ld   c,(hl)
-0AFD  4F      	    ld   c,a
-0AFE  50      	    ld   d,b
-0AFF  24      	    inc  h
-0B00  98      	    sbc  a,b
-0B01  99      	    sbc  a,c
-0B02  9A      	    sbc  a,d
-0B03  24      	    inc  h
-0B04  98      	    sbc  a,b
-0B05  99      	    sbc  a,c
-0B06  9A      	    sbc  a,d
-0B07  A3      	    and  e
-0B08  A3      	    and  e
-0B09  A3      	    and  e
-0B0A  A6      	    and  (hl)
-0B0B  AB      	    xor  e
-0B0C  24      	    inc  h
-0B0D  24      	    inc  h
-0B0E  24      	    inc  h
-0B0F  AC      	    xor  h
-0B10  A6      	    and  (hl)
-0B11  A6      	    and  (hl)
-0B12  A2      	    and  d
-0B13  A2      	    and  d
-0B14  48      	    ld   c,b
-0B15  49      	    ld   c,c
-0B16  4A      	    ld   c,d
-0B17  24      	    inc  h
-0B18  48      	    ld   c,b
-0B19  49      	    ld   c,c
-0B1A  4A      	    ld   c,d
-0B1B  24      	    inc  h
-0B1C  92      	    sub  d
-0B1D  93      	    sub  e
-0B1E  94      	    sub  h
-0B1F  24      	    inc  h
-0B20  92      	    sub  d
-0B21  93      	    sub  e
-0B22  94      	    sub  h
-0B23  A3      	    and  e
-0B24  A3      	    and  e
-0B25  A3      	    and  e
-0B26  A6      	    and  (hl)
-0B27  AB      	    xor  e
-0B28  24      	    inc  h
-0B29  24      	    inc  h
-0B2A  24      	    inc  h
-0B2B  AC      	    xor  h
-0B2C  A6      	    and  (hl)
-0B2D  A6      	    and  (hl)
-0B2E  A2      	    and  d
-0B2F  A2      	    and  d
-0B30  4B      	    ld   c,e
-0B31  4C      	    ld   c,h
-0B32  4D      	    ld   c,l
-0B33  24      	    inc  h
-0B34  4B      	    ld   c,e
-0B35  4C      	    ld   c,h
-0B36  4D      	    ld   c,l
-0B37  24      	    inc  h
-0B38  95      	    sub  l
-0B39  96      	    sub  (hl)
-0B3A  97      	    sub  a
-0B3B  24      	    inc  h
-0B3C  95      	    sub  l
-0B3D  96      	    sub  (hl)
-0B3E  97      	    sub  a
-0B3F  A3      	    and  e
-0B40  A3      	    and  e
-0B41  A3      	    and  e
-0B42  A6      	    and  (hl)
-0B43  AD      	    xor  l
-0B44  AE      	    xor  (hl)
-0B45  AE      	    xor  (hl)
-0B46  AE      	    xor  (hl)
-0B47  AF      	    xor  a
-0B48  A6      	    and  (hl)
-0B49  A6      	    and  (hl)
-0B4A  A2      	    and  d
-0B4B  A2      	    and  d
-0B4C  4E      	    ld   c,(hl)
-0B4D  4F      	    ld   c,a
-0B4E  50      	    ld   d,b
-0B4F  24      	    inc  h
-0B50  4E      	    ld   c,(hl)
-0B51  4F      	    ld   c,a
-0B52  50      	    ld   d,b
-0B53  24      	    inc  h
-0B54  98      	    sbc  a,b
-0B55  99      	    sbc  a,c
-0B56  9A      	    sbc  a,d
-0B57  24      	    inc  h
-0B58  98      	    sbc  a,b
-0B59  99      	    sbc  a,c
-0B5A  9A      	    sbc  a,d
-0B5B  A3      	    and  e
-0B5C  A3      	    and  e
-0B5D  A3      	    and  e
-0B5E  A6      	    and  (hl)
-0B5F  AB      	    xor  e
-0B60  24      	    inc  h
-0B61  24      	    inc  h
-0B62  24      	    inc  h
-0B63  AC      	    xor  h
-0B64  A6      	    and  (hl)
-0B65  A6      	    and  (hl)
-0B66  A2      	    and  d
-0B67  A2      	    and  d
-0B68  24      	    inc  h
-0B69  24      	    inc  h
-0B6A  24      	    inc  h
-0B6B  24      	    inc  h
-0B6C  24      	    inc  h
-0B6D  24      	    inc  h
-0B6E  24      	    inc  h
-0B6F  24      	    inc  h
-0B70  24      	    inc  h
-0B71  24      	    inc  h
-0B72  24      	    inc  h
-0B73  24      	    inc  h
-0B74  24      	    inc  h
-0B75  24      	    inc  h
-0B76  24      	    inc  h
-0B77  A3      	    and  e
-0B78  A3      	    and  e
-0B79  A3      	    and  e
-0B7A  A6      	    and  (hl)
-0B7B  AB      	    xor  e
-0B7C  24      	    inc  h
-0B7D  24      	    inc  h
-0B7E  24      	    inc  h
-0B7F  AC      	    xor  h
-0B80  A6      	    and  (hl)
-0B81  A6      	    and  (hl)
-0B82  A2      	    and  d
-0B83  A2      	    and  d
-0B84  24      	    inc  h
-0B85  24      	    inc  h
-0B86  24      	    inc  h
-0B87  24      	    inc  h
-0B88  24      	    inc  h
-0B89  24      	    inc  h
-0B8A  24      	    inc  h
-0B8B  24      	    inc  h
-0B8C  24      	    inc  h
-0B8D  24      	    inc  h
-0B8E  24      	    inc  h
-0B8F  24      	    inc  h
-0B90  24      	    inc  h
-0B91  24      	    inc  h
-0B92  24      	    inc  h
-0B93  A3      	    and  e
-0B94  A3      	    and  e
-0B95  A3      	    and  e
-0B96  A6      	    and  (hl)
-0B97  AB      	    xor  e
-0B98  24      	    inc  h
-0B99  24      	    inc  h
-0B9A  24      	    inc  h
-0B9B  AC      	    xor  h
-0B9C  A6      	    and  (hl)
-0B9D  A6      	    and  (hl)
-0B9E  A2      	    and  d
-0B9F  A2      	    and  d
-0BA0  24      	    inc  h
-0BA1  00      	    nop
-0BA2  24      	    inc  h
-0BA3  24      	    inc  h
-0BA4  24      	    inc  h
-0BA5  00      	    nop
-0BA6  24      	    inc  h
-0BA7  24      	    inc  h
-0BA8  24      	    inc  h
-0BA9  00      	    nop
-0BAA  24      	    inc  h
-0BAB  24      	    inc  h
-0BAC  24      	    inc  h
-0BAD  00      	    nop
-0BAE  24      	    inc  h
-0BAF  A3      	    and  e
-0BB0  A3      	    and  e
-0BB1  A3      	    and  e
-0BB2  A6      	    and  (hl)
-0BB3  AD      	    xor  l
-0BB4  AE      	    xor  (hl)
-0BB5  AE      	    xor  (hl)
-0BB6  AE      	    xor  (hl)
-0BB7  AF      	    xor  a
-0BB8  A6      	    and  (hl)
-0BB9  A6      	    and  (hl)
-0BBA  A2      	    and  d
-0BBB  A2      	    and  d
-0BBC  24      	    inc  h
-0BBD  00      	    nop
-0BBE  24      	    inc  h
-0BBF  24      	    inc  h
-0BC0  24      	    inc  h
-0BC1  00      	    nop
-0BC2  24      	    inc  h
-0BC3  24      	    inc  h
-0BC4  24      	    inc  h
-0BC5  00      	    nop
-0BC6  24      	    inc  h
-0BC7  24      	    inc  h
-0BC8  24      	    inc  h
-0BC9  00      	    nop
-0BCA  24      	    inc  h
-0BCB  A3      	    and  e
-0BCC  A3      	    and  e
-0BCD  A3      	    and  e
-0BCE  A6      	    and  (hl)
-0BCF  AB      	    xor  e
-0BD0  24      	    inc  h
-0BD1  24      	    inc  h
-0BD2  24      	    inc  h
-0BD3  AC      	    xor  h
-0BD4  A6      	    and  (hl)
-0BD5  A6      	    and  (hl)
-0BD6  A2      	    and  d
-0BD7  A2      	    and  d
-0BD8  24      	    inc  h
-0BD9  05      	    dec  b
-0BDA  24      	    inc  h
-0BDB  24      	    inc  h
-0BDC  24      	    inc  h
-0BDD  08      	    ex   af,af' ; '
-0BDE  24      	    inc  h
-0BDF  24      	    inc  h
-0BE0  24      	    inc  h
-0BE1  00      	    nop
-0BE2  24      	    inc  h
-0BE3  24      	    inc  h
-0BE4  24      	    inc  h
-0BE5  05      	    dec  b
-0BE6  24      	    inc  h
-0BE7  A3      	    and  e
-0BE8  A3      	    and  e
-0BE9  A3      	    and  e
-0BEA  A6      	    and  (hl)
-0BEB  AB      	    xor  e
-0BEC  24      	    inc  h
-0BED  24      	    inc  h
-0BEE  24      	    inc  h
-0BEF  AC      	    xor  h
-0BF0  A6      	    and  (hl)
-0BF1  A6      	    and  (hl)
-0BF2  A2      	    and  d
-0BF3  A2      	    and  d
-0BF4  24      	    inc  h
-0BF5  012424  	    ld   bc,$2424
-0BF8  24      	    inc  h
-0BF9  24      	    inc  h
-0BFA  24      	    inc  h
-/0BFB  24      	    inc  h
-0BFC  24      	    inc  h
-0BFD  012424  	    ld   bc,$2424
-0C00  24      	    inc  h
-0C01  24      	    inc  h
-0C02  24      	    inc  h
-0C03  A3      	    and  e
-0C04  A3      	    and  e
-0C05  A3      	    and  e
-0C06  A6      	    and  (hl)
-0C07  AB      	    xor  e
-0C08  24      	    inc  h
-0C09  24      	    inc  h
-0C0A  24      	    inc  h
-0C0B  AC      	    xor  h
-0C0C  A6      	    and  (hl)
-0C0D  A6      	    and  (hl)
-0C0E  A2      	    and  d
-0C0F  A2      	    and  d
-0C10  80      	    add  a,b
-0C11  81      	    add  a,c
-0C12  82      	    add  a,d
-0C13  24      	    inc  h
-0C14  24      	    inc  h
-0C15  24      	    inc  h
-0C16  24      	    inc  h
-0C17  24      	    inc  h
-0C18  89      	    adc  a,c
-0C19  8A      	    adc  a,d
-0C1A  8B      	    adc  a,e
-0C1B  24      	    inc  h
-0C1C  24      	    inc  h
-0C1D  24      	    inc  h
-0C1E  24      	    inc  h
-0C1F  A5      	    and  l
-0C20  A3      	    and  e
-0C21  A3      	    and  e
-0C22  A6      	    and  (hl)
-0C23  B0      	    or   b
-0C24  B1      	    or   c
-0C25  B1      	    or   c
-0C26  B1      	    or   c
-0C27  B2      	    or   d
-0C28  A6      	    and  (hl)
-0C29  A6      	    and  (hl)
-0C2A  A2      	    and  d
-0C2B  A2      	    and  d
-0C2C  83      	    add  a,e
-0C2D  84      	    add  a,h
-0C2E  85      	    add  a,l
-0C2F  24      	    inc  h
-0C30  24      	    inc  h
-0C31  A7      	    and  a
-0C32  24      	    inc  h
-0C33  24      	    inc  h
-0C34  8C      	    adc  a,h
-0C35  8D      	    adc  a,l
-0C36  8E      	    adc  a,(hl)
-0C37  24      	    inc  h
-0C38  24      	    inc  h
-0C39  A7      	    and  a
-0C3A  24      	    inc  h
-0C3B  24      	    inc  h
-0C3C  A5      	    and  l
-0C3D  A3      	    and  e
-0C3E  A6      	    and  (hl)
-0C3F  A6      	    and  (hl)
-0C40  A6      	    and  (hl)
-0C41  A6      	    and  (hl)
-0C42  A6      	    and  (hl)
-0C43  A6      	    and  (hl)
-0C44  A6      	    and  (hl)
-0C45  A6      	    and  (hl)
-0C46  A2      	    and  d
-0C47  A2      	    and  d
-0C48  86      	    add  a,(hl)
-0C49  87      	    add  a,a
-0C4A  88      	    adc  a,b
-0C4B  24      	    inc  h
-0C4C  24      	    inc  h
-0C4D  24      	    inc  h
-0C4E  24      	    inc  h
-0C4F  24      	    inc  h
-0C50  8F      	    adc  a,a
-0C51  90      	    sub  b
-0C52  91      	    sub  c
-0C53  24      	    inc  h
-0C54  24      	    inc  h
-0C55  24      	    inc  h
-0C56  24      	    inc  h
-0C57  24      	    inc  h
-0C58  24      	    inc  h
-0C59  A5      	    and  l
-0C5A  A6      	    and  (hl)
-0C5B  A6      	    and  (hl)
-0C5C  A6      	    and  (hl)
-0C5D  A6      	    and  (hl)
-0C5E  A6      	    and  (hl)
-0C5F  A6      	    and  (hl)
-0C60  A6      	    and  (hl)
-0C61  A6      	    and  (hl)
-0C62  A2      	    and  d
-0C63  A2      	    and  d
-0C64  80      	    add  a,b
-0C65  81      	    add  a,c
-0C66  82      	    add  a,d
-0C67  24      	    inc  h
-0C68  80      	    add  a,b
-0C69  81      	    add  a,c
-0C6A  82      	    add  a,d
-0C6B  24      	    inc  h
-0C6C  89      	    adc  a,c
-0C6D  8A      	    adc  a,d
-0C6E  8B      	    adc  a,e
-0C6F  24      	    inc  h
-0C70  89      	    adc  a,c
-0C71  8A      	    adc  a,d
-0C72  8B      	    adc  a,e
-0C73  24      	    inc  h
-0C74  24      	    inc  h
-0C75  24      	    inc  h
-0C76  24      	    inc  h
-0C77  24      	    inc  h
-0C78  24      	    inc  h
-0C79  24      	    inc  h
-0C7A  24      	    inc  h
-0C7B  9B      	    sbc  a,e
-0C7C  9C      	    sbc  a,h
-0C7D  9D      	    sbc  a,l
-0C7E  A2      	    and  d
-0C7F  A2      	    and  d
-0C80  83      	    add  a,e
-0C81  84      	    add  a,h
-0C82  85      	    add  a,l
-0C83  24      	    inc  h
-0C84  83      	    add  a,e
-0C85  84      	    add  a,h
-0C86  85      	    add  a,l
-0C87  24      	    inc  h
-0C88  8C      	    adc  a,h
-0C89  8D      	    adc  a,l
-0C8A  8E      	    adc  a,(hl)
-0C8B  24      	    inc  h
-0C8C  8C      	    adc  a,h
-0C8D  8D      	    adc  a,l
-0C8E  8E      	    adc  a,(hl)
-0C8F  24      	    inc  h
-0C90  24      	    inc  h
-0C91  24      	    inc  h
-0C92  24      	    inc  h
-0C93  24      	    inc  h
-0C94  24      	    inc  h
-0C95  24      	    inc  h
-0C96  24      	    inc  h
-0C97  9E      	    sbc  a,(hl)
-0C98  9F      	    sbc  a,a
-0C99  A0      	    and  b
-0C9A  A2      	    and  d
-0C9B  A2      	    and  d
-0C9C  86      	    add  a,(hl)
-0C9D  87      	    add  a,a
-0C9E  88      	    adc  a,b
-0C9F  24      	    inc  h
-0CA0  86      	    add  a,(hl)
-0CA1  87      	    add  a,a
-0CA2  88      	    adc  a,b
-0CA3  24      	    inc  h
-0CA4  8F      	    adc  a,a
-0CA5  90      	    sub  b
-0CA6  91      	    sub  c
-0CA7  24      	    inc  h
-0CA8  8F      	    adc  a,a
-0CA9  90      	    sub  b
-0CAA  91      	    sub  c
-0CAB  24      	    inc  h
-0CAC  24      	    inc  h
-0CAD  24      	    inc  h
-0CAE  24      	    inc  h
-0CAF  24      	    inc  h
-0CB0  24      	    inc  h
-0CB1  24      	    inc  h
-0CB2  24      	    inc  h
-0CB3  9B      	    sbc  a,e
-0CB4  9C      	    sbc  a,h
-0CB5  9D      	    sbc  a,l
-0CB6  A2      	    and  d
-0CB7  A2      	    and  d
-0CB8  80      	    add  a,b
-0CB9  81      	    add  a,c
-0CBA  82      	    add  a,d
-0CBB  24      	    inc  h
-0CBC  80      	    add  a,b
-0CBD  81      	    add  a,c
-0CBE  82      	    add  a,d
-0CBF  24      	    inc  h
-0CC0  89      	    adc  a,c
-0CC1  8A      	    adc  a,d
-0CC2  8B      	    adc  a,e
-0CC3  24      	    inc  h
-0CC4  89      	    adc  a,c
-0CC5  8A      	    adc  a,d
-0CC6  8B      	    adc  a,e
-0CC7  24      	    inc  h
-0CC8  24      	    inc  h
-0CC9  24      	    inc  h
-0CCA  24      	    inc  h
-0CCB  24      	    inc  h
-0CCC  24      	    inc  h
-0CCD  24      	    inc  h
-0CCE  24      	    inc  h
-0CCF  9E      	    sbc  a,(hl)
-0CD0  9F      	    sbc  a,a
-0CD1  A0      	    and  b
-0CD2  A2      	    and  d
-0CD3  A2      	    and  d
-0CD4  83      	    add  a,e
-0CD5  84      	    add  a,h
-0CD6  85      	    add  a,l
-0CD7  24      	    inc  h
-0CD8  83      	    add  a,e
-0CD9  84      	    add  a,h
-0CDA  85      	    add  a,l
-0CDB  24      	    inc  h
-0CDC  8C      	    adc  a,h
-0CDD  8D      	    adc  a,l
-0CDE  8E      	    adc  a,(hl)
-0CDF  24      	    inc  h
-0CE0  8C      	    adc  a,h
-0CE1  8D      	    adc  a,l
-0CE2  8E      	    adc  a,(hl)
-0CE3  24      	    inc  h
-0CE4  24      	    inc  h
-0CE5  24      	    inc  h
-0CE6  24      	    inc  h
-0CE7  24      	    inc  h
-0CE8  24      	    inc  h
-0CE9  24      	    inc  h
-0CEA  24      	    inc  h
-0CEB  24      	    inc  h
-0CEC  24      	    inc  h
-0CED  A1      	    and  c
-0CEE  A2      	    and  d
-0CEF  A2      	    and  d
-0CF0  86      	    add  a,(hl)
-0CF1  87      	    add  a,a
-0CF2  88      	    adc  a,b
-0CF3  24      	    inc  h
-0CF4  86      	    add  a,(hl)
-0CF5  87      	    add  a,a
-0CF6  88      	    adc  a,b
-0CF7  24      	    inc  h
-0CF8  8F      	    adc  a,a
-0CF9  90      	    sub  b
-0CFA  91      	    sub  c
-0CFB  24      	    inc  h
-0CFC  8F      	    adc  a,a
-0CFD  90      	    sub  b
-0CFE  91      	    sub  c
-0CFF  83      	    add  a,e
-0D00  83      	    add  a,e
-0D01  83      	    add  a,e
-0D02  83      	    add  a,e
-0D03  83      	    add  a,e
-0D04  83      	    add  a,e
-0D05  83      	    add  a,e
-0D06  83      	    add  a,e
-0D07  83      	    add  a,e
-0D08  83      	    add  a,e
-0D09  81      	    add  a,c
-0D0A  81      	    add  a,c
-0D0B  81      	    add  a,c
-0D0C  80      	    add  a,b
-0D0D  86      	    add  a,(hl)
-0D0E  80      	    add  a,b
-0D0F  80      	    add  a,b
-0D10  80      	    add  a,b
-0D11  86      	    add  a,(hl)
-0D12  80      	    add  a,b
-0D13  80      	    add  a,b
-0D14  80      	    add  a,b
-0D15  86      	    add  a,(hl)
-0D16  80      	    add  a,b
-0D17  80      	    add  a,b
-0D18  80      	    add  a,b
-0D19  86      	    add  a,(hl)
-0D1A  80      	    add  a,b
-0D1B  83      	    add  a,e
-0D1C  83      	    add  a,e
-0D1D  83      	    add  a,e
-0D1E  83      	    add  a,e
-0D1F  83      	    add  a,e
-0D20  83      	    add  a,e
-0D21  83      	    add  a,e
-0D22  83      	    add  a,e
-0D23  81      	    add  a,c
-0D24  81      	    add  a,c
-0D25  81      	    add  a,c
-0D26  81      	    add  a,c
-0D27  81      	    add  a,c
-0D28  80      	    add  a,b
-0D29  86      	    add  a,(hl)
-0D2A  80      	    add  a,b
-0D2B  80      	    add  a,b
-0D2C  80      	    add  a,b
-0D2D  86      	    add  a,(hl)
-0D2E  80      	    add  a,b
-0D2F  80      	    add  a,b
-0D30  80      	    add  a,b
-0D31  86      	    add  a,(hl)
-0D32  80      	    add  a,b
-0D33  80      	    add  a,b
-0D34  80      	    add  a,b
-0D35  86      	    add  a,(hl)
-0D36  80      	    add  a,b
-0D37  83      	    add  a,e
-0D38  83      	    add  a,e
-0D39  83      	    add  a,e
-0D3A  83      	    add  a,e
-0D3B  83      	    add  a,e
-0D3C  83      	    add  a,e
-0D3D  83      	    add  a,e
-0D3E  83      	    add  a,e
-0D3F  81      	    add  a,c
-0D40  81      	    add  a,c
-0D41  81      	    add  a,c
-0D42  81      	    add  a,c
-0D43  81      	    add  a,c
-0D44  80      	    add  a,b
-0D45  86      	    add  a,(hl)
-0D46  80      	    add  a,b
-0D47  80      	    add  a,b
-0D48  80      	    add  a,b
-0D49  86      	    add  a,(hl)
-0D4A  80      	    add  a,b
-0D4B  80      	    add  a,b
-0D4C  80      	    add  a,b
-0D4D  86      	    add  a,(hl)
-0D4E  80      	    add  a,b
-0D4F  80      	    add  a,b
-0D50  80      	    add  a,b
-0D51  86      	    add  a,(hl)
-0D52  80      	    add  a,b
-0D53  83      	    add  a,e
-0D54  83      	    add  a,e
-0D55  83      	    add  a,e
-0D56  83      	    add  a,e
-0D57  83      	    add  a,e
-0D58  83      	    add  a,e
-0D59  83      	    add  a,e
-0D5A  83      	    add  a,e
-0D5B  81      	    add  a,c
-0D5C  81      	    add  a,c
-0D5D  81      	    add  a,c
-0D5E  81      	    add  a,c
-0D5F  81      	    add  a,c
-0D60  80      	    add  a,b
-0D61  80      	    add  a,b
-0D62  80      	    add  a,b
-0D63  80      	    add  a,b
-0D64  80      	    add  a,b
-0D65  80      	    add  a,b
-0D66  80      	    add  a,b
-0D67  80      	    add  a,b
-0D68  80      	    add  a,b
-0D69  80      	    add  a,b
-0D6A  80      	    add  a,b
-0D6B  80      	    add  a,b
-0D6C  80      	    add  a,b
-0D6D  80      	    add  a,b
-0D6E  80      	    add  a,b
-0D6F  83      	    add  a,e
-0D70  83      	    add  a,e
-0D71  83      	    add  a,e
-0D72  83      	    add  a,e
-0D73  83      	    add  a,e
-0D74  83      	    add  a,e
-0D75  83      	    add  a,e
-0D76  83      	    add  a,e
-0D77  81      	    add  a,c
-0D78  81      	    add  a,c
-0D79  81      	    add  a,c
-0D7A  81      	    add  a,c
-0D7B  81      	    add  a,c
-0D7C  87      	    add  a,a
-0D7D  87      	    add  a,a
-0D7E  87      	    add  a,a
-0D7F  80      	    add  a,b
-0D80  80      	    add  a,b
-0D81  80      	    add  a,b
-0D82  80      	    add  a,b
-0D83  80      	    add  a,b
-0D84  86      	    add  a,(hl)
-0D85  86      	    add  a,(hl)
-0D86  86      	    add  a,(hl)
-0D87  80      	    add  a,b
-0D88  80      	    add  a,b
-0D89  80      	    add  a,b
-0D8A  80      	    add  a,b
-0D8B  83      	    add  a,e
-0D8C  83      	    add  a,e
-0D8D  83      	    add  a,e
-0D8E  83      	    add  a,e
-0D8F  83      	    add  a,e
-0D90  83      	    add  a,e
-0D91  83      	    add  a,e
-0D92  83      	    add  a,e
-0D93  83      	    add  a,e
-0D94  83      	    add  a,e
-0D95  81      	    add  a,c
-0D96  81      	    add  a,c
-0D97  81      	    add  a,c
-0D98  87      	    add  a,a
-0D99  87      	    add  a,a
-0D9A  87      	    add  a,a
-0D9B  80      	    add  a,b
-0D9C  80      	    add  a,b
-0D9D  87      	    add  a,a
-0D9E  80      	    add  a,b
-0D9F  80      	    add  a,b
-0DA0  86      	    add  a,(hl)
-0DA1  86      	    add  a,(hl)
-0DA2  86      	    add  a,(hl)
-0DA3  80      	    add  a,b
-0DA4  80      	    add  a,b
-0DA5  87      	    add  a,a
-0DA6  80      	    add  a,b
-0DA7  83      	    add  a,e
-0DA8  83      	    add  a,e
-0DA9  83      	    add  a,e
-0DAA  86      	    add  a,(hl)
-0DAB  86      	    add  a,(hl)
-0DAC  86      	    add  a,(hl)
-0DAD  86      	    add  a,(hl)
-0DAE  86      	    add  a,(hl)
-0DAF  86      	    add  a,(hl)
-0DB0  86      	    add  a,(hl)
-0DB1  86      	    add  a,(hl)
-0DB2  81      	    add  a,c
-0DB3  81      	    add  a,c
-0DB4  87      	    add  a,a
-0DB5  87      	    add  a,a
-0DB6  87      	    add  a,a
-0DB7  80      	    add  a,b
-0DB8  80      	    add  a,b
-0DB9  80      	    add  a,b
-0DBA  80      	    add  a,b
-0DBB  80      	    add  a,b
-0DBC  86      	    add  a,(hl)
-0DBD  86      	    add  a,(hl)
-0DBE  86      	    add  a,(hl)
-0DBF  80      	    add  a,b
-0DC0  80      	    add  a,b
-0DC1  80      	    add  a,b
-0DC2  80      	    add  a,b
-0DC3  83      	    add  a,e
-0DC4  83      	    add  a,e
-0DC5  83      	    add  a,e
-0DC6  86      	    add  a,(hl)
-0DC7  86      	    add  a,(hl)
-0DC8  86      	    add  a,(hl)
-0DC9  86      	    add  a,(hl)
-0DCA  86      	    add  a,(hl)
-0DCB  86      	    add  a,(hl)
-0DCC  86      	    add  a,(hl)
-0DCD  86      	    add  a,(hl)
-0DCE  81      	    add  a,c
-0DCF  81      	    add  a,c
-0DD0  87      	    add  a,a
-0DD1  87      	    add  a,a
-0DD2  87      	    add  a,a
-0DD3  80      	    add  a,b
-0DD4  87      	    add  a,a
-0DD5  87      	    add  a,a
-0DD6  87      	    add  a,a
-0DD7  80      	    add  a,b
-0DD8  86      	    add  a,(hl)
-0DD9  86      	    add  a,(hl)
-0DDA  86      	    add  a,(hl)
-0DDB  80      	    add  a,b
-0DDC  86      	    add  a,(hl)
-0DDD  86      	    add  a,(hl)
-0DDE  86      	    add  a,(hl)
-0DDF  83      	    add  a,e
-0DE0  83      	    add  a,e
-0DE1  83      	    add  a,e
-0DE2  86      	    add  a,(hl)
-0DE3  85      	    add  a,l
-0DE4  85      	    add  a,l
-0DE5  85      	    add  a,l
-0DE6  85      	    add  a,l
-0DE7  85      	    add  a,l
-0DE8  86      	    add  a,(hl)
-0DE9  86      	    add  a,(hl)
-0DEA  81      	    add  a,c
-0DEB  81      	    add  a,c
-0DEC  87      	    add  a,a
-0DED  87      	    add  a,a
-0DEE  87      	    add  a,a
-0DEF  80      	    add  a,b
-0DF0  87      	    add  a,a
-0DF1  87      	    add  a,a
-0DF2  87      	    add  a,a
-0DF3  80      	    add  a,b
-0DF4  86      	    add  a,(hl)
-0DF5  86      	    add  a,(hl)
-0DF6  86      	    add  a,(hl)
-0DF7  80      	    add  a,b
-0DF8  86      	    add  a,(hl)
-0DF9  86      	    add  a,(hl)
-0DFA  86      	    add  a,(hl)
-0DFB  83      	    add  a,e
-0DFC  83      	    add  a,e
-0DFD  83      	    add  a,e
-0DFE  86      	    add  a,(hl)
-0DFF  85      	    add  a,l
-0E00  80      	    add  a,b
-0E01  80      	    add  a,b
-0E02  80      	    add  a,b
-0E03  85      	    add  a,l
-0E04  86      	    add  a,(hl)
-0E05  86      	    add  a,(hl)
-0E06  81      	    add  a,c
-0E07  81      	    add  a,c
-0E08  87      	    add  a,a
-0E09  87      	    add  a,a
-0E0A  87      	    add  a,a
-0E0B  80      	    add  a,b
-0E0C  87      	    add  a,a
-0E0D  87      	    add  a,a
-0E0E  87      	    add  a,a
-0E0F  80      	    add  a,b
-0E10  86      	    add  a,(hl)
-0E11  86      	    add  a,(hl)
-0E12  86      	    add  a,(hl)
-0E13  80      	    add  a,b
-0E14  86      	    add  a,(hl)
-0E15  86      	    add  a,(hl)
-0E16  86      	    add  a,(hl)
-0E17  83      	    add  a,e
-0E18  83      	    add  a,e
-0E19  83      	    add  a,e
-0E1A  86      	    add  a,(hl)
-0E1B  85      	    add  a,l
-0E1C  80      	    add  a,b
-0E1D  80      	    add  a,b
-0E1E  80      	    add  a,b
-0E1F  85      	    add  a,l
-0E20  86      	    add  a,(hl)
-0E21  86      	    add  a,(hl)
-0E22  81      	    add  a,c
-0E23  81      	    add  a,c
-0E24  87      	    add  a,a
-0E25  87      	    add  a,a
-0E26  87      	    add  a,a
-0E27  80      	    add  a,b
-0E28  87      	    add  a,a
-0E29  87      	    add  a,a
-0E2A  87      	    add  a,a
-0E2B  80      	    add  a,b
-0E2C  86      	    add  a,(hl)
-0E2D  86      	    add  a,(hl)
-0E2E  86      	    add  a,(hl)
-0E2F  80      	    add  a,b
-0E30  86      	    add  a,(hl)
-0E31  86      	    add  a,(hl)
-0E32  86      	    add  a,(hl)
-0E33  83      	    add  a,e
-0E34  83      	    add  a,e
-0E35  83      	    add  a,e
-0E36  86      	    add  a,(hl)
-0E37  85      	    add  a,l
-0E38  80      	    add  a,b
-0E39  80      	    add  a,b
-0E3A  80      	    add  a,b
-0E3B  85      	    add  a,l
-0E3C  86      	    add  a,(hl)
-0E3D  86      	    add  a,(hl)
-0E3E  81      	    add  a,c
-0E3F  81      	    add  a,c
-0E40  87      	    add  a,a
-0E41  87      	    add  a,a
-0E42  87      	    add  a,a
-0E43  80      	    add  a,b
-0E44  87      	    add  a,a
-0E45  87      	    add  a,a
-0E46  87      	    add  a,a
-0E47  80      	    add  a,b
-0E48  86      	    add  a,(hl)
-0E49  86      	    add  a,(hl)
-0E4A  86      	    add  a,(hl)
-0E4B  80      	    add  a,b
-0E4C  86      	    add  a,(hl)
-0E4D  86      	    add  a,(hl)
-0E4E  86      	    add  a,(hl)
-0E4F  83      	    add  a,e
-0E50  83      	    add  a,e
-0E51  83      	    add  a,e
-0E52  86      	    add  a,(hl)
-0E53  85      	    add  a,l
-0E54  85      	    add  a,l
-0E55  85      	    add  a,l
-0E56  85      	    add  a,l
-0E57  85      	    add  a,l
-0E58  86      	    add  a,(hl)
-0E59  86      	    add  a,(hl)
-0E5A  81      	    add  a,c
-0E5B  81      	    add  a,c
-0E5C  87      	    add  a,a
-0E5D  87      	    add  a,a
-0E5E  87      	    add  a,a
-0E5F  80      	    add  a,b
-0E60  87      	    add  a,a
-0E61  87      	    add  a,a
-0E62  87      	    add  a,a
-0E63  80      	    add  a,b
-0E64  86      	    add  a,(hl)
-0E65  86      	    add  a,(hl)
-0E66  86      	    add  a,(hl)
-0E67  80      	    add  a,b
-0E68  86      	    add  a,(hl)
-0E69  86      	    add  a,(hl)
-0E6A  86      	    add  a,(hl)
-0E6B  83      	    add  a,e
-0E6C  83      	    add  a,e
-0E6D  83      	    add  a,e
-0E6E  86      	    add  a,(hl)
-0E6F  85      	    add  a,l
-0E70  80      	    add  a,b
-0E71  80      	    add  a,b
-0E72  80      	    add  a,b
-0E73  85      	    add  a,l
-0E74  86      	    add  a,(hl)
-0E75  86      	    add  a,(hl)
-0E76  81      	    add  a,c
-0E77  81      	    add  a,c
-0E78  80      	    add  a,b
-0E79  80      	    add  a,b
-0E7A  80      	    add  a,b
-0E7B  80      	    add  a,b
-0E7C  80      	    add  a,b
-0E7D  80      	    add  a,b
-0E7E  80      	    add  a,b
-0E7F  80      	    add  a,b
-0E80  80      	    add  a,b
-0E81  80      	    add  a,b
-0E82  80      	    add  a,b
-0E83  80      	    add  a,b
-0E84  80      	    add  a,b
-0E85  80      	    add  a,b
-0E86  80      	    add  a,b
-0E87  83      	    add  a,e
-0E88  83      	    add  a,e
-0E89  83      	    add  a,e
-0E8A  86      	    add  a,(hl)
-0E8B  85      	    add  a,l
-0E8C  80      	    add  a,b
-0E8D  80      	    add  a,b
-0E8E  80      	    add  a,b
-0E8F  85      	    add  a,l
-0E90  86      	    add  a,(hl)
-0E91  86      	    add  a,(hl)
-0E92  81      	    add  a,c
-0E93  81      	    add  a,c
-0E94  80      	    add  a,b
-0E95  80      	    add  a,b
-0E96  80      	    add  a,b
-0E97  80      	    add  a,b
-0E98  80      	    add  a,b
-0E99  80      	    add  a,b
-0E9A  80      	    add  a,b
-0E9B  80      	    add  a,b
-0E9C  80      	    add  a,b
-0E9D  80      	    add  a,b
-0E9E  80      	    add  a,b
-0E9F  80      	    add  a,b
-0EA0  80      	    add  a,b
-0EA1  80      	    add  a,b
-0EA2  80      	    add  a,b
-0EA3  83      	    add  a,e
-0EA4  83      	    add  a,e
-0EA5  83      	    add  a,e
-0EA6  86      	    add  a,(hl)
-0EA7  85      	    add  a,l
-0EA8  80      	    add  a,b
-0EA9  80      	    add  a,b
-0EAA  80      	    add  a,b
-0EAB  85      	    add  a,l
-0EAC  86      	    add  a,(hl)
-0EAD  86      	    add  a,(hl)
-0EAE  81      	    add  a,c
-0EAF  81      	    add  a,c
-0EB0  80      	    add  a,b
-0EB1  86      	    add  a,(hl)
-0EB2  80      	    add  a,b
-0EB3  80      	    add  a,b
-0EB4  80      	    add  a,b
-0EB5  86      	    add  a,(hl)
-0EB6  80      	    add  a,b
-0EB7  80      	    add  a,b
-0EB8  80      	    add  a,b
-0EB9  86      	    add  a,(hl)
-0EBA  80      	    add  a,b
-0EBB  80      	    add  a,b
-0EBC  80      	    add  a,b
-0EBD  86      	    add  a,(hl)
-0EBE  80      	    add  a,b
-0EBF  83      	    add  a,e
-0EC0  83      	    add  a,e
-0EC1  83      	    add  a,e
-0EC2  86      	    add  a,(hl)
-0EC3  85      	    add  a,l
-0EC4  85      	    add  a,l
-0EC5  85      	    add  a,l
-0EC6  85      	    add  a,l
-0EC7  85      	    add  a,l
-0EC8  86      	    add  a,(hl)
-0EC9  86      	    add  a,(hl)
-0ECA  81      	    add  a,c
-0ECB  81      	    add  a,c
-0ECC  80      	    add  a,b
-0ECD  86      	    add  a,(hl)
-0ECE  80      	    add  a,b
-0ECF  80      	    add  a,b
-0ED0  80      	    add  a,b
-0ED1  86      	    add  a,(hl)
-0ED2  80      	    add  a,b
-0ED3  80      	    add  a,b
-0ED4  80      	    add  a,b
-0ED5  86      	    add  a,(hl)
-0ED6  80      	    add  a,b
-0ED7  80      	    add  a,b
-0ED8  80      	    add  a,b
-0ED9  86      	    add  a,(hl)
-0EDA  80      	    add  a,b
-0EDB  83      	    add  a,e
-0EDC  83      	    add  a,e
-0EDD  83      	    add  a,e
-0EDE  86      	    add  a,(hl)
-0EDF  85      	    add  a,l
-0EE0  80      	    add  a,b
-0EE1  80      	    add  a,b
-0EE2  80      	    add  a,b
-0EE3  85      	    add  a,l
-0EE4  86      	    add  a,(hl)
-0EE5  86      	    add  a,(hl)
-0EE6  81      	    add  a,c
-0EE7  81      	    add  a,c
-0EE8  80      	    add  a,b
-0EE9  86      	    add  a,(hl)
-0EEA  80      	    add  a,b
-0EEB  80      	    add  a,b
-0EEC  80      	    add  a,b
-0EED  86      	    add  a,(hl)
-0EEE  80      	    add  a,b
-0EEF  80      	    add  a,b
-0EF0  80      	    add  a,b
-0EF1  86      	    add  a,(hl)
-0EF2  80      	    add  a,b
-0EF3  80      	    add  a,b
-0EF4  80      	    add  a,b
-0EF5  86      	    add  a,(hl)
-0EF6  80      	    add  a,b
-0EF7  83      	    add  a,e
-0EF8  83      	    add  a,e
-0EF9  83      	    add  a,e
-0EFA  86      	    add  a,(hl)
-0EFB  85      	    add  a,l
-0EFC  80      	    add  a,b
-0EFD  80      	    add  a,b
-0EFE  80      	    add  a,b
-0EFF  85      	    add  a,l
-0F00  86      	    add  a,(hl)
-0F01  86      	    add  a,(hl)
-0F02  81      	    add  a,c
-0F03  81      	    add  a,c
-0F04  80      	    add  a,b
-0F05  86      	    add  a,(hl)
-0F06  80      	    add  a,b
-0F07  80      	    add  a,b
-0F08  80      	    add  a,b
-0F09  80      	    add  a,b
-0F0A  80      	    add  a,b
-0F0B  80      	    add  a,b
-0F0C  80      	    add  a,b
-0F0D  86      	    add  a,(hl)
-0F0E  80      	    add  a,b
-0F0F  80      	    add  a,b
-0F10  80      	    add  a,b
-0F11  80      	    add  a,b
-0F12  80      	    add  a,b
-0F13  83      	    add  a,e
-0F14  83      	    add  a,e
-0F15  83      	    add  a,e
-0F16  86      	    add  a,(hl)
-0F17  85      	    add  a,l
-0F18  80      	    add  a,b
-0F19  80      	    add  a,b
-0F1A  80      	    add  a,b
-0F1B  85      	    add  a,l
-0F1C  86      	    add  a,(hl)
-0F1D  86      	    add  a,(hl)
-0F1E  81      	    add  a,c
-0F1F  81      	    add  a,c
-0F20  84      	    add  a,h
-0F21  84      	    add  a,h
-0F22  84      	    add  a,h
-0F23  80      	    add  a,b
-0F24  80      	    add  a,b
-0F25  80      	    add  a,b
-0F26  80      	    add  a,b
-0F27  80      	    add  a,b
-0F28  86      	    add  a,(hl)
-0F29  86      	    add  a,(hl)
-0F2A  86      	    add  a,(hl)
-0F2B  80      	    add  a,b
-0F2C  80      	    add  a,b
-0F2D  80      	    add  a,b
-0F2E  80      	    add  a,b
-0F2F  83      	    add  a,e
-0F30  83      	    add  a,e
-0F31  83      	    add  a,e
-0F32  86      	    add  a,(hl)
-0F33  85      	    add  a,l
-0F34  85      	    add  a,l
-0F35  85      	    add  a,l
-0F36  85      	    add  a,l
-0F37  85      	    add  a,l
-0F38  86      	    add  a,(hl)
-0F39  86      	    add  a,(hl)
-0F3A  81      	    add  a,c
-0F3B  81      	    add  a,c
-0F3C  84      	    add  a,h
-0F3D  84      	    add  a,h
-0F3E  84      	    add  a,h
-0F3F  80      	    add  a,b
-0F40  80      	    add  a,b
-0F41  87      	    add  a,a
-0F42  80      	    add  a,b
-0F43  80      	    add  a,b
-0F44  86      	    add  a,(hl)
-0F45  86      	    add  a,(hl)
-0F46  86      	    add  a,(hl)
-0F47  80      	    add  a,b
-0F48  80      	    add  a,b
-0F49  87      	    add  a,a
-0F4A  80      	    add  a,b
-0F4B  83      	    add  a,e
-0F4C  83      	    add  a,e
-0F4D  83      	    add  a,e
-0F4E  86      	    add  a,(hl)
-0F4F  86      	    add  a,(hl)
-0F50  86      	    add  a,(hl)
-0F51  86      	    add  a,(hl)
-0F52  86      	    add  a,(hl)
-0F53  86      	    add  a,(hl)
-0F54  86      	    add  a,(hl)
-0F55  86      	    add  a,(hl)
-0F56  81      	    add  a,c
-0F57  81      	    add  a,c
-0F58  84      	    add  a,h
-0F59  84      	    add  a,h
-0F5A  84      	    add  a,h
-0F5B  80      	    add  a,b
-0F5C  80      	    add  a,b
-0F5D  80      	    add  a,b
-0F5E  80      	    add  a,b
-0F5F  80      	    add  a,b
-0F60  86      	    add  a,(hl)
-0F61  86      	    add  a,(hl)
-0F62  86      	    add  a,(hl)
-0F63  80      	    add  a,b
-0F64  80      	    add  a,b
-0F65  80      	    add  a,b
-0F66  80      	    add  a,b
-0F67  83      	    add  a,e
-0F68  83      	    add  a,e
-0F69  83      	    add  a,e
-0F6A  86      	    add  a,(hl)
-0F6B  86      	    add  a,(hl)
-0F6C  86      	    add  a,(hl)
-0F6D  86      	    add  a,(hl)
-0F6E  86      	    add  a,(hl)
-0F6F  86      	    add  a,(hl)
-0F70  86      	    add  a,(hl)
-0F71  86      	    add  a,(hl)
-0F72  81      	    add  a,c
-0F73  81      	    add  a,c
-0F74  84      	    add  a,h
-0F75  84      	    add  a,h
-0F76  84      	    add  a,h
-0F77  80      	    add  a,b
-0F78  84      	    add  a,h
-0F79  84      	    add  a,h
-0F7A  84      	    add  a,h
-0F7B  80      	    add  a,b
-0F7C  86      	    add  a,(hl)
-0F7D  86      	    add  a,(hl)
-0F7E  86      	    add  a,(hl)
-0F7F  80      	    add  a,b
-0F80  86      	    add  a,(hl)
-0F81  86      	    add  a,(hl)
-0F82  86      	    add  a,(hl)
-0F83  83      	    add  a,e
-0F84  83      	    add  a,e
-0F85  83      	    add  a,e
-0F86  83      	    add  a,e
-0F87  83      	    add  a,e
-0F88  83      	    add  a,e
-0F89  83      	    add  a,e
-0F8A  83      	    add  a,e
-0F8B  81      	    add  a,c
-0F8C  81      	    add  a,c
-0F8D  81      	    add  a,c
-0F8E  81      	    add  a,c
-0F8F  81      	    add  a,c
-0F90  84      	    add  a,h
-0F91  84      	    add  a,h
-0F92  84      	    add  a,h
-0F93  80      	    add  a,b
-0F94  84      	    add  a,h
-0F95  84      	    add  a,h
-0F96  84      	    add  a,h
-0F97  80      	    add  a,b
-0F98  86      	    add  a,(hl)
-0F99  86      	    add  a,(hl)
-0F9A  86      	    add  a,(hl)
-0F9B  80      	    add  a,b
-0F9C  86      	    add  a,(hl)
-0F9D  86      	    add  a,(hl)
-0F9E  86      	    add  a,(hl)
-0F9F  83      	    add  a,e
-0FA0  83      	    add  a,e
-0FA1  83      	    add  a,e
-0FA2  83      	    add  a,e
-0FA3  83      	    add  a,e
-0FA4  83      	    add  a,e
-0FA5  83      	    add  a,e
-0FA6  83      	    add  a,e
-0FA7  81      	    add  a,c
-0FA8  81      	    add  a,c
-0FA9  81      	    add  a,c
-0FAA  81      	    add  a,c
-0FAB  81      	    add  a,c
-0FAC  84      	    add  a,h
-0FAD  84      	    add  a,h
-0FAE  84      	    add  a,h
-0FAF  80      	    add  a,b
-0FB0  84      	    add  a,h
-0FB1  84      	    add  a,h
-0FB2  84      	    add  a,h
-0FB3  80      	    add  a,b
-0FB4  86      	    add  a,(hl)
-0FB5  86      	    add  a,(hl)
-0FB6  86      	    add  a,(hl)
-0FB7  80      	    add  a,b
-0FB8  86      	    add  a,(hl)
-0FB9  86      	    add  a,(hl)
-0FBA  86      	    add  a,(hl)
-0FBB  83      	    add  a,e
-0FBC  83      	    add  a,e
-0FBD  83      	    add  a,e
-0FBE  83      	    add  a,e
-0FBF  83      	    add  a,e
-0FC0  83      	    add  a,e
-0FC1  83      	    add  a,e
-0FC2  83      	    add  a,e
-0FC3  81      	    add  a,c
-0FC4  81      	    add  a,c
-0FC5  81      	    add  a,c
-0FC6  81      	    add  a,c
-0FC7  81      	    add  a,c
-0FC8  84      	    add  a,h
-0FC9  84      	    add  a,h
-0FCA  84      	    add  a,h
-0FCB  80      	    add  a,b
-0FCC  84      	    add  a,h
-0FCD  84      	    add  a,h
-0FCE  84      	    add  a,h
-0FCF  80      	    add  a,b
-0FD0  86      	    add  a,(hl)
-0FD1  86      	    add  a,(hl)
-0FD2  86      	    add  a,(hl)
-0FD3  80      	    add  a,b
-0FD4  86      	    add  a,(hl)
-0FD5  86      	    add  a,(hl)
-0FD6  86      	    add  a,(hl)
-0FD7  83      	    add  a,e
-0FD8  83      	    add  a,e
-0FD9  83      	    add  a,e
-0FDA  83      	    add  a,e
-0FDB  83      	    add  a,e
-0FDC  83      	    add  a,e
-0FDD  83      	    add  a,e
-0FDE  83      	    add  a,e
-0FDF  81      	    add  a,c
-0FE0  81      	    add  a,c
-0FE1  81      	    add  a,c
-0FE2  81      	    add  a,c
-0FE3  81      	    add  a,c
-0FE4  84      	    add  a,h
-0FE5  84      	    add  a,h
-0FE6  84      	    add  a,h
-0FE7  80      	    add  a,b
-0FE8  84      	    add  a,h
-0FE9  84      	    add  a,h
-0FEA  84      	    add  a,h
-0FEB  80      	    add  a,b
-0FEC  86      	    add  a,(hl)
-0FED  86      	    add  a,(hl)
-0FEE  86      	    add  a,(hl)
-0FEF  80      	    add  a,b
-0FF0  86      	    add  a,(hl)
-0FF1  86      	    add  a,(hl)
-0FF2  86      	    add  a,(hl)
-0FF3  83      	    add  a,e
-0FF4  83      	    add  a,e
-0FF5  83      	    add  a,e
-0FF6  83      	    add  a,e
-0FF7  83      	    add  a,e
-0FF8  83      	    add  a,e
-0FF9  83      	    add  a,e
-0FFA  83      	    add  a,e
-0FFB  83      	    add  a,e
-0FFC  83      	    add  a,e
-0FFD  81      	    add  a,c
-0FFE  81      	    add  a,c
-0FFF  81      	    add  a,c
-
-                ;;; ============ start of suprmous.x2 =============
-
-1000  84      	    add  a,h
-1001  84      	    add  a,h
-1002  84      	    add  a,h
-1003  80      	    add  a,b
-1004  84      	    add  a,h
-1005  84      	    add  a,h
-1006  84      	    add  a,h
-1007  80      	    add  a,b
-1008  86      	    add  a,(hl)
-1009  86      	    add  a,(hl)
-100A  86      	    add  a,(hl)
-100B  80      	    add  a,b
-100C  86      	    add  a,(hl)
-100D  86      	    add  a,(hl)
-100E  86      	    add  a,(hl)
+                intermission_screen:
+09EF               db   $24, $24, $24, $24, $24, $24, $24, $24
+09F7               db   $24, $24, $A1, $A2, $A2, $24, $00, $24
+09FF               db   $24, $24, $00, $24, $24, $24, $00, $24
+0A07               db   $24, $24, $00, $24, $24, $24, $24, $24
+0A0F               db   $24, $24, $24, $24, $9B, $9C, $9D, $A2
+0A17               db   $A2, $24, $00, $24, $24, $24, $00, $24
+0A1F               db   $24, $24, $00, $24, $24, $24, $00, $24
+0A27               db   $24, $24, $24, $24, $24, $24, $24, $24
+0A2F               db   $9E, $9F, $A0, $A2, $A2, $24, $08, $24
+0A37               db   $24, $24, $04, $24, $24, $24, $06, $24
+0A3F               db   $24, $24, $02, $24, $24, $24, $24, $24
+0A47               db   $24, $24, $24, $24, $9B, $9C, $9D, $A2
+0A4F               db   $A2, $24, $24, $24, $24, $24, $24, $24
+0A57               db   $24, $24, $24, $24, $24, $24, $24, $24
+0A5F               db   $24, $24, $24, $24, $24, $24, $24, $24
+0A67               db   $9E, $9F, $A0, $A2, $A2, $48, $49, $4A
+0A6F               db   $24, $24, $24, $24, $24, $92, $93, $94
+0A77               db   $24, $24, $24, $24, $24, $24, $24, $24
+0A7F               db   $24, $24, $24, $24, $24, $24, $A1, $A2
+0A87               db   $A2, $4B, $4C, $4D, $24, $24, $A7, $24
+0A8F               db   $24, $95, $96, $97, $24, $24, $A7, $24
+0A97               db   $24, $24, $A4, $A6, $A6, $A6, $A6, $A6
+0A9F               db   $A6, $A6, $A6, $A2, $A2, $4E, $4F, $50
+0AA7               db   $24, $24, $24, $24, $24, $98, $99, $9A
+0AAF               db   $24, $24, $24, $24, $24, $A4, $A3, $A6
+0AB7               db   $A6, $A6, $A6, $A6, $A6, $A6, $A6, $A2
+0ABF               db   $A2, $48, $49, $4A, $24, $48, $49, $4A
+0AC7               db   $24, $92, $93, $94, $24, $92, $93, $94
+0ACF               db   $A4, $A3, $A3, $A6, $A8, $A9, $A9, $A9
+0AD7               db   $AA, $A6, $A6, $A2, $A2, $4B, $4C, $4D
+0ADF               db   $24, $4B, $4C, $4D, $24, $95, $96, $97
+0AE7               db   $24, $95, $96, $97, $A3, $A3, $A3, $A6
+0AEF               db   $AB, $24, $24, $24, $AC, $A6, $A6, $A2
+0AF7               db   $A2, $4E, $4F, $50, $24, $4E, $4F, $50
+0AFF               db   $24, $98, $99, $9A, $24, $98, $99, $9A
+0B07               db   $A3, $A3, $A3, $A6, $AB, $24, $24, $24
+0B0F               db   $AC, $A6, $A6, $A2, $A2, $48, $49, $4A
+0B17               db   $24, $48, $49, $4A, $24, $92, $93, $94
+0B1F               db   $24, $92, $93, $94, $A3, $A3, $A3, $A6
+0B27               db   $AB, $24, $24, $24, $AC, $A6, $A6, $A2
+0B2F               db   $A2, $4B, $4C, $4D, $24, $4B, $4C, $4D
+0B37               db   $24, $95, $96, $97, $24, $95, $96, $97
+0B3F               db   $A3, $A3, $A3, $A6, $AD, $AE, $AE, $AE
+0B47               db   $AF, $A6, $A6, $A2, $A2, $4E, $4F, $50
+0B4F               db   $24, $4E, $4F, $50, $24, $98, $99, $9A
+0B57               db   $24, $98, $99, $9A, $A3, $A3, $A3, $A6
+0B5F               db   $AB, $24, $24, $24, $AC, $A6, $A6, $A2
+0B67               db   $A2, $24, $24, $24, $24, $24, $24, $24
+0B6F               db   $24, $24, $24, $24, $24, $24, $24, $24
+0B77               db   $A3, $A3, $A3, $A6, $AB, $24, $24, $24
+0B7F               db   $AC, $A6, $A6, $A2, $A2, $24, $24, $24
+0B87               db   $24, $24, $24, $24, $24, $24, $24, $24
+0B8F               db   $24, $24, $24, $24, $A3, $A3, $A3, $A6
+0B97               db   $AB, $24, $24, $24, $AC, $A6, $A6, $A2
+0B9F               db   $A2, $24, $00, $24, $24, $24, $00, $24
+0BA7               db   $24, $24, $00, $24, $24, $24, $00, $24
+0BAF               db   $A3, $A3, $A3, $A6, $AD, $AE, $AE, $AE
+0BB7               db   $AF, $A6, $A6, $A2, $A2, $24, $00, $24
+0BBF               db   $24, $24, $00, $24, $24, $24, $00, $24
+0BC7               db   $24, $24, $00, $24, $A3, $A3, $A3, $A6
+0BCF               db   $AB, $24, $24, $24, $AC, $A6, $A6, $A2
+0BD7               db   $A2, $24, $05, $24, $24, $24, $08, $24
+0BDF               db   $24, $24, $00, $24, $24, $24, $05, $24
+0BE7               db   $A3, $A3, $A3, $A6, $AB, $24, $24, $24
+0BEF               db   $AC, $A6, $A6, $A2, $A2, $24, $01, $24
+0BF7               db   $24, $24, $24, $24, $24, $24, $01, $24
+0BFF               db   $24, $24, $24, $24, $A3, $A3, $A3, $A6
+0C07               db   $AB, $24, $24, $24, $AC, $A6, $A6, $A2
+0C0F               db   $A2, $80, $81, $82, $24, $24, $24, $24
+0C17               db   $24, $89, $8A, $8B, $24, $24, $24, $24
+0C1F               db   $A5, $A3, $A3, $A6, $B0, $B1, $B1, $B1
+0C27               db   $B2, $A6, $A6, $A2, $A2, $83, $84, $85
+0C2F               db   $24, $24, $A7, $24, $24, $8C, $8D, $8E
+0C37               db   $24, $24, $A7, $24, $24, $A5, $A3, $A6
+0C3F               db   $A6, $A6, $A6, $A6, $A6, $A6, $A6, $A2
+0C47               db   $A2, $86, $87, $88, $24, $24, $24, $24
+0C4F               db   $24, $8F, $90, $91, $24, $24, $24, $24
+0C57               db   $24, $24, $A5, $A6, $A6, $A6, $A6, $A6
+0C5F               db   $A6, $A6, $A6, $A2, $A2, $80, $81, $82
+0C67               db   $24, $80, $81, $82, $24, $89, $8A, $8B
+0C6F               db   $24, $89, $8A, $8B, $24, $24, $24, $24
+0C77               db   $24, $24, $24, $24, $9B, $9C, $9D, $A2
+0C7F               db   $A2, $83, $84, $85, $24, $83, $84, $85
+0C87               db   $24, $8C, $8D, $8E, $24, $8C, $8D, $8E
+0C8F               db   $24, $24, $24, $24, $24, $24, $24, $24
+0C97               db   $9E, $9F, $A0, $A2, $A2, $86, $87, $88
+0C9F               db   $24, $86, $87, $88, $24, $8F, $90, $91
+0CA7               db   $24, $8F, $90, $91, $24, $24, $24, $24
+0CAF               db   $24, $24, $24, $24, $9B, $9C, $9D, $A2
+0CB7               db   $A2, $80, $81, $82, $24, $80, $81, $82
+0CBF               db   $24, $89, $8A, $8B, $24, $89, $8A, $8B
+0CC7               db   $24, $24, $24, $24, $24, $24, $24, $24
+0CCF               db   $9E, $9F, $A0, $A2, $A2, $83, $84, $85
+0CD7               db   $24, $83, $84, $85, $24, $8C, $8D, $8E
+0CDF               db   $24, $8C, $8D, $8E, $24, $24, $24, $24
+0CE7               db   $24, $24, $24, $24, $24, $24, $A1, $A2
+0CEF               db   $A2, $86, $87, $88, $24, $86, $87, $88
+0CF7               db   $24, $8F, $90, $91, $24, $8F, $90, $91
+                intermission_screen_color:
+0CFF               db   $83, $83, $83, $83, $83, $83, $83, $83
+0D07               db   $83, $83, $81, $81, $81, $80, $86, $80
+0D0F               db   $80, $80, $86, $80, $80, $80, $86, $80
+0D17               db   $80, $80, $86, $80, $83, $83, $83, $83
+0D1F               db   $83, $83, $83, $83, $81, $81, $81, $81
+0D27               db   $81, $80, $86, $80, $80, $80, $86, $80
+0D2F               db   $80, $80, $86, $80, $80, $80, $86, $80
+0D37               db   $83, $83, $83, $83, $83, $83, $83, $83
+0D3F               db   $81, $81, $81, $81, $81, $80, $86, $80
+0D47               db   $80, $80, $86, $80, $80, $80, $86, $80
+0D4F               db   $80, $80, $86, $80, $83, $83, $83, $83
+0D57               db   $83, $83, $83, $83, $81, $81, $81, $81
+0D5F               db   $81, $80, $80, $80, $80, $80, $80, $80
+0D67               db   $80, $80, $80, $80, $80, $80, $80, $80
+0D6F               db   $83, $83, $83, $83, $83, $83, $83, $83
+0D77               db   $81, $81, $81, $81, $81, $87, $87, $87
+0D7F               db   $80, $80, $80, $80, $80, $86, $86, $86
+0D87               db   $80, $80, $80, $80, $83, $83, $83, $83
+0D8F               db   $83, $83, $83, $83, $83, $83, $81, $81
+0D97               db   $81, $87, $87, $87, $80, $80, $87, $80
+0D9F               db   $80, $86, $86, $86, $80, $80, $87, $80
+0DA7               db   $83, $83, $83, $86, $86, $86, $86, $86
+0DAF               db   $86, $86, $86, $81, $81, $87, $87, $87
+0DB7               db   $80, $80, $80, $80, $80, $86, $86, $86
+0DBF               db   $80, $80, $80, $80, $83, $83, $83, $86
+0DC7               db   $86, $86, $86, $86, $86, $86, $86, $81
+0DCF               db   $81, $87, $87, $87, $80, $87, $87, $87
+0DD7               db   $80, $86, $86, $86, $80, $86, $86, $86
+0DDF               db   $83, $83, $83, $86, $85, $85, $85, $85
+0DE7               db   $85, $86, $86, $81, $81, $87, $87, $87
+0DEF               db   $80, $87, $87, $87, $80, $86, $86, $86
+0DF7               db   $80, $86, $86, $86, $83, $83, $83, $86
+0DFF               db   $85, $80, $80, $80, $85, $86, $86, $81
+0E07               db   $81, $87, $87, $87, $80, $87, $87, $87
+0E0F               db   $80, $86, $86, $86, $80, $86, $86, $86
+0E17               db   $83, $83, $83, $86, $85, $80, $80, $80
+0E1F               db   $85, $86, $86, $81, $81, $87, $87, $87
+0E27               db   $80, $87, $87, $87, $80, $86, $86, $86
+0E2F               db   $80, $86, $86, $86, $83, $83, $83, $86
+0E37               db   $85, $80, $80, $80, $85, $86, $86, $81
+0E3F               db   $81, $87, $87, $87, $80, $87, $87, $87
+0E47               db   $80, $86, $86, $86, $80, $86, $86, $86
+0E4F               db   $83, $83, $83, $86, $85, $85, $85, $85
+0E57               db   $85, $86, $86, $81, $81, $87, $87, $87
+0E5F               db   $80, $87, $87, $87, $80, $86, $86, $86
+0E67               db   $80, $86, $86, $86, $83, $83, $83, $86
+0E6F               db   $85, $80, $80, $80, $85, $86, $86, $81
+0E77               db   $81, $80, $80, $80, $80, $80, $80, $80
+0E7F               db   $80, $80, $80, $80, $80, $80, $80, $80
+0E87               db   $83, $83, $83, $86, $85, $80, $80, $80
+0E8F               db   $85, $86, $86, $81, $81, $80, $80, $80
+0E97               db   $80, $80, $80, $80, $80, $80, $80, $80
+0E9F               db   $80, $80, $80, $80, $83, $83, $83, $86
+0EA7               db   $85, $80, $80, $80, $85, $86, $86, $81
+0EAF               db   $81, $80, $86, $80, $80, $80, $86, $80
+0EB7               db   $80, $80, $86, $80, $80, $80, $86, $80
+0EBF               db   $83, $83, $83, $86, $85, $85, $85, $85
+0EC7               db   $85, $86, $86, $81, $81, $80, $86, $80
+0ECF               db   $80, $80, $86, $80, $80, $80, $86, $80
+0ED7               db   $80, $80, $86, $80, $83, $83, $83, $86
+0EDF               db   $85, $80, $80, $80, $85, $86, $86, $81
+0EE7               db   $81, $80, $86, $80, $80, $80, $86, $80
+0EEF               db   $80, $80, $86, $80, $80, $80, $86, $80
+0EF7               db   $83, $83, $83, $86, $85, $80, $80, $80
+0EFF               db   $85, $86, $86, $81, $81, $80, $86, $80
+0F07               db   $80, $80, $80, $80, $80, $80, $86, $80
+0F0F               db   $80, $80, $80, $80, $83, $83, $83, $86
+0F17               db   $85, $80, $80, $80, $85, $86, $86, $81
+0F1F               db   $81, $84, $84, $84, $80, $80, $80, $80
+0F27               db   $80, $86, $86, $86, $80, $80, $80, $80
+0F2F               db   $83, $83, $83, $86, $85, $85, $85, $85
+0F37               db   $85, $86, $86, $81, $81, $84, $84, $84
+0F3F               db   $80, $80, $87, $80, $80, $86, $86, $86
+0F47               db   $80, $80, $87, $80, $83, $83, $83, $86
+0F4F               db   $86, $86, $86, $86, $86, $86, $86, $81
+0F57               db   $81, $84, $84, $84, $80, $80, $80, $80
+0F5F               db   $80, $86, $86, $86, $80, $80, $80, $80
+0F67               db   $83, $83, $83, $86, $86, $86, $86, $86
+0F6F               db   $86, $86, $86, $81, $81, $84, $84, $84
+0F77               db   $80, $84, $84, $84, $80, $86, $86, $86
+0F7F               db   $80, $86, $86, $86, $83, $83, $83, $83
+0F87               db   $83, $83, $83, $83, $81, $81, $81, $81
+0F8F               db   $81, $84, $84, $84, $80, $84, $84, $84
+0F97               db   $80, $86, $86, $86, $80, $86, $86, $86
+0F9F               db   $83, $83, $83, $83, $83, $83, $83, $83
+0FA7               db   $81, $81, $81, $81, $81, $84, $84, $84
+0FAF               db   $80, $84, $84, $84, $80, $86, $86, $86
+0FB7               db   $80, $86, $86, $86, $83, $83, $83, $83
+0FBF               db   $83, $83, $83, $83, $81, $81, $81, $81
+0FC7               db   $81, $84, $84, $84, $80, $84, $84, $84
+0FCF               db   $80, $86, $86, $86, $80, $86, $86, $86
+0FD7               db   $83, $83, $83, $83, $83, $83, $83, $83
+0FDF               db   $81, $81, $81, $81, $81, $84, $84, $84
+0FE7               db   $80, $84, $84, $84, $80, $86, $86, $86
+0FEF               db   $80, $86, $86, $86, $83, $83, $83, $83
+0FF7               db   $83, $83, $83, $83, $83, $83, $81, $81
+0FFF               db   $81, $84, $84, $84, $80, $84, $84, $84
+1007               db   $80, $86, $86, $86, $80, $86, $86, $86
 
 100F  3A3E80  	    ld   a,(endlevel_active)
 1012  A7      	    and  a
@@ -3502,22 +2133,18 @@ XXXX                db   $25, $25, $25, $F5, $F5, $F5, $F5, $F5
 XXXX                db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
 XXXX                db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
 XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
-
 13E4        	    db   $25, $25, $25, $F4, $25, $25, $25, $25
 13EC         	    db   $25, $25, $25, $F4, $25, $25, $25, $25
 13F4         	    db   $25, $25, $25, $F4, $25, $25, $25, $f4
 13FC        	    db   $25, $25, $25, $F4, $25, $25, $25, $f4
-
 1404        	    db   $25, $25, $25, $25, $25, $25, $25, $f4
 140C         	    db   $25, $25, $25, $25, $25, $25, $25, $f4
 1414         	    db   $25, $25, $25, $f4, $25, $25, $25, $f4
 141C         	    db   $25, $25, $25, $f4, $25, $25, $25, $25
-
 1424         	    db   $25, $25, $25, $f4, $25, $25, $25, $25
 142C        	    db   $25, $25, $25, $f4, $25, $25, $25, $f4
 1434         	    db   $25, $25, $25, $f5, $f5, $f5, $f5, $f4
 143C        	    db   $35, $35, $35, $35, $25, $25, $25, $f4
-
 1449               db   $35, $35, $35, $35, $25, $25, $25, $F5
 1451               db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
 1459               db   $25, $25, $25, $F6, $25, $37, $38, $35

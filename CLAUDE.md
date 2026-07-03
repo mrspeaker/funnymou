@@ -523,8 +523,10 @@ Per enemy, once it is grid-aligned at a maze cell:
 ```
 $0000-$00FF : CODE  reset/NMI vectors + init; nop padding $009F-$00FF
 $0100-$0961 : CODE  per-frame service ($0100), boot/RAM test ($07F1), screen clear ($0933)
-$0962-$09EF : CODE + small tables (title/text draw)
-$09F0-$100E : DATA  static/title tilemap + color/attribute data
+$0962-$09EE : CODE + small tables (title/text draw); screen-blit routine $09BB (level-clear
+                    intermission) via blit_rect-clone $09DC, called from $20BC
+$09EF-$100E : DATA  intermission-screen background: intermission_screen ($09EF, 784B tilemap,
+                    28x28 -> VRAM $9043) + intermission_screen_color ($0CFF, 784B color map)
 $100F-$1390 : CODE  maze pipeline: draw_cur_level_map ($130B) -> draw_map ($1346)
                     -> blit_rect ($1360) / fill_rect ($1384) ; see "Maze / level data format"
 $1391-$1FD0 : DATA  ** 4 MAZE TILEMAPS ** — banks of $310 bytes (=28x28) each:

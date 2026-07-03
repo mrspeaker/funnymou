@@ -1441,12 +1441,12 @@ start:
     ld   hl,$9043
     ld   b,$1C
     ld   c,$1D
-    ld   de,very_chunky_data_2
+    ld   de,intermission_screen
     call $09DC
     ld   hl,$9443
     ld   b,$1C
     ld   c,$1D
-    ld   de,$0CFF
+    ld   de,intermission_screen_color
     call $09DC
     call $0962
     ret
@@ -1466,1573 +1466,204 @@ start:
     jp   nz,$09DC
     ret
 
- very_chunky_data_2:
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    and  c
-    and  d
-    and  d
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    sbc  a,e
-    sbc  a,h
-    sbc  a,l
-    and  d
-    and  d
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    sbc  a,(hl)
-    sbc  a,a
-    and  b
-    and  d
-    and  d
-    inc  h
-    ex   af,af' ; '
-    inc  h
-    inc  h
-    inc  h
-    inc  b
-    inc  h
-    inc  h
-    inc  h
-    ld   b,$24
-    inc  h
-    inc  h
-    ld   (bc),a
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    sbc  a,e
-    sbc  a,h
-    sbc  a,l
-    and  d
-    and  d
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    sbc  a,(hl)
-    sbc  a,a
-    and  b
-    and  d
-    and  d
-    ld   c,b
-    ld   c,c
-    ld   c,d
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    sub  d
-    sub  e
-    sub  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    and  c
-    and  d
-    and  d
-    ld   c,e
-    ld   c,h
-    ld   c,l
-    inc  h
-    inc  h
-    and  a
-    inc  h
-    inc  h
-    sub  l
-    sub  (hl)
-    sub  a
-    inc  h
-    inc  h
-    and  a
-    inc  h
-    inc  h
-    inc  h
-    and  h
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    ld   c,(hl)
-    ld   c,a
-    ld   d,b
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    sbc  a,b
-    sbc  a,c
-    sbc  a,d
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    and  h
-    and  e
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    ld   c,b
-    ld   c,c
-    ld   c,d
-    inc  h
-    ld   c,b
-    ld   c,c
-    ld   c,d
-    inc  h
-    sub  d
-    sub  e
-    sub  h
-    inc  h
-    sub  d
-    sub  e
-    sub  h
-    and  h
-    and  e
-    and  e
-    and  (hl)
-    xor  b
-    xor  c
-    xor  c
-    xor  c
-    xor  d
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    ld   c,e
-    ld   c,h
-    ld   c,l
-    inc  h
-    ld   c,e
-    ld   c,h
-    ld   c,l
-    inc  h
-    sub  l
-    sub  (hl)
-    sub  a
-    inc  h
-    sub  l
-    sub  (hl)
-    sub  a
-    and  e
-    and  e
-    and  e
-    and  (hl)
-    xor  e
-    inc  h
-    inc  h
-    inc  h
-    xor  h
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    ld   c,(hl)
-    ld   c,a
-    ld   d,b
-    inc  h
-    ld   c,(hl)
-    ld   c,a
-    ld   d,b
-    inc  h
-    sbc  a,b
-    sbc  a,c
-    sbc  a,d
-    inc  h
-    sbc  a,b
-    sbc  a,c
-    sbc  a,d
-    and  e
-    and  e
-    and  e
-    and  (hl)
-    xor  e
-    inc  h
-    inc  h
-    inc  h
-    xor  h
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    ld   c,b
-    ld   c,c
-    ld   c,d
-    inc  h
-    ld   c,b
-    ld   c,c
-    ld   c,d
-    inc  h
-    sub  d
-    sub  e
-    sub  h
-    inc  h
-    sub  d
-    sub  e
-    sub  h
-    and  e
-    and  e
-    and  e
-    and  (hl)
-    xor  e
-    inc  h
-    inc  h
-    inc  h
-    xor  h
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    ld   c,e
-    ld   c,h
-    ld   c,l
-    inc  h
-    ld   c,e
-    ld   c,h
-    ld   c,l
-    inc  h
-    sub  l
-    sub  (hl)
-    sub  a
-    inc  h
-    sub  l
-    sub  (hl)
-    sub  a
-    and  e
-    and  e
-    and  e
-    and  (hl)
-    xor  l
-    xor  (hl)
-    xor  (hl)
-    xor  (hl)
-    xor  a
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    ld   c,(hl)
-    ld   c,a
-    ld   d,b
-    inc  h
-    ld   c,(hl)
-    ld   c,a
-    ld   d,b
-    inc  h
-    sbc  a,b
-    sbc  a,c
-    sbc  a,d
-    inc  h
-    sbc  a,b
-    sbc  a,c
-    sbc  a,d
-    and  e
-    and  e
-    and  e
-    and  (hl)
-    xor  e
-    inc  h
-    inc  h
-    inc  h
-    xor  h
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    and  e
-    and  e
-    and  e
-    and  (hl)
-    xor  e
-    inc  h
-    inc  h
-    inc  h
-    xor  h
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    and  e
-    and  e
-    and  e
-    and  (hl)
-    xor  e
-    inc  h
-    inc  h
-    inc  h
-    xor  h
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    and  e
-    and  e
-    and  e
-    and  (hl)
-    xor  l
-    xor  (hl)
-    xor  (hl)
-    xor  (hl)
-    xor  a
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    and  e
-    and  e
-    and  e
-    and  (hl)
-    xor  e
-    inc  h
-    inc  h
-    inc  h
-    xor  h
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    inc  h
-    dec  b
-    inc  h
-    inc  h
-    inc  h
-    ex   af,af' ; '
-    inc  h
-    inc  h
-    inc  h
-    nop
-    inc  h
-    inc  h
-    inc  h
-    dec  b
-    inc  h
-    and  e
-    and  e
-    and  e
-    and  (hl)
-    xor  e
-    inc  h
-    inc  h
-    inc  h
-    xor  h
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    inc  h
-    ld   bc,$2424
-    inc  h
-    inc  h
-    inc  h
-	    inc  h
-    inc  h
-    ld   bc,$2424
-    inc  h
-    inc  h
-    inc  h
-    and  e
-    and  e
-    and  e
-    and  (hl)
-    xor  e
-    inc  h
-    inc  h
-    inc  h
-    xor  h
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    add  a,b
-    add  a,c
-    add  a,d
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    adc  a,c
-    adc  a,d
-    adc  a,e
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    and  l
-    and  e
-    and  e
-    and  (hl)
-    or   b
-    or   c
-    or   c
-    or   c
-    or   d
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    add  a,e
-    add  a,h
-    add  a,l
-    inc  h
-    inc  h
-    and  a
-    inc  h
-    inc  h
-    adc  a,h
-    adc  a,l
-    adc  a,(hl)
-    inc  h
-    inc  h
-    and  a
-    inc  h
-    inc  h
-    and  l
-    and  e
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    add  a,(hl)
-    add  a,a
-    adc  a,b
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    adc  a,a
-    sub  b
-    sub  c
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    and  l
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  (hl)
-    and  d
-    and  d
-    add  a,b
-    add  a,c
-    add  a,d
-    inc  h
-    add  a,b
-    add  a,c
-    add  a,d
-    inc  h
-    adc  a,c
-    adc  a,d
-    adc  a,e
-    inc  h
-    adc  a,c
-    adc  a,d
-    adc  a,e
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    sbc  a,e
-    sbc  a,h
-    sbc  a,l
-    and  d
-    and  d
-    add  a,e
-    add  a,h
-    add  a,l
-    inc  h
-    add  a,e
-    add  a,h
-    add  a,l
-    inc  h
-    adc  a,h
-    adc  a,l
-    adc  a,(hl)
-    inc  h
-    adc  a,h
-    adc  a,l
-    adc  a,(hl)
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    sbc  a,(hl)
-    sbc  a,a
-    and  b
-    and  d
-    and  d
-    add  a,(hl)
-    add  a,a
-    adc  a,b
-    inc  h
-    add  a,(hl)
-    add  a,a
-    adc  a,b
-    inc  h
-    adc  a,a
-    sub  b
-    sub  c
-    inc  h
-    adc  a,a
-    sub  b
-    sub  c
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    sbc  a,e
-    sbc  a,h
-    sbc  a,l
-    and  d
-    and  d
-    add  a,b
-    add  a,c
-    add  a,d
-    inc  h
-    add  a,b
-    add  a,c
-    add  a,d
-    inc  h
-    adc  a,c
-    adc  a,d
-    adc  a,e
-    inc  h
-    adc  a,c
-    adc  a,d
-    adc  a,e
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    sbc  a,(hl)
-    sbc  a,a
-    and  b
-    and  d
-    and  d
-    add  a,e
-    add  a,h
-    add  a,l
-    inc  h
-    add  a,e
-    add  a,h
-    add  a,l
-    inc  h
-    adc  a,h
-    adc  a,l
-    adc  a,(hl)
-    inc  h
-    adc  a,h
-    adc  a,l
-    adc  a,(hl)
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    and  c
-    and  d
-    and  d
-    add  a,(hl)
-    add  a,a
-    adc  a,b
-    inc  h
-    add  a,(hl)
-    add  a,a
-    adc  a,b
-    inc  h
-    adc  a,a
-    sub  b
-    sub  c
-    inc  h
-    adc  a,a
-    sub  b
-    sub  c
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,b
-    add  a,a
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,a
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,l
-    add  a,l
-    add  a,l
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,l
-    add  a,l
-    add  a,l
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,a
-    add  a,a
-    add  a,a
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,l
-    add  a,l
-    add  a,l
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,l
-    add  a,l
-    add  a,l
-    add  a,l
-    add  a,l
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,b
-    add  a,a
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,a
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,b
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,c
-    add  a,c
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,c
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,e
-    add  a,c
-    add  a,c
-    add  a,c
-
- ;;; ============ start of suprmous.x2 =============
-
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,h
-    add  a,h
-    add  a,h
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
-    add  a,b
-    add  a,(hl)
-    add  a,(hl)
-    add  a,(hl)
+ intermission_screen:
+    db   $24, $24, $24, $24, $24, $24, $24, $24
+    db   $24, $24, $A1, $A2, $A2, $24, $00, $24
+    db   $24, $24, $00, $24, $24, $24, $00, $24
+    db   $24, $24, $00, $24, $24, $24, $24, $24
+    db   $24, $24, $24, $24, $9B, $9C, $9D, $A2
+    db   $A2, $24, $00, $24, $24, $24, $00, $24
+    db   $24, $24, $00, $24, $24, $24, $00, $24
+    db   $24, $24, $24, $24, $24, $24, $24, $24
+    db   $9E, $9F, $A0, $A2, $A2, $24, $08, $24
+    db   $24, $24, $04, $24, $24, $24, $06, $24
+    db   $24, $24, $02, $24, $24, $24, $24, $24
+    db   $24, $24, $24, $24, $9B, $9C, $9D, $A2
+    db   $A2, $24, $24, $24, $24, $24, $24, $24
+    db   $24, $24, $24, $24, $24, $24, $24, $24
+    db   $24, $24, $24, $24, $24, $24, $24, $24
+    db   $9E, $9F, $A0, $A2, $A2, $48, $49, $4A
+    db   $24, $24, $24, $24, $24, $92, $93, $94
+    db   $24, $24, $24, $24, $24, $24, $24, $24
+    db   $24, $24, $24, $24, $24, $24, $A1, $A2
+    db   $A2, $4B, $4C, $4D, $24, $24, $A7, $24
+    db   $24, $95, $96, $97, $24, $24, $A7, $24
+    db   $24, $24, $A4, $A6, $A6, $A6, $A6, $A6
+    db   $A6, $A6, $A6, $A2, $A2, $4E, $4F, $50
+    db   $24, $24, $24, $24, $24, $98, $99, $9A
+    db   $24, $24, $24, $24, $24, $A4, $A3, $A6
+    db   $A6, $A6, $A6, $A6, $A6, $A6, $A6, $A2
+    db   $A2, $48, $49, $4A, $24, $48, $49, $4A
+    db   $24, $92, $93, $94, $24, $92, $93, $94
+    db   $A4, $A3, $A3, $A6, $A8, $A9, $A9, $A9
+    db   $AA, $A6, $A6, $A2, $A2, $4B, $4C, $4D
+    db   $24, $4B, $4C, $4D, $24, $95, $96, $97
+    db   $24, $95, $96, $97, $A3, $A3, $A3, $A6
+    db   $AB, $24, $24, $24, $AC, $A6, $A6, $A2
+    db   $A2, $4E, $4F, $50, $24, $4E, $4F, $50
+    db   $24, $98, $99, $9A, $24, $98, $99, $9A
+    db   $A3, $A3, $A3, $A6, $AB, $24, $24, $24
+    db   $AC, $A6, $A6, $A2, $A2, $48, $49, $4A
+    db   $24, $48, $49, $4A, $24, $92, $93, $94
+    db   $24, $92, $93, $94, $A3, $A3, $A3, $A6
+    db   $AB, $24, $24, $24, $AC, $A6, $A6, $A2
+    db   $A2, $4B, $4C, $4D, $24, $4B, $4C, $4D
+    db   $24, $95, $96, $97, $24, $95, $96, $97
+    db   $A3, $A3, $A3, $A6, $AD, $AE, $AE, $AE
+    db   $AF, $A6, $A6, $A2, $A2, $4E, $4F, $50
+    db   $24, $4E, $4F, $50, $24, $98, $99, $9A
+    db   $24, $98, $99, $9A, $A3, $A3, $A3, $A6
+    db   $AB, $24, $24, $24, $AC, $A6, $A6, $A2
+    db   $A2, $24, $24, $24, $24, $24, $24, $24
+    db   $24, $24, $24, $24, $24, $24, $24, $24
+    db   $A3, $A3, $A3, $A6, $AB, $24, $24, $24
+    db   $AC, $A6, $A6, $A2, $A2, $24, $24, $24
+    db   $24, $24, $24, $24, $24, $24, $24, $24
+    db   $24, $24, $24, $24, $A3, $A3, $A3, $A6
+    db   $AB, $24, $24, $24, $AC, $A6, $A6, $A2
+    db   $A2, $24, $00, $24, $24, $24, $00, $24
+    db   $24, $24, $00, $24, $24, $24, $00, $24
+    db   $A3, $A3, $A3, $A6, $AD, $AE, $AE, $AE
+    db   $AF, $A6, $A6, $A2, $A2, $24, $00, $24
+    db   $24, $24, $00, $24, $24, $24, $00, $24
+    db   $24, $24, $00, $24, $A3, $A3, $A3, $A6
+    db   $AB, $24, $24, $24, $AC, $A6, $A6, $A2
+    db   $A2, $24, $05, $24, $24, $24, $08, $24
+    db   $24, $24, $00, $24, $24, $24, $05, $24
+    db   $A3, $A3, $A3, $A6, $AB, $24, $24, $24
+    db   $AC, $A6, $A6, $A2, $A2, $24, $01, $24
+    db   $24, $24, $24, $24, $24, $24, $01, $24
+    db   $24, $24, $24, $24, $A3, $A3, $A3, $A6
+    db   $AB, $24, $24, $24, $AC, $A6, $A6, $A2
+    db   $A2, $80, $81, $82, $24, $24, $24, $24
+    db   $24, $89, $8A, $8B, $24, $24, $24, $24
+    db   $A5, $A3, $A3, $A6, $B0, $B1, $B1, $B1
+    db   $B2, $A6, $A6, $A2, $A2, $83, $84, $85
+    db   $24, $24, $A7, $24, $24, $8C, $8D, $8E
+    db   $24, $24, $A7, $24, $24, $A5, $A3, $A6
+    db   $A6, $A6, $A6, $A6, $A6, $A6, $A6, $A2
+    db   $A2, $86, $87, $88, $24, $24, $24, $24
+    db   $24, $8F, $90, $91, $24, $24, $24, $24
+    db   $24, $24, $A5, $A6, $A6, $A6, $A6, $A6
+    db   $A6, $A6, $A6, $A2, $A2, $80, $81, $82
+    db   $24, $80, $81, $82, $24, $89, $8A, $8B
+    db   $24, $89, $8A, $8B, $24, $24, $24, $24
+    db   $24, $24, $24, $24, $9B, $9C, $9D, $A2
+    db   $A2, $83, $84, $85, $24, $83, $84, $85
+    db   $24, $8C, $8D, $8E, $24, $8C, $8D, $8E
+    db   $24, $24, $24, $24, $24, $24, $24, $24
+    db   $9E, $9F, $A0, $A2, $A2, $86, $87, $88
+    db   $24, $86, $87, $88, $24, $8F, $90, $91
+    db   $24, $8F, $90, $91, $24, $24, $24, $24
+    db   $24, $24, $24, $24, $9B, $9C, $9D, $A2
+    db   $A2, $80, $81, $82, $24, $80, $81, $82
+    db   $24, $89, $8A, $8B, $24, $89, $8A, $8B
+    db   $24, $24, $24, $24, $24, $24, $24, $24
+    db   $9E, $9F, $A0, $A2, $A2, $83, $84, $85
+    db   $24, $83, $84, $85, $24, $8C, $8D, $8E
+    db   $24, $8C, $8D, $8E, $24, $24, $24, $24
+    db   $24, $24, $24, $24, $24, $24, $A1, $A2
+    db   $A2, $86, $87, $88, $24, $86, $87, $88
+    db   $24, $8F, $90, $91, $24, $8F, $90, $91
+ intermission_screen_color:
+    db   $83, $83, $83, $83, $83, $83, $83, $83
+    db   $83, $83, $81, $81, $81, $80, $86, $80
+    db   $80, $80, $86, $80, $80, $80, $86, $80
+    db   $80, $80, $86, $80, $83, $83, $83, $83
+    db   $83, $83, $83, $83, $81, $81, $81, $81
+    db   $81, $80, $86, $80, $80, $80, $86, $80
+    db   $80, $80, $86, $80, $80, $80, $86, $80
+    db   $83, $83, $83, $83, $83, $83, $83, $83
+    db   $81, $81, $81, $81, $81, $80, $86, $80
+    db   $80, $80, $86, $80, $80, $80, $86, $80
+    db   $80, $80, $86, $80, $83, $83, $83, $83
+    db   $83, $83, $83, $83, $81, $81, $81, $81
+    db   $81, $80, $80, $80, $80, $80, $80, $80
+    db   $80, $80, $80, $80, $80, $80, $80, $80
+    db   $83, $83, $83, $83, $83, $83, $83, $83
+    db   $81, $81, $81, $81, $81, $87, $87, $87
+    db   $80, $80, $80, $80, $80, $86, $86, $86
+    db   $80, $80, $80, $80, $83, $83, $83, $83
+    db   $83, $83, $83, $83, $83, $83, $81, $81
+    db   $81, $87, $87, $87, $80, $80, $87, $80
+    db   $80, $86, $86, $86, $80, $80, $87, $80
+    db   $83, $83, $83, $86, $86, $86, $86, $86
+    db   $86, $86, $86, $81, $81, $87, $87, $87
+    db   $80, $80, $80, $80, $80, $86, $86, $86
+    db   $80, $80, $80, $80, $83, $83, $83, $86
+    db   $86, $86, $86, $86, $86, $86, $86, $81
+    db   $81, $87, $87, $87, $80, $87, $87, $87
+    db   $80, $86, $86, $86, $80, $86, $86, $86
+    db   $83, $83, $83, $86, $85, $85, $85, $85
+    db   $85, $86, $86, $81, $81, $87, $87, $87
+    db   $80, $87, $87, $87, $80, $86, $86, $86
+    db   $80, $86, $86, $86, $83, $83, $83, $86
+    db   $85, $80, $80, $80, $85, $86, $86, $81
+    db   $81, $87, $87, $87, $80, $87, $87, $87
+    db   $80, $86, $86, $86, $80, $86, $86, $86
+    db   $83, $83, $83, $86, $85, $80, $80, $80
+    db   $85, $86, $86, $81, $81, $87, $87, $87
+    db   $80, $87, $87, $87, $80, $86, $86, $86
+    db   $80, $86, $86, $86, $83, $83, $83, $86
+    db   $85, $80, $80, $80, $85, $86, $86, $81
+    db   $81, $87, $87, $87, $80, $87, $87, $87
+    db   $80, $86, $86, $86, $80, $86, $86, $86
+    db   $83, $83, $83, $86, $85, $85, $85, $85
+    db   $85, $86, $86, $81, $81, $87, $87, $87
+    db   $80, $87, $87, $87, $80, $86, $86, $86
+    db   $80, $86, $86, $86, $83, $83, $83, $86
+    db   $85, $80, $80, $80, $85, $86, $86, $81
+    db   $81, $80, $80, $80, $80, $80, $80, $80
+    db   $80, $80, $80, $80, $80, $80, $80, $80
+    db   $83, $83, $83, $86, $85, $80, $80, $80
+    db   $85, $86, $86, $81, $81, $80, $80, $80
+    db   $80, $80, $80, $80, $80, $80, $80, $80
+    db   $80, $80, $80, $80, $83, $83, $83, $86
+    db   $85, $80, $80, $80, $85, $86, $86, $81
+    db   $81, $80, $86, $80, $80, $80, $86, $80
+    db   $80, $80, $86, $80, $80, $80, $86, $80
+    db   $83, $83, $83, $86, $85, $85, $85, $85
+    db   $85, $86, $86, $81, $81, $80, $86, $80
+    db   $80, $80, $86, $80, $80, $80, $86, $80
+    db   $80, $80, $86, $80, $83, $83, $83, $86
+    db   $85, $80, $80, $80, $85, $86, $86, $81
+    db   $81, $80, $86, $80, $80, $80, $86, $80
+    db   $80, $80, $86, $80, $80, $80, $86, $80
+    db   $83, $83, $83, $86, $85, $80, $80, $80
+    db   $85, $86, $86, $81, $81, $80, $86, $80
+    db   $80, $80, $80, $80, $80, $80, $86, $80
+    db   $80, $80, $80, $80, $83, $83, $83, $86
+    db   $85, $80, $80, $80, $85, $86, $86, $81
+    db   $81, $84, $84, $84, $80, $80, $80, $80
+    db   $80, $86, $86, $86, $80, $80, $80, $80
+    db   $83, $83, $83, $86, $85, $85, $85, $85
+    db   $85, $86, $86, $81, $81, $84, $84, $84
+    db   $80, $80, $87, $80, $80, $86, $86, $86
+    db   $80, $80, $87, $80, $83, $83, $83, $86
+    db   $86, $86, $86, $86, $86, $86, $86, $81
+    db   $81, $84, $84, $84, $80, $80, $80, $80
+    db   $80, $86, $86, $86, $80, $80, $80, $80
+    db   $83, $83, $83, $86, $86, $86, $86, $86
+    db   $86, $86, $86, $81, $81, $84, $84, $84
+    db   $80, $84, $84, $84, $80, $86, $86, $86
+    db   $80, $86, $86, $86, $83, $83, $83, $83
+    db   $83, $83, $83, $83, $81, $81, $81, $81
+    db   $81, $84, $84, $84, $80, $84, $84, $84
+    db   $80, $86, $86, $86, $80, $86, $86, $86
+    db   $83, $83, $83, $83, $83, $83, $83, $83
+    db   $81, $81, $81, $81, $81, $84, $84, $84
+    db   $80, $84, $84, $84, $80, $86, $86, $86
+    db   $80, $86, $86, $86, $83, $83, $83, $83
+    db   $83, $83, $83, $83, $81, $81, $81, $81
+    db   $81, $84, $84, $84, $80, $84, $84, $84
+    db   $80, $86, $86, $86, $80, $86, $86, $86
+    db   $83, $83, $83, $83, $83, $83, $83, $83
+    db   $81, $81, $81, $81, $81, $84, $84, $84
+    db   $80, $84, $84, $84, $80, $86, $86, $86
+    db   $80, $86, $86, $86, $83, $83, $83, $83
+    db   $83, $83, $83, $83, $83, $83, $81, $81
+    db   $81, $84, $84, $84, $80, $84, $84, $84
+    db   $80, $86, $86, $86, $80, $86, $86, $86
 
     ld   a,(endlevel_active)
     and  a
@@ -3502,22 +2133,18 @@ start:
      db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
      db   $F5, $F5, $F5, $F5, $F5, $F5, $F5, $F5
      db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
-
   db   $25, $25, $25, $F4, $25, $25, $25, $25
    db   $25, $25, $25, $F4, $25, $25, $25, $25
    db   $25, $25, $25, $F4, $25, $25, $25, $f4
   db   $25, $25, $25, $F4, $25, $25, $25, $f4
-
   db   $25, $25, $25, $25, $25, $25, $25, $f4
    db   $25, $25, $25, $25, $25, $25, $25, $f4
    db   $25, $25, $25, $f4, $25, $25, $25, $f4
    db   $25, $25, $25, $f4, $25, $25, $25, $25
-
    db   $25, $25, $25, $f4, $25, $25, $25, $25
   db   $25, $25, $25, $f4, $25, $25, $25, $f4
    db   $25, $25, $25, $f5, $f5, $f5, $f5, $f4
   db   $35, $35, $35, $35, $25, $25, $25, $f4
-
     db   $35, $35, $35, $35, $25, $25, $25, $F5
     db   $F5, $F5, $F5, $F4, $25, $25, $25, $F4
     db   $25, $25, $25, $F6, $25, $37, $38, $35
