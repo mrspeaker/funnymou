@@ -55,18 +55,6 @@
  ;;; +$1A appear/spawn timer
  ;;; +$1B busy/not-collidable lock (1 while appearing or dying)
  ;;; +$1D/$1E secondary pointer (level-indexed)
- ;;; ============ enemy record fields ============
- ;;; Shared 32-byte record. New fields below, verified this session
- ;;;  from the sprite commit ($309C), setup_cat_1 ($2B6E: cat_ai called with hl=base+7),
- ;;;  the cat1 template ($2B75), and the managers' $31CF/$32F7 pointer loads:
- ;;;    +3  slot-link (low byte of $80xx sprite addr, -> sprite +1)
- ;;;    +4  base tile (+flip) -> sprite +1
- ;;;    +7  AI state: 1=appear, 3/4=chase, 5/6=caught/dying, 7  (dispatched by cat_ai/snake_ai)
- ;;;    +18 16-bit level-indexed ptr (cats: AI-waypoint table; snakes: spawn-delay table)
- ;;;    +1B busy / not-collidable lock (1 while appearing or dying)
- ;;;    +1D 16-bit level-indexed secondary ptr (cats, from shared table $2B28)
- ;;;  catN_ai_init = page-85/86 one-shot "AI path loaded" guard flags.
- ;; =================================================
 
      cat1_bytes      = $8510 ; 32 bytes
      cat1_slot       = $8513 ; +3  (=$05 -> sprite slot1 +1)
@@ -160,7 +148,9 @@
      hw_in_0         = $A000 ; 1 = L, 2 = R, 4 = down, 8 = up
      hw_in_1         = $A800 ; 0x4 = P1, 0x8 = P2
 
- ;;; ============ constants ========
+     ;;; ============ constants ========
+     SCR_COLS        = 28
+     SCR_ROWS        = 28
 
      ;; cur_screen enum
      SCR_NONE        = $00
@@ -176,11 +166,13 @@
      TILES_H = $1B
 
      TILE_BLANK      = $24
+     __              = $25
      TILE_WATER      = $37
      TILE_WATER_2    = $38
      TILE_BOULDER    = $39 ; boulder rest tile (paired with $3A); touching it spawns a falling boulder
      TILE_PLATFORM   = $F4
      TILE_EXIT_HOLE  = $F5 ; over exit/hole -> sets player over-hole flag $842D ($28EB)
+     _H              = $F5 ; ladder! (why exit_hole?)
      TILE_GAP        = $FE ; open water/gap: enemy death (cat/snake_water_die); player enter-hole ($294C); blocks walk
 
  ;;; ============ RE: state / globals ============
@@ -236,7 +228,7 @@
      snake_water_die = $34B5 ; snake on $FE tile -> state 4, splash tile $2C, sound $95
 
      player_vs_enemy = $392A ; AABB player sprite vs each enemy -> player death
-     enemy_eaten_sm  = $394B ; eaten enemy: drive home, award escalating points
+     enemy_eaten_sm  = $394B ; enemy death/return-home driver, award escalating points
      boulder_squash  = $3ACC ; while boulder active: AABB-test it vs each enemy, squash the ones it overlaps
      boulder_vs_enemy = $3B74 ; AABB overlap test: falling boulder ($801C) vs one enemy sprite -> kill on hit
 
@@ -596,10 +588,10 @@ start:
     ld   (disp_timer),a
     cp   $7E
     jp   nz,$0308
-    ex   af,af'
+    ex   af,af' ; '
     ld   a,$A0
     ld   (watchdog),a
-    ex   af,af'
+    ex   af,af' ; '
     cp   $77
     jp   nz,$0314
     ex   af,af' ; '
@@ -3439,18 +3431,19 @@ start:
 
  draw_map:
     ld   hl,$9043
-    ld   b,$1C
-    ld   c,$1C
+    ld   b,SCR_COLS
+    ld   c,SCR_ROWS
     ex   af,af' ; '
-    call $1360
+    call blit_rect
     ex   af,af' ; '
     ld   de,$0020
     ld   hl,$9443
-    ld   b,$1C
-    ld   c,$1C
-    call $1384
+    ld   b,SCR_COLS
+    ld   c,SCR_ROWS
+    call fill_rect
     ret
 
+ blit_rect:          ; copy b(cols) x c(rows) tile rect from (de) -> VRAM (hl); row stride $20, de reads linearly
     push bc
     push hl
     ld   a,(de)
@@ -3463,7 +3456,7 @@ start:
     add  hl,bc
     pop  bc
     dec  c
-    jr   nz,$1360
+    jr   nz,blit_rect
     ret
 
     push bc
@@ -3480,6 +3473,8 @@ start:
     dec  c
     jr   nz,$1372
     ret
+
+ fill_rect:          ; fill b(cols) x c(rows) rect at (hl) with byte a; row stride = de
     push bc
     push hl
     ld   (hl),a
@@ -3489,17 +3484,19 @@ start:
     add  hl,de
     pop  bc
     dec  c
-    jr   nz,$1384
+    jr   nz,fill_rect
     ret
 
  ;;; very chunky data
- ;;; Looks like a lot of level data down to $1FD0 (3135 bytes)
- level_1_map:     ; next map at 16A0 (783 bytes per screen?)
-    dc   54, $25  ; two rows of blanks
-     dc    5, $25  ; plus the top of col 3
-    dc   24, $F5  ; 24 ladder tiles
+ ;;; Looks like a lot of level data down to $1FD0 (3136 bytes)
+ ;;; 27 cells per column, running top-to-bottom, right to left
+ level_1_map:     ; next map at 16A1 (784 bytes per screen)
+  dc   27, __  ; col 27, blanks
+  dc   27, __  ; col 26, blanks
+     dc    5, __  ; plus the top of col 3
+    dc   24, _H  ; 24 ladder tiles
     db   $f4
-     db   $25, $25, $25, $f4, $25, $25, $25
+     db   __, __, __, $f4, __, __, __
     db   $f4, $25, $25, $25, $25, $25, $25, $25
     db   $f4, $25, $25, $25, $25, $25, $25, $25
     db   $f4, $25, $25, $25, $f4, $25, $25, $25
@@ -6021,10 +6018,10 @@ start:
     jp   nz,$2271
     inc  c
     ld   a,c
-    ex   af,af'
+    ex   af,af' ; '
     ld   hl,$237E
     call $212E
-    ex   af,af'
+    ex   af,af' ; '
     ld   (hl),a
     ld   de,score_hi
     rrca
@@ -6106,10 +6103,10 @@ start:
     ld   a,(hl)
     add  a,$01
     daa
-    ex   af,af'
+    ex   af,af' ; '
     ld   hl,$2388
     call $212E
-    ex   af,af'
+    ex   af,af' ; '
     ld   ($8037),a
     ld   de,$8037
     ld   b,$02
@@ -6364,10 +6361,10 @@ start:
     rrca
     ld   bc,$010F
     ld   l,a
-    ex   af,af'
+    ex   af,af' ; '
     inc  b
     djnz $251F
-    ex   af,af'
+    ex   af,af' ; '
     rrca
     ld   (bc),a
     ld   c,a
@@ -6377,13 +6374,13 @@ start:
     rrca
     ld   bc,$010F
     rrca
-    ex   af,af'
+    ex   af,af' ; '
     rrca
-    ex   af,af'
+    ex   af,af' ; '
     rrca
     ld   bc,$010F
     ld   l,a
-    ex   af,af'
+    ex   af,af' ; '
     ccf
     ld   (bc),a
     rra
@@ -6400,7 +6397,7 @@ start:
     ld   l,a
     ld   (bc),a
     rrca
-    ex   af,af'
+    ex   af,af' ; '
     rrca
     ld   bc,$013F
     rra
@@ -6440,7 +6437,7 @@ start:
     jp   nz,$250D
     ld   de,$249B
     jp   $2501
-    ex   af,af'
+    ex   af,af' ; '
     inc  de
     ld   a,(de)
     inc  de
@@ -6448,9 +6445,9 @@ start:
     dec  hl
     ld   (hl),e
     dec  hl
-    ex   af,af'
+    ex   af,af' ; '
     ld   (hl),a
-    ex   af,af'
+    ex   af,af' ; '
     jp   $2574
 
  get_player_tile_pos:
@@ -6521,10 +6518,10 @@ start:
     ld   a,($841F)
     cp   $01
     jp   z,$25BC
-    ex   af,af'
+    ex   af,af' ; '
     ld   a,$00
     ld   ($8416),a
-    ex   af,af'
+    ex   af,af' ; '
     cp   $02
     jp   z,$25C2
     cp   $00
@@ -8276,7 +8273,7 @@ mthing
     nop
     nop
     nop
-    ex   af,af'
+    ex   af,af' ; '
     inc  d
     inc  b
     nop
@@ -9856,7 +9853,7 @@ mthing
     push de
     ld   b,$02
     ld   c,$03
-    call $1360
+    call blit_rect
     pop  de
     pop  bc
     inc  ix
@@ -10064,7 +10061,7 @@ mthing
     ld   l,(ix+$00)
     ld   b,$01
     ld   c,$07
-    call $1360
+    call blit_rect
     pop  hl
     ret
 
@@ -10098,14 +10095,14 @@ mthing
     ld   b,$02
     ld   c,$02
     push hl
-    call $1360
+    call blit_rect
     pop  hl
     ld   a,(de)
     ld   de,$0020
     ld   b,$02
     ld   c,$02
     set  2,h
-    call $1384
+    call fill_rect
     pop  bc
     pop  de
     pop  hl
@@ -10126,14 +10123,14 @@ mthing
     ld   b,$02
     ld   c,$02
     push hl
-    call $1384
+    call fill_rect
     pop  hl
     ld   a,$87
     ld   de,$0020
     ld   b,$02
     ld   c,$02
     set  2,h
-    call $1384
+    call fill_rect
     jp   $3E7B
 
 
@@ -10216,7 +10213,7 @@ mthing
     ld   a,$09
     ld   hl,food_returned
     ld   bc,$0000
-    ex   af,af'
+    ex   af,af' ; '
     ld   a,(hl)
     and  a
     call nz,$3F4C
@@ -10224,7 +10221,7 @@ mthing
     inc  hl
     inc  c
     inc  c
-    ex   af,af'
+    ex   af,af' ; '
     dec  a
     jp   nz,$3F3C
     ret
@@ -10273,14 +10270,14 @@ mthing
     ld   b,$02
     ld   c,$02
     push hl
-    call $1384
+    call fill_rect
     pop  hl
     ld   a,$87
     ld   de,$0020
     ld   b,$02
     ld   c,$02
     set  2,h
-    call $1384
+    call fill_rect
     pop  hl
     pop  bc
     jp   $3F83
@@ -11041,7 +11038,7 @@ mthing
     dec  d
     nop
     nop
-    ex   af,af'
+    ex   af,af' ; '
     nop
     nop
     djnz $4507
@@ -11049,7 +11046,7 @@ mthing
     dec  b
     nop
     nop
-    ex   af,af'
+    ex   af,af' ; '
     nop
     nop
     inc  b

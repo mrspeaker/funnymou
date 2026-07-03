@@ -55,18 +55,6 @@
                 ;;; +$1A appear/spawn timer
                 ;;; +$1B busy/not-collidable lock (1 while appearing or dying)
                 ;;; +$1D/$1E secondary pointer (level-indexed)
-                ;;; ============ enemy record fields ============
-                ;;; Shared 32-byte record. New fields below, verified this session
-                ;;;  from the sprite commit ($309C), setup_cat_1 ($2B6E: cat_ai called with hl=base+7),
-                ;;;  the cat1 template ($2B75), and the managers' $31CF/$32F7 pointer loads:
-                ;;;    +3  slot-link (low byte of $80xx sprite addr, -> sprite +1)
-                ;;;    +4  base tile (+flip) -> sprite +1
-                ;;;    +7  AI state: 1=appear, 3/4=chase, 5/6=caught/dying, 7  (dispatched by cat_ai/snake_ai)
-                ;;;    +18 16-bit level-indexed ptr (cats: AI-waypoint table; snakes: spawn-delay table)
-                ;;;    +1B busy / not-collidable lock (1 while appearing or dying)
-                ;;;    +1D 16-bit level-indexed secondary ptr (cats, from shared table $2B28)
-                ;;;  catN_ai_init = page-85/86 one-shot "AI path loaded" guard flags.
-                ;; =================================================
 
                     cat1_bytes      = $8510 ; 32 bytes
                     cat1_slot       = $8513 ; +3  (=$05 -> sprite slot1 +1)
@@ -160,7 +148,9 @@
                     hw_in_0         = $A000 ; 1 = L, 2 = R, 4 = down, 8 = up
                     hw_in_1         = $A800 ; 0x4 = P1, 0x8 = P2
 
-                ;;; ============ constants ========
+                    ;;; ============ constants ========
+                    SCR_COLS        = 28
+                    SCR_ROWS        = 28
 
                     ;; cur_screen enum
                     SCR_NONE        = $00
@@ -176,11 +166,13 @@
                     TILES_H = $1B
 
                     TILE_BLANK      = $24
+                    __              = $25
                     TILE_WATER      = $37
                     TILE_WATER_2    = $38
                     TILE_BOULDER    = $39 ; boulder rest tile (paired with $3A); touching it spawns a falling boulder
                     TILE_PLATFORM   = $F4
                     TILE_EXIT_HOLE  = $F5 ; over exit/hole -> sets player over-hole flag $842D ($28EB)
+                    _H              = $F5 ; ladder! (why exit_hole?)
                     TILE_GAP        = $FE ; open water/gap: enemy death (cat/snake_water_die); player enter-hole ($294C); blocks walk
 
                 ;;; ============ RE: state / globals ============
@@ -236,7 +228,7 @@
                     snake_water_die = $34B5 ; snake on $FE tile -> state 4, splash tile $2C, sound $95
 
                     player_vs_enemy = $392A ; AABB player sprite vs each enemy -> player death
-                    enemy_eaten_sm  = $394B ; eaten enemy: drive home, award escalating points
+                    enemy_eaten_sm  = $394B ; enemy death/return-home driver, award escalating points
                     boulder_squash  = $3ACC ; while boulder active: AABB-test it vs each enemy, squash the ones it overlaps
                     boulder_vs_enemy = $3B74 ; AABB overlap test: falling boulder ($801C) vs one enemy sprite -> kill on hit
 
@@ -3439,18 +3431,19 @@ zeros               dc   55,0
 
                 draw_map:
 1346  214390  	    ld   hl,$9043
-1349  061C    	    ld   b,$1C
-134B  0E1C    	    ld   c,$1C
+1349  061C    	    ld   b,SCR_COLS
+134B  0E1C    	    ld   c,SCR_ROWS
 134D  08      	    ex   af,af' ; '
-134E  CD6013  	    call $1360
+134E  CD6013  	    call blit_rect
 1351  08      	    ex   af,af' ; '
 1352  112000  	    ld   de,$0020
 1355  214394  	    ld   hl,$9443
-1358  061C    	    ld   b,$1C
-135A  0E1C    	    ld   c,$1C
-135C  CD8413  	    call $1384
+1358  061C    	    ld   b,SCR_COLS
+135A  0E1C    	    ld   c,SCR_ROWS
+135C  CD8413  	    call fill_rect
 135F  C9      	    ret
 
+                blit_rect:          ; copy b(cols) x c(rows) tile rect from (de) -> VRAM (hl); row stride $20, de reads linearly
 1360  C5      	    push bc
 1361  E5      	    push hl
 1362  1A      	    ld   a,(de)
@@ -3463,7 +3456,7 @@ zeros               dc   55,0
 136C  09      	    add  hl,bc
 136D  C1      	    pop  bc
 136E  0D      	    dec  c
-136F  20EF    	    jr   nz,$1360
+136F  20EF    	    jr   nz,blit_rect
 1371  C9      	    ret
 
 1372  C5      	    push bc
@@ -3480,6 +3473,8 @@ zeros               dc   55,0
 1380  0D      	    dec  c
 1381  20EF    	    jr   nz,$1372
 1383  C9      	    ret
+
+                fill_rect:          ; fill b(cols) x c(rows) rect at (hl) with byte a; row stride = de
 1384  C5      	    push bc
 1385  E5      	    push hl
 1386  77      	    ld   (hl),a
@@ -3489,17 +3484,19 @@ zeros               dc   55,0
 138B  19      	    add  hl,de
 138C  C1      	    pop  bc
 138D  0D      	    dec  c
-138E  20F4    	    jr   nz,$1384
+138E  20F4    	    jr   nz,fill_rect
 1390  C9      	    ret
 
                 ;;; very chunky data
-                ;;; Looks like a lot of level data down to $1FD0 (3135 bytes)
-                level_1_map:     ; next map at 16A0 (783 bytes per screen?)
-1391  25      	    dc   54, $25  ; two rows of blanks
-13B8                dc    5, $25  ; plus the top of col 3
-13CC  F5      	    dc   24, $F5  ; 24 ladder tiles
+                ;;; Looks like a lot of level data down to $1FD0 (3136 bytes)
+                ;;; 27 cells per column, running top-to-bottom, right to left
+                level_1_map:     ; next map at 16A1 (784 bytes per screen)
+1391        	    dc   27, __  ; col 27, blanks
+xxxx        	    dc   27, __  ; col 26, blanks
+13B8                dc    5, __  ; plus the top of col 3
+13CC  F5      	    dc   24, _H  ; 24 ladder tiles
 13E4  F42525  	    db   $f4
-13E5                db   $25, $25, $25, $f4, $25, $25, $25
+13E5                db   __, __, __, $f4, __, __, __
 13EC  F42525  	    db   $f4, $25, $25, $25, $25, $25, $25, $25
 13F4  F42525  	    db   $f4, $25, $25, $25, $25, $25, $25, $25
 13FC  F42525  	    db   $f4, $25, $25, $25, $f4, $25, $25, $25
@@ -9856,7 +9853,7 @@ _
 3CB0  D5      	    push de
 3CB1  0602    	    ld   b,$02
 3CB3  0E03    	    ld   c,$03
-3CB5  CD6013  	    call $1360
+3CB5  CD6013  	    call blit_rect
 3CB8  D1      	    pop  de
 3CB9  C1      	    pop  bc
 3CBA  DD23    	    inc  ix
@@ -10064,7 +10061,7 @@ _
 3E1D  DD6E00  	    ld   l,(ix+$00)
 3E20  0601    	    ld   b,$01
 3E22  0E07    	    ld   c,$07
-3E24  CD6013  	    call $1360
+3E24  CD6013  	    call blit_rect
 3E27  E1      	    pop  hl
 3E28  C9      	    ret
 
@@ -10098,14 +10095,14 @@ _
 3E65  0602    	    ld   b,$02
 3E67  0E02    	    ld   c,$02
 3E69  E5      	    push hl
-3E6A  CD6013  	    call $1360
+3E6A  CD6013  	    call blit_rect
 3E6D  E1      	    pop  hl
 3E6E  1A      	    ld   a,(de)
 3E6F  112000  	    ld   de,$0020
 3E72  0602    	    ld   b,$02
 3E74  0E02    	    ld   c,$02
 3E76  CBD4    	    set  2,h
-3E78  CD8413  	    call $1384
+3E78  CD8413  	    call fill_rect
 3E7B  C1      	    pop  bc
 3E7C  D1      	    pop  de
 3E7D  E1      	    pop  hl
@@ -10126,14 +10123,14 @@ _
 3E98  0602    	    ld   b,$02
 3E9A  0E02    	    ld   c,$02
 3E9C  E5      	    push hl
-3E9D  CD8413  	    call $1384
+3E9D  CD8413  	    call fill_rect
 3EA0  E1      	    pop  hl
 3EA1  3E87    	    ld   a,$87
 3EA3  112000  	    ld   de,$0020
 3EA6  0602    	    ld   b,$02
 3EA8  0E02    	    ld   c,$02
 3EAA  CBD4    	    set  2,h
-3EAC  CD8413  	    call $1384
+3EAC  CD8413  	    call fill_rect
 3EAF  C37B3E  	    jp   $3E7B
 
 
@@ -10273,14 +10270,14 @@ _
 3F98  0602    	    ld   b,$02
 3F9A  0E02    	    ld   c,$02
 3F9C  E5      	    push hl
-3F9D  CD8413  	    call $1384
+3F9D  CD8413  	    call fill_rect
 3FA0  E1      	    pop  hl
 3FA1  3E87    	    ld   a,$87
 3FA3  112000  	    ld   de,$0020
 3FA6  0602    	    ld   b,$02
 3FA8  0E02    	    ld   c,$02
 3FAA  CBD4    	    set  2,h
-3FAC  CD8413  	    call $1384
+3FAC  CD8413  	    call fill_rect
 3FAF  E1      	    pop  hl
 3FB0  C1      	    pop  bc
 3FB1  C3833F  	    jp   $3F83

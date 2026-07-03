@@ -2,11 +2,11 @@
 
 This repo is a **reverse-engineering / documentation project** for the arcade game
 **Funny Mouse** (`funnymou` in MAME). The goal is to annotate the disassembly
-(`explore_funny.asm`) with meaningful labels and comments, with a current focus on the
-**enemy (cat) AI**.
+(`funnymou.asm`) with meaningful labels and comments, with a current focus on the
+**enemy (cat) AI**. This file is turned into `src.asm` that can then be assembled.
 
 > This file is the living knowledge base. When you learn something new about the dump,
-> record it here (and, where useful, add the label to `explore_funny.asm` — see
+> record it here (and, where useful, add the label to `funnymou.asm` — see
 > [Labeling workflow](#labeling-workflow)). Cite ROM addresses (`$xxxx`) as evidence.
 
 ---
@@ -34,14 +34,13 @@ This repo is a **reverse-engineering / documentation project** for the arcade ga
 | Path | What it is |
 |------|-----------|
 | `funnymou.asm` | **The buildable master (~11.7k lines).** Assembles to a **hash-correct** ROM via `build.sh`. This is the file to annotate. See [Build & edit rules](#build--edit-rules) below. |
-| `explore_funny.asm` | Earlier plain-source annotation **scratch** file (column-1 source, NOT wired to the build). Findings get folded from here into `funnymou.asm`. |
 | `build.sh` | `cut -c 16- funnymou.asm > src.asm; zmac -c -n src.asm; split -b4k` → shasum-compares each chunk to `dump/suprmous.x1..x5`. |
 | `funnymou.org` | MAME ROM defs + `thepit_main_map` + preliminary memory map. |
 | `dump/` | Raw ROM/PROM images (`sm.6`, `suprmous.x*`, `*.clr`). |
 | `thepit/` | MAME driver source for the hardware (`thepit.cpp`/`.h`, `thepit_v.cpp`). Authoritative HW ref. Confirms `funnymou` runs **ROT90** (`thepit.cpp:1474`). |
 
 ### Build & edit rules
-`funnymou.asm` is a **zmac listing baked into the source**: columns **1–15** of every line are an
+`funnymou.asm` is **zmac listing baked into the source**: columns **1–15** of every line are an
 `ADDR  HEXBYTES<tab>` prefix that `build.sh` **strips** (`cut -c 16-`) before assembling. So:
 - **All real content must start at column ≥ 16.** A comment/directive starting before col 16
   gets its first 15 chars chopped and breaks the build. Existing equates use 20 leading spaces —
@@ -49,9 +48,6 @@ This repo is a **reverse-engineering / documentation project** for the arcade ga
 - Comments, `name = $addr` equates, and label renames emit **no bytes** → the ROM stays
   byte-identical *as long as it still assembles*. **Verify every change with `./build.sh`**
   (all 5 shasum pairs must match).
-- **Prefer funnymou.asm's existing names/style** (`player_x`, `cat1_x`, `setup_cat_1`,
-  `draw_cur_level_map`, …). They are often *more* correct than the CLAUDE.md/`explore_funny.asm`
-  names — e.g. the ROT90 X/Y issue in §5. Verify a finding against code before bulk-renaming.
 
 ---
 
@@ -306,12 +302,6 @@ Fields recap: `$867F`=bomb supply, `$8680`=active flag, `$8684`/`$8685`=Y/X, `$8
 `$8687`=color, `$8683`=explosion-lethal flag, `$8688`/`$8689`=explosion frame/stage,
 `$868A`=arming timer, `$868B`=detonate flag.
 
-> NOTE: the `$8680` object was previously mislabeled "hawk" then "boulder"; it is the **bomb**.
-> The actual **boulder** is the `$85C0` slot-7 object described next (previously mislabeled the
-> "power-pellet / clear-enemies pickup"). Both errors on that object — that it "sweeps
-> horizontally" and that it clears all enemies with no overlap test — were artifacts of reading
-> it in the wrong frame; under **ROT90** it *falls vertically* and *squashes on overlap*.
-
 Boulder — the **falling boulder** (`$85C0` block, slot 7). Two boulders rest at **fixed edge
 cells** (tiles `$39`/`$3A` = `TILE_BOULDER`; redrawn at `$9065`/`$9085` and `$9385`/`$93A5`
 until triggered; consumed flags `$8180`/`$8181`, one per screen half). The player **touches**
@@ -337,7 +327,7 @@ snakes) → state (+$07)=`$04`, splash tile (+$04)=`$1C`/`$2C`, busy-lock (+$1B)
 wrongly described as clearing *all* enemies with no overlap test — `$3B74` *is* the per-enemy
 overlap test.)
 
-### Maze hazards: bridges & sliding platforms (player tile-interaction dispatcher)
+### Maze tools: bridges & sliding platforms (player tile-interaction dispatcher)
 When the player is committed each frame (`$28BB` region), a chain of small helpers checks the
 maze tile just ahead of the player (`$251B`→VRAM addr, then `+$FFE2`/`+$FFE1`) and fires a
 per-tile effect. Confirmed tile → effect:
@@ -356,7 +346,7 @@ per-tile effect. Confirmed tile → effect:
 tile-animation that **opens then closes** a span of maze tiles: `$3C92` selects a per-maze
 position set (table `$3BE3`, indexed by `$8101 & 3`) and `$3CA9`→`$1360` blits the open/closed
 tile blocks (source tables `$3BD7`/`$3BDD`) into VRAM. So the player crossing a bridge tile
-(`$FC`) makes the bridge open — an enemy over the opened span is over "water" and dies.
+(`$FC`) make **all** the bridges open — an enemy over the opened span is over "water" and dies.
 
 **Sliding platform — `$407D`** (block `$80A0-$80A8`, draws into **sprite slot 2** via `$4092`).
 On activation it snaps to the player (`$80A5`=X from `$8406`, `$80A8`=Y from `$8407`+`$F0`;
@@ -428,10 +418,10 @@ manages a bonus/score display. Per-field semantics only partially traced.
 
 ## 6. ENEMY AI (CATS & SNAKES)
 
-The enemy AI is the reason for this project. There are **two enemy types** — **3 cats** and
-**2 snakes** — implemented as **two near-identical drivers** funneling into a **shared
-per-enemy engine**. (The two types differ mainly in manager/graphics and the wall-code set
-they navigate against; the core chase logic is identical.)
+There are **two enemy types** — **3 cats** and **2 snakes** — implemented as 
+**two near-identical drivers** funneling into a **shared per-enemy engine**. 
+(The two types differ mainly in manager/graphics and the wall-code set they navigate against; 
+the core chase logic is identical.)
 
 ### Managers
 - **`$2A51`** — manager A (**cats**): cats A/B/C (records `$8510`/`$8550`/`$8570`).
@@ -535,9 +525,11 @@ $0000-$00FF : CODE  reset/NMI vectors + init; nop padding $009F-$00FF
 $0100-$0961 : CODE  per-frame service ($0100), boot/RAM test ($07F1), screen clear ($0933)
 $0962-$09EF : CODE + small tables (title/text draw)
 $09F0-$100E : DATA  static/title tilemap + color/attribute data
-$100F-$1390 : CODE  maze-draw dispatcher ($130B), VRAM blit ($1346/$1384)
-$1391-$1FD0 : DATA  ** 4 MAZE TILEMAPS ** — banks of $310 bytes:
-                    $1391, $16A1, $19B1, $1CC1  (selected by ($8101 & 3), blitted 28x28 to VRAM $9043)
+$100F-$1390 : CODE  maze pipeline: draw_cur_level_map ($130B) -> draw_map ($1346)
+                    -> blit_rect ($1360) / fill_rect ($1384) ; see "Maze / level data format"
+$1391-$1FD0 : DATA  ** 4 MAZE TILEMAPS ** — banks of $310 bytes (=28x28) each:
+                    level_1_map=$1391, $16A1, $19B1, $1CC1  (selected by ($8101 & 3),
+                    blitted 28x28 to VRAM $9043)
 $1FD1-$3FB3 : CODE  main engine (state dispatch $1FD1, actor/AI engine, collisions)
                     embedded data: $2342-$2390 display list; $246C-$249A player init record;
                     $249B-$24FC FF-terminated attract-demo movement script; misc delta tables
@@ -548,6 +540,35 @@ $4559-$4919 : CODE  display/text routines
 $491A-$4927 : DATA  text/font message table (blitted to VRAM $9100 by $48FA)
 $4928-$4FFF : unmapped padding / dump end
 ```
+
+### Maze / level data format
+Each of the **4 maze banks** (`$1391`/`$16A1`/`$19B1`/`$1CC1`) is a **flat `$310` = 784-byte
+array of tile-code bytes — one byte per cell, no header, no runtime compression**. The bytes
+*are* the VRAM tile codes; they are copied verbatim.
+
+- **Geometry: 28×28, stored column-major.** Each run of 28 source bytes is one screen column,
+  top-to-bottom; because the hardware is **ROT90**, successive columns lay out **right-to-left**
+  on the physical screen (matches the in-listing comment "27 cells per column, top-to-bottom,
+  right to left"). Reshaping bank 0 as 28 columns × 28 rows renders a coherent symmetric maze
+  (ladder shafts `$F5`, platform walls `$F4`, water `$37/$38`, food/boulder `$3x`, blank `$25`).
+
+**Draw pipeline** (`draw_cur_level_map` `$130B`): `cur_map ($8101) & 3` selects the bank into
+`de`, loads color byte `a=$83`, and calls **`draw_map` `$1346`**, which:
+- fills the **tilemap** at VRAM `$9043` via **`blit_rect` `$1360`** — copies a `b`×`c` rect from
+  `(de)` to `(hl)`, inner stride `+1` (`b`=28), row stride `+$20` (`c`=28); `de` reads the source
+  linearly. (`ex af,af'` around the call preserves `a`, which `blit_rect` clobbers.)
+- fills the matching **color RAM** window at `$9443` via **`fill_rect` `$1384`** — writes the
+  constant `a` (=`$83`) into a `b`×`c` rect, row stride taken from `de` (`$0020`). So the whole
+  playfield is a **single flat color**; there is no per-cell color data.
+
+`blit_rect`/`fill_rect` are **general rectangle primitives**, reused for small blits (bridge
+tiles 2×3, food pieces 2×2, `fill_rect` with `set 2,h` → color-RAM mirror). A third, **unused**
+bottom-up copy variant sits at `$1372` (same as `blit_rect` but row stride `-$20`).
+
+**Source-encoding caveat:** in `funnymou.asm` the banks are hand-written as a mix of
+`dc count,value` (run-length fill) and literal `db` rows. Where `dc` runs replaced raw bytes the
+baked-in **address column (cols 1–15) went stale** (e.g. shows `$13B8` where the real address is
+`$13C7`) — trust `zout/src.lst`, not the address column, in the `$1391–$1FD0` data region.
 
 ### Jump / dispatch tables
 - **`$1FD1`** — main state dispatcher: reads `$8039` bitmask, `rrca`+`jp c` chain to
@@ -603,99 +624,81 @@ $4928-$4FFF : unmapped padding / dump end
 
 ## 9. Labeling workflow
 
-`explore_funny.asm` supports equates at the top (one is already present):
-```
-    watchdog            = $B800 ; watchdog
-```
-To document the dump, **add `name = $addr ; comment` equates** there as findings solidify,
-and add `;` comments to routine entry points. Below is a proposed starter set consolidating
-this doc's findings — add incrementally as each is confirmed in-listing.
+There are **two labelling mechanisms**; pick by what the address *is*:
+
+1. **Equates (`name = $addr`) — for RAM, hardware, data-table and constant addresses only.**
+   Placed in the equate block at the top. eg:
+   ```
+       watchdog            = $B800 ; watchdog
+   ```
+   Use these for things that are *referenced but not executed*: work-RAM variables (`$80xx`),
+   hardware ports (`$A000`/`$B000`…), and constants (tile codes, screen states). Equates use
+   **20 leading spaces** (col 21+).
+
+2. **Inline labels (`name:` at the address) — for code entry points / routines.**
+   Do **not** equate a routine's address at the top. Instead put the label on its own line
+   *immediately above the instruction at that address*, then replace the obvious `$addr`
+   operand references (`call`/`jp`/`jr`/`ld`) in the code with the label name. This is how
+   `init_game_RAM_test:` ($07F1, referenced by `jp init_game_RAM_test`) is done. Labels use
+   **16 leading spaces** (col 17+) and may carry a trailing `; comment`:
+   ```
+                   cat_mgr:            ; cat manager (cats A/B/C)
+   07F1  3A00B8  	    ld   a,(watchdog)      <- (the real instruction line follows)
+   ```
+   A label emits no bytes and takes the current PC, so the ROM stays byte-identical as long
+   as it still assembles. **Verify every change with `./build.sh`.**
+
+**Engine routines currently carried as inline labels** (grep the name in `funnymou.asm` to jump
+to each). Pre-existing: `main_loop` ($0100, NMI service), `init_game_RAM_test` ($07F1, boot
+selftest), `main_game_loop` ($1FD1, fg loop / consumes req_flags), `draw_cur_level_map` ($130B,
+load maze), `get_player_tile_pos` ($251B, player pos→vram), `get_tile_pos` ($30B3, actor pos→vram).
+Converted from equates:
 
 ```asm
-; --- hardware ---
-watchdog        = $B800   ; watchdog reset / sound command write
-mainlatch       = $B000   ; LS259: +0 nmi_en +2 coin_lock +3 snd_en +6 flipX +7 flipY
-dsw             = $B000   ; DIP switches (read)
-in_joy          = $A000   ; player joystick
-in_coin         = $A800   ; coin/start
-vram            = $9000   ; tilemap
-spriteram       = $9840   ; 8x4 sprites
-
-; --- sprite mirror & actors ---
-sprite_mirror   = $8000   ; 8x4, DMA'd to spriteram each frame by copy_sprites
-player_ws       = $8400   ; player workspace (template player_tmpl=$246C)
-plr_x           = $8406   ; joystick L/R axis (funnymou.asm: player_x). ROT90 -> sprite +0 (HW-Y)
-plr_y           = $8407   ; joystick U/D axis (funnymou.asm: player_y). ROT90 -> sprite +3 (HW-X)
-plr_state       = $841F   ; 0 respawn 1 play 2 dead 4 enter-hole 5 at-hole
-cat_ctrl_85     = $8500   ; [enable,spawned] pairs (cats A/B/C)
-cat_rec_a       = $8510
-cat_rec_b       = $8550
-cat_rec_c       = $8570
-snake_ctrl_86   = $8600   ; [enable,spawned] pairs (snakes A/B)
-snake_rec_a     = $8610
-snake_rec_b     = $8630
-boulder         = $85C0   ; falling boulder active flag (slot 7); boulder_x=$85C5 boulder_y=$85C6
-bomb            = $8680   ; player bomb object (slot 7); drop+detonate via button1
-bomb_supply     = $867F   ; remaining bombs (=5 at each life start, $206C)
-bomb_lethal     = $8683   ; explosion active/lethal flag (checked by bomb_collide)
-
-; --- globals ---
-game_mode       = $8030   ; 0 attract 1 1P 2 2P
-cur_player      = $8031
-req_level_done  = $8032
-req_death       = $8033
-req_flags       = $8039   ; event bitmask
-seq_state       = $803B   ; 0..8 top-level state
-p1_score        = $8044
-page_active     = $8100
-page_p1         = $8200
-page_p2         = $8300
-food_state      = $8120   ; 9x1 per-piece state: 0 uncollected, 2 carried, 1 returned
-food_returned   = $8140   ; 9x2 fill-from-front log; all set (all food carried home) => level clear
-
-; --- key routines ---
-nmi_service     = $0100
-copy_sprites    = $062C
-score_add_apply = $063B
-read_inputs     = $0743
-boot_selftest   = $07F1
-fg_loop         = $1FD1   ; consumes req_flags
-load_maze       = $130B   ; (level & 3) -> bank
-ingame_update   = $23A0   ; per-frame game pipeline (state 6)
-platform_update = $407D   ; sliding platform (slot 2), block $80A0-$80A8
-bridge_update   = $3BFF   ; bridge open/close tile animation, block $80C0-$80C7
-scripted_move   = $3D0A   ; scripted player move (home-entry), block $80E0-$80E7
-level_end_seq   = $23D3   ; per-frame: run check_level_done, else end-level timer -> req_level_done
-check_level_done= $2429   ; all 9 food_returned slots nonzero? => start end-of-level sequence
-food_pickup     = $29C8   ; player over food tile ($DC-$EF) -> mark carried (food_state 0->2)
-food_set_state  = $3EB2   ; find food piece at VRAM cell (hl), write reg c into its food_state
-food_maze_erase = $3F62   ; blank carried (state 2) food cells in the maze (tile $25/$87)
-food_maze_redraw= $3E29   ; repaint maze food from food_state (drops carried 2->0 on rebuild)
-food_pos_tbl    = $3FC6   ; per-maze food VRAM-cell pointer table (stride $12, 9x2)
-food_return_home= $4167   ; home-entry: log carried piece (food_return_add) + food_state 2->1
-food_return_add = $3EF2   ; append a carried-home piece to food_returned, draw it, +500 pts
-food_log_redraw = $3F36   ; repaint all food_returned entries to VRAM (maze rebuild/page swap)
-player_update   = $2539
-pos_to_maze     = $251B   ; player X/Y -> vram tile addr
-cat_mgr         = $2A51   ; cats A/B/C
-cat_ai          = $2C3E   ; per-enemy state engine (cats)
-enemy_chase     = $2D0E   ; steer toward player sprite ($8000/$8003)
-enemy_rand_dir  = $2CEC   ; ld a,r random direction
-tile_addr_actor = $30B3   ; enemy X/Y -> vram tile addr
-cat_water_die   = $2DD0   ; cat on $FE tile -> state 4, tile $1C, sound $95
-snake_water_die = $34B5   ; snake on $FE tile -> state 4, tile $2C, sound $95
-snake_mgr       = $3206   ; snakes A/B
-snake_ai        = $333F   ; per-enemy state engine (snakes)
-spawn_delay_sa  = $3315   ; level-indexed spawn delay table (snake A)
-spawn_delay_sb  = $332B   ; level-indexed spawn delay table (snake B)
-enemy_eaten_sm  = $394B
-player_vs_enemy = $392A
-bomb_update     = $100F   ; drop ($1046) / arm+detonate ($10ED) / explode ($110D)
-bomb_collide    = $116D   ; explosion AABB vs player + each cat/snake (enemy->state 6)
-boulder_update  = $41BC   ; boulder: spawn-on-touch / fall (boulder_y+=2, ROT90=>down) / despawn
-boulder_squash  = $3ACC   ; while boulder active: AABB-test it vs each enemy (boulder_vs_enemy=$3B74)
-boulder_vs_enemy = $3B74  ; AABB falling boulder ($801C) vs one enemy -> squash (state $04) on overlap
+; --- key routines (inline labels, not equates) ---
+copy_sprites        $062C ; DMA sprite_mirror ($8000) -> sprite_ram each frame
+score_add_apply     $063B ; apply pending score_add to score
+read_inputs         $0743 ; read joystick / coin inputs
+bomb_update         $100F ; drop ($1046) / arm+detonate ($10ED) / explode ($110D)
+draw_map            $1346 ; draw current maze: blit_rect tiles ($9043) + fill_rect color ($9443)
+blit_rect           $1360 ; copy b x c tile rect (de)->VRAM(hl), row stride $20 (general primitive)
+fill_rect           $1384 ; fill b x c rect at (hl) with byte a, row stride de (general primitive)
+bomb_collide        $116D ; explosion AABB vs player + each cat/snake (enemy->state 6)
+ingame_update       $23A0 ; per-frame game pipeline (state 6)
+level_end_seq       $23D3 ; run check_level_done, else end-level timer -> req_level_done
+check_level_done    $2429 ; all 9 food_returned slots nonzero? => start end-of-level sequence
+player_update       $2539 ; player state machine
+cat_mgr             $2A51 ; cats A/B/C
+cat_ai              $2C3E ; per-enemy state engine (cats)
+enemy_rand_dir      $2CEC ; ld a,r random direction
+enemy_chase         $2D0E ; steer toward player sprite ($8000/$8003)
+cat_water_die       $2DD0 ; cat on $FE tile -> state 4, tile $1C, sound $95
+food_pickup         $29C8 ; player over food tile ($DC-$EF) -> mark carried (food_state 0->2)
+snake_mgr           $3206 ; snakes A/B
+spawn_delay_sa      $3315 ; level-indexed spawn delay table (snake A)   [data table]
+spawn_delay_sb      $332B ; level-indexed spawn delay table (snake B)   [data table]
+snake_ai            $333F ; per-enemy state engine (snakes)
+snake_water_die     $34B5 ; snake on $FE tile -> state 4, tile $2C, sound $95
+player_vs_enemy     $392A ; AABB player sprite vs each enemy -> player death
+enemy_eaten_sm      $394B ; enemy death/return-home driver
+boulder_squash      $3ACC ; while boulder active: AABB-test it vs each enemy (boulder_vs_enemy=$3B74)
+boulder_vs_enemy    $3B74 ; AABB falling boulder ($801C) vs one enemy -> squash (state $04) on overlap
+food_maze_redraw    $3E29 ; repaint maze food from food_state (drops carried 2->0 on rebuild)
+food_set_state      $3EB2 ; find food piece at VRAM cell (hl), write reg c into its food_state
+food_return_add     $3EF2 ; append a carried-home piece to food_returned, draw it, +500 pts
+food_log_redraw     $3F36 ; repaint all food_returned entries to VRAM (maze rebuild/page swap)
+food_maze_erase     $3F62 ; blank carried (state 2) food cells in the maze (tile $25/$87)
+food_pos_tbl        $3FC6 ; per-maze food VRAM-cell pointer table (stride $12, 9x2)   [data table]
+platform_update     $407D ; sliding platform (slot 2), block $80A0-$80A8
+bridge_update       $3BFF ; bridge open/close tile animation, block $80C0-$80C7
+scripted_move       $3D0A ; scripted player move (home-entry), block $80E0-$80E7
+food_return_home    $4167 ; home-entry: log carried piece (food_return_add) + food_state 2->1
+boulder_update      $41BC ; boulder: spawn-on-touch / fall (boulder_y+=2, ROT90=>down) / despawn
 ```
+
+(`spawn_delay_sa`/`sb` and `food_pos_tbl` are *data tables*, but they are pointer-load targets
+reached by name — `ld bc,spawn_delay_sa` / `ld ix,food_pos_tbl` — so they carry an inline label
+at the table's first byte rather than an equate.)
 
 ---
 
@@ -708,32 +711,9 @@ boulder_vs_enemy = $3B74  ; AABB falling boulder ($801C) vs one enemy -> squash 
   `$39/$3A`=`TILE_BOULDER` (boulder rest cell; touch → boulder falls), `$F4`/`$EF`=cat walls, `$E1-$E4`=snake walls,
   `$FE`=open water/gap (enemy death; player enter-hole), `$F5`=exit/hole, `$FC`=bridge,
   `$F9`=sliding-platform, `$FF`=home-entry — see the §5 tile-effect table).
-- **Bridge & sliding-platform enemy death** — *resolved* (see §6 step 4 / §5). Player-side
-  triggers: bridge `$3BFF`/tile `$FC`, platform `$407D`/tile `$F9` (sprite slot 2). Enemy-side:
-  a cat/snake on an `$FE` cell is killed at `$2DD0`/`$34B5` → state 4, splash sound `$95`. The
-  bridge writes `$FE` from its open-tile block `$3BD7`. *Remaining*: confirm the sliding
-  platform likewise exposes `$FE` under the vacated gap (assumed, not yet traced tile-by-tile).
-- **Food carry-and-return mechanic** — *resolved* (see §5). `$8120` holds 9 per-piece states
-  (`0` uncollected / `2` carried / `1` returned). Pickup `0→2` at `$29C8` (tile range `$DC-$EF`,
-  carry-one-at-a-time via the `$809C-$80A0` block); return `2→1` at `$4167` (logs to `$8140` via
-  `$3EF2`, +500 pts); drop-on-death `2→0` at `$3E29`. `$2429` scans `$8140` and, when all 9 are
-  returned, starts the end-of-level sequence. *Remaining nuance*: the `$809C-$80A0` carried-food
-  block overlaps the sliding-platform block region (`$80A0+`, slot 2) — confirm how the carried
-  piece is actually drawn (shared slot 2?) vs the platform, and pin the exact maze "home base"
-  cell that triggers `$412F`→`$4167`.
 - **Player bomb subsystem** — *located* (`$100F`/`$116D`/`$8680`, see §5). Remaining detail:
   the exact meaning of the drop-gate maze-tile check (`$251B`+`$FFE2`, tile ≥ `$F0`) and
   the full explosion-stage tile/animation table (`$110D`).
-- **Boulder mechanics** — *resolved* (see §5, "Bomb and boulder"). It is the `$85C0` slot-7
-  object formerly mislabeled the "power-pellet / clear-enemies pickup". Player touches tile
-  `$39`/`$3A` (`TILE_BOULDER`) → `boulder_req` `$85C1`; `boulder_update` `$41BC` makes it **fall
-  straight down** (`boulder_y` `$85C6 += 2`/frame → sprite +3, which under ROT90 is physical
-  vertical; `boulder_x` `$85C5` constant); `boulder_squash` `$3ACC` → `boulder_vs_enemy` `$3B74`
-  AABB-tests it against each enemy and squashes (state `$04`) only the ones it overlaps; the
-  player sprite is never tested, so it can't hurt the player. (The `$8680` object is the **bomb**,
-  a separate button-triggered mechanic — do not conflate them.) *Remaining nuance*: confirm the
-  two spawn cells sit literally atop the edge ladders (only proven to be one-per-screen-half via
-  `player_x ≷ $80`), and pin the `$85C2`/`$85C3` spawn-temp vs `$85C4` init-flag fields.
 - **`$8480` bonus subsystem** field semantics (handler `$4247`).
 - Snake manager (`$3206`) internals were inferred as a twin of the cat manager — verify
   directly, and confirm what actually distinguishes cats from snakes (graphics only, or
@@ -745,4 +725,6 @@ boulder_vs_enemy = $3B74  ; AABB falling boulder ($801C) vs one enemy -> squash 
 ### How to extend
 1. Pick a routine/region from §7 or an open question.
 2. Grep its address as an operand; re-decode by hand if it sits after a data block (§2).
-3. Add confirmed `name = $addr` equates + comments to `explore_funny.asm`, and update this file.
+3. Label it in `funnymou.asm` per §9: an **inline label** at the address for a code entry point
+   (and swap obvious `$addr` operand refs → the name), or an **equate** for a RAM/HW/constant
+   address. Verify with `./build.sh` (all 5 shasum pairs must match), then update this file.

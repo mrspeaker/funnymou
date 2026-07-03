@@ -1,11 +1,24 @@
 #!/bin/bash
+
+set -e
+
+# clear previous output
+echo "clean:     go."
 rm -rf zout
 
+# chop off listing 16 chars
 cut -c 16- funnymou.asm > src.asm
+
+# compile to un-annotated bytes
+echo -n "compile:   "
+#zmac -j -c -n --oo cim,lst bongo.asm
 zmac -c -n src.asm
+echo "go."
+
 split -b4k zout/src.cim zout/f
 
-# cmp -l -x dump/suprmous.x1 zout/faa
+# Test which bits are diff:
+# cmp  -l -x dump/bg1.bin zout/bg1
 
 f1a=`shasum zout/faa | sed 's/.*=.//g'`
 f1b=`shasum dump/suprmous.x1 | sed 's/.*=.//g'`
