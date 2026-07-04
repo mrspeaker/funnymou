@@ -6741,7 +6741,7 @@ _
 
 3E29  212081  	    ld   hl,food_state
 3E2C  DD21C63F	    ld   ix,food_pos_tbl
-3E30  FD210E40	    ld   iy,$400E
+3E30  FD210E40	    ld   iy,food_gfx_ptr_tbl
 3E34  111200  	    ld   de,$0012
 3E37  3A0181  	    ld   a,(cur_map)
 3E3A  E603    	    and  $03
@@ -7024,108 +7024,21 @@ _
 400B  93      	    sub  e
 400C  54      	    ld   d,h
 400D  93      	    sub  e
-400E  5D      	    ld   e,l
-400F  40      	    ld   b,b
-4010  62      	    ld   h,d
-4011  40      	    ld   b,b
-4012  67      	    ld   h,a
-4013  40      	    ld   b,b
-4014  6C      	    ld   l,h
-4015  40      	    ld   b,b
-4016  71      	    ld   (hl),c
-4017  40      	    ld   b,b
-4018  5D      	    ld   e,l
-4019  40      	    ld   b,b
-401A  62      	    ld   h,d
-401B  40      	    ld   b,b
-401C  67      	    ld   h,a
-401D  40      	    ld   b,b
-401E  6C      	    ld   l,h
-401F  40      	    ld   b,b
-4020  71      	    ld   (hl),c
-4021  40      	    ld   b,b
-4022  5D      	    ld   e,l
-4023  40      	    ld   b,b
-4024  62      	    ld   h,d
-4025  40      	    ld   b,b
-4026  67      	    ld   h,a
-4027  40      	    ld   b,b
-4028  6C      	    ld   l,h
-4029  40      	    ld   b,b
-402A  71      	    ld   (hl),c
-402B  40      	    ld   b,b
-402C  5D      	    ld   e,l
-402D  40      	    ld   b,b
-402E  62      	    ld   h,d
-402F  40      	    ld   b,b
-4030  67      	    ld   h,a
-4031  40      	    ld   b,b
-4032  6C      	    ld   l,h
-4033  40      	    ld   b,b
-4034  71      	    ld   (hl),c
-4035  40      	    ld   b,b
-4036  5D      	    ld   e,l
-4037  40      	    ld   b,b
-4038  62      	    ld   h,d
-4039  40      	    ld   b,b
-403A  67      	    ld   h,a
-403B  40      	    ld   b,b
-403C  6C      	    ld   l,h
-403D  40      	    ld   b,b
-403E  71      	    ld   (hl),c
-403F  40      	    ld   b,b
-4040  5D      	    ld   e,l
-4041  40      	    ld   b,b
-4042  62      	    ld   h,d
-4043  40      	    ld   b,b
-4044  67      	    ld   h,a
-4045  40      	    ld   b,b
-4046  6C      	    ld   l,h
-4047  40      	    ld   b,b
-4048  71      	    ld   (hl),c
-4049  40      	    ld   b,b
-404A  5D      	    ld   e,l
-404B  40      	    ld   b,b
-404C  62      	    ld   h,d
-404D  40      	    ld   b,b
-404E  67      	    ld   h,a
-404F  40      	    ld   b,b
-4050  6C      	    ld   l,h
-4051  40      	    ld   b,b
-4052  71      	    ld   (hl),c
-4053  40      	    ld   b,b
-4054  5D      	    ld   e,l
-4055  40      	    ld   b,b
-4056  00      	    nop
-4057  00      	    nop
-4058  00      	    nop
-4059  00      	    nop
-405A  00      	    nop
-405B  00      	    nop
-405C  00      	    nop
-405D  E0      	    ret  po
-405E  E1      	    pop  hl
-405F  E2E387  	    jp   po,$87E3
-4062  E4E5E6  	    call po,$E6E5
-4065  E7      	    rst  $20
-4066  87      	    add  a,a
-4067  E8      	    ret  pe
-4068  E9      	    jp   (hl)
-4069  EAEB87  	    jp   pe,$87EB
-406C  ECEDEE  	    call pe,$EEED
-406F  EF      	    rst  $28
-4070  87      	    add  a,a
-4071  DCDDDE  	    call c,$DEDD
-4074  DF      	    rst  $18
-4075  87      	    add  a,a
-4076  00      	    nop
-4077  00      	    nop
-4078  00      	    nop
-4079  00      	    nop
-407A  00      	    nop
-407B  00      	    nop
-407C  00      	    nop
-
+                food_gfx_ptr_tbl: ; per-maze 9x 2-byte LE ptr into food_gfx_data (stride $12)
+400E               db   $5D, $40, $62, $40, $67, $40, $6C, $40, $71, $40, $5D, $40, $62, $40, $67, $40, $6C, $40  ; maze 0: 9 food-graphic pointers
+4020               db   $71, $40, $5D, $40, $62, $40, $67, $40, $6C, $40, $71, $40, $5D, $40, $62, $40, $67, $40  ; maze 1: 9 food-graphic pointers
+4032               db   $6C, $40, $71, $40, $5D, $40, $62, $40, $67, $40, $6C, $40, $71, $40, $5D, $40, $62, $40  ; maze 2: 9 food-graphic pointers
+4044               db   $67, $40, $6C, $40, $71, $40, $5D, $40, $62, $40, $67, $40, $6C, $40, $71, $40, $5D, $40  ; maze 3: 9 food-graphic pointers
+                ; -- padding --
+4056               db   $00, $00, $00, $00, $00, $00, $00
+                food_gfx_data: ; 5 food types x [2x2 tile block ($DC-$EF) + color $87]
+405D               db   $E0, $E1, $E2, $E3, $87                             ; food type 0: tiles $E0-$E3, color $87
+4062               db   $E4, $E5, $E6, $E7, $87                             ; food type 1: tiles $E4-$E7, color $87
+4067               db   $E8, $E9, $EA, $EB, $87                             ; food type 2: tiles $E8-$EB, color $87
+406C               db   $EC, $ED, $EE, $EF, $87                             ; food type 3: tiles $EC-$EF, color $87
+4071               db   $DC, $DD, $DE, $DF, $87                             ; food type 4: tiles $DC-$DF, color $87
+                ; -- padding --
+4076               db   $00, $00, $00, $00, $00, $00, $00
 407D  3AA080  	    ld   a,(carrying_1)
 4080  A7      	    and  a
 4081  C2A940  	    jp   nz,$40A9

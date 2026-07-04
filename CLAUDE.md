@@ -651,7 +651,10 @@ $1FD1-$3FB3 : CODE  main engine (state dispatch $1FD1, actor/AI engine, collisio
                     embedded data: $2342-$2390 display list; player_init_template $246C-$2499
                     (46B, ldir'd to $8400) + pad $249A; attract_demo_script $249B-$24FC
                     (FF-terminated joystick script, $0F-prefixed byte pairs); misc delta tables
-$3FB4-$407C : DATA  VRAM-position pointer tables (ix=$3FB4/$3FC6, stride $12/$20) + small jump table
+$3FB4-$407C : DATA  food-display tables: food_home_pos_tbl ($3FB4), food_pos_tbl ($3FC6),
+                    food_gfx_ptr_tbl ($400E, per-maze ptrs), food_gfx_data ($405D, 5 food
+                    2x2 tile blocks). NOT a jump table — the "jp (hl)" the linear disasm shows
+                    at $4068 is a food tile byte ($E9) misread as an opcode.
 $407D-$44FD : CODE  score/status display + game logic
 $44FE-$4558 : DATA  parameter + VRAM-address tables + direction map
 $4559-$4919 : CODE  display/text routines
@@ -693,7 +696,8 @@ baked-in **address column (cols 1–15) went stale** (e.g. shows `$13B8` where t
   `$219E/$21CA/$21F6/$2204/$2284/$200A/$20B3/$20D9`.
 - **`$130B`** — level→maze-bank selector: `($8101 & 3)` → `$1391/$16A1/$19B1/$1CC1`.
 - **`food_home_pos_tbl` `$3FB4`** (9× returned-food home HUD slots) / **`food_pos_tbl` `$3FC6`** — 2-byte LE VRAM-position pointer tables.
-- Computed `jp (hl)` sites: `$11D8`, `$3B98`, `$4068`.
+- Computed `jp (hl)` sites: `$11D8`, `$3B98`. (`$4068` is **not** one — it's food data `$E9`
+  in `food_gfx_data` misdecoded as `jp (hl)`.)
 
 
 ## 9. Labeling workflow
@@ -764,6 +768,8 @@ food_log_redraw     $3F36 ; repaint all food_returned entries to VRAM (maze rebu
 food_maze_erase     $3F62 ; blank carried (state 2) food cells in the maze (tile $25/$87)
 food_home_pos_tbl   $3FB4 ; 9x 2-byte LE VRAM cells = returned-food 'home' HUD slots   [data table]
 food_pos_tbl        $3FC6 ; per-maze food VRAM-cell pointer table (stride $12, 9x2)   [data table]
+food_gfx_ptr_tbl    $400E ; per-maze 9x 2-byte LE ptr into food_gfx_data (stride $12)  [data table]
+food_gfx_data       $405D ; 5 food types x [2x2 tile block $DC-$EF + color $87]        [data table]
 platform_update     $407D ; sliding platform (slot 2), block $80A0-$80A8
 bridge_update       $3BFF ; bridge open/close tile animation, block $80C0-$80C7
 scripted_move       $3D0A ; scripted player move (home-entry), block $80E0-$80E7

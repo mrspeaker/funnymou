@@ -6741,7 +6741,7 @@ mthing
 
     ld   hl,food_state
     ld   ix,food_pos_tbl
-    ld   iy,$400E
+    ld   iy,food_gfx_ptr_tbl
     ld   de,$0012
     ld   a,(cur_map)
     and  $03
@@ -7024,108 +7024,21 @@ mthing
     sub  e
     ld   d,h
     sub  e
-    ld   e,l
-    ld   b,b
-    ld   h,d
-    ld   b,b
-    ld   h,a
-    ld   b,b
-    ld   l,h
-    ld   b,b
-    ld   (hl),c
-    ld   b,b
-    ld   e,l
-    ld   b,b
-    ld   h,d
-    ld   b,b
-    ld   h,a
-    ld   b,b
-    ld   l,h
-    ld   b,b
-    ld   (hl),c
-    ld   b,b
-    ld   e,l
-    ld   b,b
-    ld   h,d
-    ld   b,b
-    ld   h,a
-    ld   b,b
-    ld   l,h
-    ld   b,b
-    ld   (hl),c
-    ld   b,b
-    ld   e,l
-    ld   b,b
-    ld   h,d
-    ld   b,b
-    ld   h,a
-    ld   b,b
-    ld   l,h
-    ld   b,b
-    ld   (hl),c
-    ld   b,b
-    ld   e,l
-    ld   b,b
-    ld   h,d
-    ld   b,b
-    ld   h,a
-    ld   b,b
-    ld   l,h
-    ld   b,b
-    ld   (hl),c
-    ld   b,b
-    ld   e,l
-    ld   b,b
-    ld   h,d
-    ld   b,b
-    ld   h,a
-    ld   b,b
-    ld   l,h
-    ld   b,b
-    ld   (hl),c
-    ld   b,b
-    ld   e,l
-    ld   b,b
-    ld   h,d
-    ld   b,b
-    ld   h,a
-    ld   b,b
-    ld   l,h
-    ld   b,b
-    ld   (hl),c
-    ld   b,b
-    ld   e,l
-    ld   b,b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ret  po
-    pop  hl
-    jp   po,$87E3
-    call po,$E6E5
-    rst  $20
-    add  a,a
-    ret  pe
-    jp   (hl)
-    jp   pe,$87EB
-    call pe,$EEED
-    rst  $28
-    add  a,a
-    call c,$DEDD
-    rst  $18
-    add  a,a
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-
+ food_gfx_ptr_tbl: ; per-maze 9x 2-byte LE ptr into food_gfx_data (stride $12)
+    db   $5D, $40, $62, $40, $67, $40, $6C, $40, $71, $40, $5D, $40, $62, $40, $67, $40, $6C, $40  ; maze 0: 9 food-graphic pointers
+    db   $71, $40, $5D, $40, $62, $40, $67, $40, $6C, $40, $71, $40, $5D, $40, $62, $40, $67, $40  ; maze 1: 9 food-graphic pointers
+    db   $6C, $40, $71, $40, $5D, $40, $62, $40, $67, $40, $6C, $40, $71, $40, $5D, $40, $62, $40  ; maze 2: 9 food-graphic pointers
+    db   $67, $40, $6C, $40, $71, $40, $5D, $40, $62, $40, $67, $40, $6C, $40, $71, $40, $5D, $40  ; maze 3: 9 food-graphic pointers
+ ; -- padding --
+    db   $00, $00, $00, $00, $00, $00, $00
+ food_gfx_data: ; 5 food types x [2x2 tile block ($DC-$EF) + color $87]
+    db   $E0, $E1, $E2, $E3, $87                             ; food type 0: tiles $E0-$E3, color $87
+    db   $E4, $E5, $E6, $E7, $87                             ; food type 1: tiles $E4-$E7, color $87
+    db   $E8, $E9, $EA, $EB, $87                             ; food type 2: tiles $E8-$EB, color $87
+    db   $EC, $ED, $EE, $EF, $87                             ; food type 3: tiles $EC-$EF, color $87
+    db   $DC, $DD, $DE, $DF, $87                             ; food type 4: tiles $DC-$DF, color $87
+ ; -- padding --
+    db   $00, $00, $00, $00, $00, $00, $00
     ld   a,(carrying_1)
     and  a
     jp   nz,$40A9
