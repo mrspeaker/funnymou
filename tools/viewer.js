@@ -25,6 +25,30 @@ const LEVEL_ADDR = [0x1391, 0x16A1, 0x19B1, 0x1CC1];// level_1..4_map
 const JUNC_X = [0x14, 0x34, 0x54, 0x74, 0x94, 0xB4, 0xD4];
 const JUNC_Y = [0x22, 0x42, 0x62, 0x82, 0xA2, 0xC2, 0xE2];
 
+// Per-maze food tables (see CLAUDE.md §5), stride $12 per maze, indexed by
+// (cur_map & 3), 9 pieces of 2 bytes each:
+//   FOOD_POS $3FC6 = VRAM cell (top-left of the 2x2 block) — a literal draw
+//                    address, so it maps to a maze cell directly via -$9043.
+//   FOOD_GFX $400E = pointer to the 2x2 graphic: 4 consecutive tile codes
+//                    [t0 t1; t2 t3] followed by a colour byte. Deterministic:
+//                    5 fruit graphics ($405D/$4062/$4067/$406C/$4071) cycled
+//                    across the 9 slots — food is never random.
+const FOOD_POS = 0x3FC6, FOOD_GFX = 0x400E, FOOD_STRIDE = 0x12, FOOD_COUNT = 9;
+
+// Actors, from their ROM init templates (spawn X/Y = record +$06/+$07 for the
+// player, +$08/+$09 for enemies; enemy tile = +$04; enemy sprite colour is the
+// constant $06 committed at $309C -> group 2, player colour $05 -> group 1).
+// Sprite codes are 16x16 (gfx bank offset $800): mouse walk $00-$03, cat $1C-$1F,
+// snake $2C-$2F. Spawns all sit on the junction lattice. (snake B shares snake A's
+// spawn cell for staggered entry, so it is not drawn separately.)
+const ACTORS = [
+  { name: 'mouse',   x: 0x74, y: 0xC2, code: 0x00, group: 1 },
+  { name: 'cat A',   x: 0xB4, y: 0x42, code: 0x1C, group: 2 },
+  { name: 'cat B',   x: 0x34, y: 0x42, code: 0x1C, group: 2 },
+  { name: 'cat C',   x: 0x34, y: 0xC2, code: 0x1C, group: 2 },
+  { name: 'snake',   x: 0xB4, y: 0xC2, code: 0x2C, group: 2 },
+];
+
 // Tile legend for the on-screen key (code -> [label, css color]).
 const LEGEND = [
   [0x25, 'floor',    '#000000'],
@@ -39,7 +63,7 @@ const LEGEND = [
 ];
 
 const state = { level: 0, tiles: null, palette: null, prog: null, scale: 3,
-                showJunc: false };
+                showJunc: false, showFood: false, showActors: false };
 
 const el = (id) => document.getElementById(id);
 
@@ -62,22 +86,44 @@ function getTilePos(x, y) {
   return ((0x90 + h) << 8) | l;
 }
 
-// The maze is blitted to VRAM $9043. Map each junction (X,Y) to a data-grid cell.
+// Map an actor game-space (X,Y) to the maze-data cell its sprite sits on.
+// get_tile_pos ($30B3) returns the tile the actor *reads* for its wall/water
+// check, offset from the corridor cell the sprite actually occupies; correct in
+// maze-data space by -1 row / +1 col (which, through the ROT90 cabinet view, reads
+// as "down 1, right 1" on screen). Verified against the ROM: this lays all 49
+// junction lattice points x 4 mazes onto the ladder-shaft columns ($F5) at the
+// decision rows. See CLAUDE.md §6.
+function posToCell(x, y) {
+  const off = getTilePos(x, y) - 0x9043;               // maze blitted to VRAM $9043
+  return [(off >> 5) - 1, (off & 0x1F) + 1];           // stride $20 per VRAM row
+}
+
+// The junction decision-lattice cells for the current maze (level-independent).
 function junctionCells() {
   const cells = [];
   for (const x of JUNC_X) for (const y of JUNC_Y) {
-    const off = getTilePos(x, y) - 0x9043;
-    // get_tile_pos ($30B3) returns the tile the enemy *reads* for its wall/water
-    // check, offset from the corridor cell its sprite actually sits on. Correct in
-    // maze-data space by -1 row / +1 col (which, through the ROT90 cabinet view,
-    // reads as "down 1, right 1" on screen). Verified against the ROM: this lays
-    // all 49 lattice points x 4 mazes onto the ladder-shaft columns ($F5) at the
-    // decision rows. See CLAUDE.md §6.
-    const r = (off >> 5) - 1;                            // stride $20 per VRAM row
-    const c = (off & 0x1F) + 1;
+    const [r, c] = posToCell(x, y);
     if (r >= 0 && r < MAZE_H && c >= 0 && c < MAZE_W) cells.push([r, c]);
   }
   return cells;
+}
+
+// The 9 food pieces for the current level's maze: cell (top-left of the 2x2
+// block) plus the 4 tile codes of its fruit graphic, read from the ROM tables.
+function foodPieces() {
+  const mz = state.level & 3;
+  const pbase = FOOD_POS + mz * FOOD_STRIDE, gbase = FOOD_GFX + mz * FOOD_STRIDE;
+  const pieces = [];
+  for (let i = 0; i < FOOD_COUNT; i++) {
+    const vram = state.prog[pbase + i * 2] | (state.prog[pbase + i * 2 + 1] << 8);
+    const off = vram - 0x9043;
+    const r = off >> 5, c = off & 0x1F;
+    const gfx = state.prog[gbase + i * 2] | (state.prog[gbase + i * 2 + 1] << 8);
+    const tiles = [state.prog[gfx], state.prog[gfx + 1],
+                   state.prog[gfx + 2], state.prog[gfx + 3]];
+    if (r >= 0 && r < MAZE_H && c >= 0 && c < MAZE_W) pieces.push({ r, c, tiles });
+  }
+  return pieces;
 }
 
 // Build 32-entry RGB palette exactly like suprmous_palette().
@@ -112,9 +158,64 @@ function decodeTiles(p0, p1, p2) {
   return tiles;
 }
 
+// Decode all 64 sprites (suprmous_spritelayout: 16x16, 3bpp, gfx byte offset
+// $0800, 32 bytes each) into Uint8Array(256) pixel-value (0-7) buffers.
+function decodeSprites(p0, p1, p2) {
+  const planes = [p0, p1, p2];
+  const yoff = [], xoff = [];
+  for (let y = 0; y < 8; y++) yoff.push(y * 8);        // STEP8(0,8)
+  for (let y = 0; y < 8; y++) yoff.push(128 + y * 8);  // STEP8(16*8,8)
+  for (let x = 0; x < 8; x++) xoff.push(x);            // STEP8(0,1)
+  for (let x = 0; x < 8; x++) xoff.push(64 + x);       // STEP8(8*8,1)
+  const sprites = [];
+  for (let n = 0; n < 64; n++) {
+    const base = 0x800 + n * 32, px = new Uint8Array(256);
+    for (let y = 0; y < 16; y++) {
+      for (let x = 0; x < 16; x++) {
+        const b = yoff[y] + xoff[x], byte = base + (b >> 3), bit = 7 - (b & 7);
+        let v = 0;
+        for (let p = 0; p < 3; p++) v |= ((planes[p][byte] >> bit) & 1) << p;
+        px[y * 16 + x] = v;
+      }
+    }
+    sprites.push(px);
+  }
+  return sprites;
+}
+
+// Paint a 16x16 sprite (palette group `grp`) into native ImageData `d` at native
+// top-left pixel (ox, oy). Pixel value 0 is transparent (hardware transpen 0).
+function paintSprite(d, S, code, grp, ox, oy) {
+  const spr = state.sprites[code & 0x3f];
+  for (let y = 0; y < 16; y++) {
+    for (let x = 0; x < 16; x++) {
+      const v = spr[y * 16 + x];
+      if (v === 0) continue;
+      const X = ox + x, Y = oy + y;
+      if (X < 0 || X >= S || Y < 0 || Y >= S) continue;
+      const [r, g, b] = state.palette[grp * 8 + v];
+      const idx = (Y * S + X) * 4;
+      d[idx] = r; d[idx + 1] = g; d[idx + 2] = b; d[idx + 3] = 255;
+    }
+  }
+}
+
 function currentMaze() {
   const base = LEVEL_ADDR[state.level];
   return state.prog.subarray(base, base + MAZE_BYTES);
+}
+
+// Paint one 8x8 tile (using foreground palette group) into native ImageData `d`
+// at maze cell (cellRow, cellCol). `S` is the buffer's pixel width.
+function paintTile(d, S, tileIdx, cellRow, cellCol) {
+  const tile = state.tiles[tileIdx];
+  for (let py = 0; py < 8; py++) {
+    for (let px = 0; px < 8; px++) {
+      const [r, g, b] = state.palette[FORE_GROUP * 8 + tile[py * 8 + px]];
+      const idx = (((cellRow * 8 + py) * S) + (cellCol * 8 + px)) * 4;
+      d[idx] = r; d[idx + 1] = g; d[idx + 2] = b; d[idx + 3] = 255;
+    }
+  }
 }
 
 function render() {
@@ -124,18 +225,27 @@ function render() {
   // 1) paint the maze into a native-resolution ImageData.
   const buf = new ImageData(S, S);
   const d = buf.data;
-  for (let row = 0; row < MAZE_H; row++) {
-    for (let col = 0; col < MAZE_W; col++) {
-      const tile = state.tiles[maze[row * MAZE_W + col]];
-      for (let py = 0; py < 8; py++) {
-        for (let px = 0; px < 8; px++) {
-          const [r, g, b] = state.palette[FORE_GROUP * 8 + tile[py * 8 + px]];
-          const idx = (((row * 8 + py) * S) + (col * 8 + px)) * 4;
-          d[idx] = r; d[idx + 1] = g; d[idx + 2] = b; d[idx + 3] = 255;
-        }
-      }
+  for (let row = 0; row < MAZE_H; row++)
+    for (let col = 0; col < MAZE_W; col++)
+      paintTile(d, S, maze[row * MAZE_W + col], row, col);
+
+  // 1b) draw the real food graphics (2x2 fruit blocks) over their floor cells,
+  //     exactly as food_maze_redraw ($3E29) blits them at runtime.
+  if (state.showFood)
+    for (const { r, c, tiles } of foodPieces()) {
+      paintTile(d, S, tiles[0], r,     c);
+      paintTile(d, S, tiles[1], r,     c + 1);
+      paintTile(d, S, tiles[2], r + 1, c);
+      paintTile(d, S, tiles[3], r + 1, c + 1);
     }
-  }
+
+  // 1c) draw the actor sprites (mouse / cats / snake) at their spawn cells. The
+  //     16x16 sprite is centred on the cell centre (cell*8 + 4).
+  if (state.showActors)
+    for (const { x, y, code, group } of ACTORS) {
+      const [r, c] = posToCell(x, y);
+      paintSprite(d, S, code, group, c * TILE - 4, r * TILE - 4);
+    }
 
   // 2) blit native ImageData onto an offscreen, then scale (crisp) to the canvas.
   const off = document.createElement('canvas');
@@ -165,6 +275,17 @@ function render() {
     }
   }
 
+  // 3b) thin locator outline around each food block, so the fruit graphics
+  //     (already painted into the maze in step 1b) are easy to spot.
+  if (state.showFood) {
+    ctx.strokeStyle = 'rgba(255,214,64,0.9)';
+    ctx.lineWidth = Math.max(1, scale);
+    const box = 2 * TILE * scale, o = ctx.lineWidth / 2;
+    for (const { r, c } of foodPieces()) {
+      ctx.strokeRect(c * TILE * scale - o, r * TILE * scale - o, box + 2 * o, box + 2 * o);
+    }
+  }
+
   // 4) cabinet ROT90 view via CSS transform (native game is rotated 90° CW).
   cv.style.transform = 'rotate(90deg)';
 
@@ -185,6 +306,8 @@ function wire() {
   el('prev').onclick = () => { if (state.level > 0) { state.level--; render(); } };
   el('next').onclick = () => { if (state.level < LEVEL_ADDR.length - 1) { state.level++; render(); } };
   el('junctions').onchange = (e) => { state.showJunc = e.target.checked; render(); };
+  el('food').onchange = (e) => { state.showFood = e.target.checked; render(); };
+  el('actors').onchange = (e) => { state.showActors = e.target.checked; render(); };
   el('scale').oninput = (e) => { state.scale = +e.target.value; render(); };
   document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') el('prev').click();
@@ -207,6 +330,7 @@ async function main() {
     state.prog = prog;
 
     state.tiles = decodeTiles(x8, x9, x7);   // planes: x8=bit0, x9=bit1, x7=bit2
+    state.sprites = decodeSprites(x8, x9, x7);
     state.palette = buildPalette(clr2, clr1);
 
     buildLegend();

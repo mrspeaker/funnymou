@@ -37,6 +37,7 @@ This repo is a **reverse-engineering / documentation project** for the arcade ga
 | `funnymou.org` | MAME ROM defs + `thepit_main_map` + preliminary memory map. |
 | `dump/` | Raw ROM/PROM images (`sm.6`, `suprmous.x*`, `*.clr`). |
 | `thepit/` | MAME driver source for the hardware (`thepit.cpp`/`.h`, `thepit_v.cpp`). Authoritative HW ref. Confirms `funnymou` runs **ROT90** (`thepit.cpp:1474`). |
+| `tools/` | Browser **level viewer** (`index.html`+`viewer.js`) — decodes the 4 maze banks, chars & 16×16 sprites, and PROM palette straight from `tools/rom/` (full ROM set) exactly as MAME does. ROT90 cabinet view; toggles for the AI junction lattice (§6), food spawns (§5), and actor sprites (mouse/cats/snake at spawn). |
 
 ### Build & edit rules
 `funnymou.asm` is **zmac listing baked into the source**: columns **1–15** of every line are an
@@ -109,9 +110,33 @@ Main CPU: **Z80**. Source: `funnymou.org` + `thepit/thepit_v.cpp`.
 ### Sprite RAM format (`$9840`, and the `$8000` mirror — see §5)
 4 bytes per sprite:
 - `+0` = **Y** (displayed as `240 - value`)
-- `+1` = tile code (bits 0-5) | flipX (bit 6) | flipY (bit 7)
+- `+1` = **sprite code (bits 0-5)** | flipX (bit 6) | flipY (bit 7)
 - `+2` = color (priority = bit 3)
 - `+3` = **X** (displayed as `value + 1`)
+
+Draw (`thepit_v.cpp:draw_sprites`): code = `spriteram[+1] & 0x3F`, color = `spriteram[+2]`,
+flipX/Y = bits 6/7; slots 0-3 drawn one pixel down. Note `+0`/`+3` hold **HW Y/X**; under
+ROT90 those are game-**X**/**Y** respectively (see §5).
+
+### Sprite / char graphics format (gfx ROMs `x8`/`x9`/`x7`)
+The gfx ROMs are **3 bitplanes** (`suprmous.x8`=bit0, `x9`=bit1, `x7`=bit2), each `$1000`
+bytes, giving pixel values 0-7 (0 = transparent for sprites — hardware transpen 0). Palette
+group = `color % 4` (gfx has 4 color sets, granularity 8): pen = `group*8 + pixelvalue`. Per
+`gfx_suprmous` (`thepit.cpp:743`):
+- **Chars** (`suprmous_charlayout`): **8×8**, 256 of them, gfx byte offset **`$0000`**
+  (`$000-$7FF`), 8 bytes each. These are the tilemap tiles ($9000 VRAM codes).
+- **Sprites** (`suprmous_spritelayout`): **16×16**, 64 of them, gfx byte offset **`$0800`**
+  (`$800-$FFF`), 32 bytes each. Sprite code *n* → gfx byte `$800 + n*32`. Row/col bit layout:
+  y ∈ `{0,8,…,56}` then `{128,…,184}`, x ∈ `{0,…,7}` then `{64,…,71}` (MSB-first per byte).
+
+**Actor sprite codes** (from the ROM init templates + confirmed by decoding the gfx):
+- **Mouse** (player): walk `$00-$03` (horizontal, orient base `$8414`=`$00`; `$80`=flipX for
+  right), climb `$08-$0B` (vertical, orient `$08`); respawn/death frames `$0C-$0F`. **Color
+  group 1** (player color `$8412`=`$05`).
+- **Cat**: `$1C-$1F` (base tile `$1C`). **Snake**: `$2C-$2F` (base tile `$2C`).
+  **All enemies use color `$06` → group 2**: the shared commit `$309C` writes the *constant*
+  `$06` into sprite `+2` (`ld (hl),$06`), so enemy colour is not a per-record field.
+- Not actors: sprites **`$28-$2B` = the "100/200/400/800" score-popup digits**.
 
 ---
 
@@ -240,7 +265,7 @@ Bases: **`$8510`, `$8550`, `$8570`** (cats A/B/C, page-$85 manager `$2A51`) and
 |-----|---------|
 | +$00 | step/move counter |
 | +$03 | sprite-slot link (low byte of `$80xx` mirror addr: `$05`/`$0D`/`$11`/`$15`/`$19`) |
-| +$04 | base tile (+flip) → sprite +1 |
+| +$04 | base **sprite code** (+flip) → sprite +1 (6-bit); cats `$1C`, snakes `$2C` at spawn |
 | +$07 | **AI state**: 1=appear/emerge (→3 when emerge-ctr `+$13`≥`$80`), 3=active chase (only active state), 4=dying/return start, 5/6/7=return-home→respawn |
 | +$08 | **X** (game-logic, joystick axis) → sprite +0 (HW-Y; ROT90). funnymou `cat1_x`=`$8518` |
 | +$09 | **Y** (game-logic) → sprite +3 (HW-X; ROT90). funnymou `cat1_y`=`$8519` |
@@ -321,7 +346,7 @@ increases exactly as `player_y` does when you push down).
 `$8601`/`$8603`) it calls **`boulder_vs_enemy` `$3B74`**: an **AABB overlap test** of the falling
 boulder sprite (`$801C`) against that enemy's sprite (`iy`), comparing sprite +3 and +0 within a
 window; **only on overlap** does it `jp (hl)` into the kill template (`$3B26` cats / `$3B64`
-snakes) → state (+$07)=`$04`, splash tile (+$04)=`$1C`/`$2C`, busy-lock (+$1B)=`$01`. The
+snakes) → state (+$07)=`$04`, sprite code (+$04)=`$1C`/`$2C`, busy-lock (+$1B)=`$01`. The
 **player sprite is never tested**, so the boulder never hurts the player. (Earlier this was
 wrongly described as clearing *all* enemies with no overlap test — `$3B74` *is* the per-enemy
 overlap test.)
@@ -507,8 +532,9 @@ bytes, not VRAM. (The `$14…`/`$22…` values are position coordinates, *not* "
    (the "open water / gap" tile): **`$2DD0` for cats, twin `$34B5` for snakes**. On a match it
    kills the enemy — writes (relative to record base): **+$07 (state) = `$04`** (→ the
    dying/return handler `$30DD` / snake twin `$3710`), **+$1B (busy lock) = `$01`**, **+$04
-   (tile) = `$1C`** (cat splash) / **`$2C`** (snake splash), **+$0A = `$00`**, and latches
-   **splash sound `$95`**. The `$FE` cells are produced by the bridge opening (`$3BFF`; see §5)
+   (sprite code) = `$1C`** (cat) / **`$2C`** (snake) — these are the enemies' **base creature
+   sprites** (`$1C-$1F` cat, `$2C-$2F` snake; not a dedicated "splash" graphic — the death code
+   just resets to the base code), **+$0A = `$00`**, and latches **splash sound `$95`**. The `$FE` cells are produced by the bridge opening (`$3BFF`; see §5)
    or the sliding platform leaving a gap — so a pursuer that follows the player onto a bridge
    just as it opens is standing on `$FE` and dies. (The enemy passed the wall check in step 3
    when the cell was still solid `$FC`; the bridge opens while it is mid-cell.)
