@@ -216,13 +216,7 @@
 
                 ;;; ============ engine routines ============
 
-                    spawn_delay_sa  = $3315 ; level-indexed spawn-delay table (snake A)
-                    spawn_delay_sb  = $332B ; level-indexed spawn-delay table (snake B)
-                    snake_ai        = $333F ; per-enemy state engine (snakes)
                     snake_water_die = $34B5 ; snake on $FE tile -> state 4, splash tile $2C, sound $95
-
-                    enemy_eaten_sm  = $394B ; enemy death/return-home driver, award escalating points
-                    boulder_vs_enemy = $3B74 ; AABB overlap test: falling boulder ($801C) vs one enemy sprite -> kill on hit
 
                     food_pickup     = $29C8 ; player over food tile ($DC-$EF) -> mark carried (0->2)
                     food_maze_redraw = $3E29 ; repaint maze food from food_state (drops carried 2->0)
@@ -230,10 +224,8 @@
                     food_return_add = $3EF2 ; append carried-home piece to food_returned, +500 pts
                     food_log_redraw = $3F36 ; repaint all food_returned entries to VRAM
                     food_maze_erase = $3F62 ; blank carried (state 2) food cells (tile $25/$87)
-                    food_pos_tbl    = $3FC6 ; per-maze food vram-cell pointer table (stride $12, 9x2)
                     food_return_home = $4167 ; home-entry: log carried piece + food_state 2->1
 
-                    platform_update = $407D ; sliding platform (slot 2), block $80A0-$80A8
                     bridge_update   = $3BFF ; bridge open/close tile animation, block $80C0-$80C7
                     scripted_move   = $3D0A ; scripted player move (home-entry), block $80E0-$80E7
 
@@ -2641,6 +2633,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 212A  2C      	    inc  l
 212B  10FB    	    djnz $2128
 212D  C9      	    ret
+
                 draw_column: ; draw [VRAM_addr_LE, tiles.., $FF] column upward (-$20 stride)
 212E  5E      	    ld   e,(hl)
 212F  23      	    inc  hl
@@ -2655,6 +2648,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 213B  13      	    inc  de
 213C  09      	    add  hl,bc
 213D  18F7    	    jr   $2136
+
                 hiscore_compare: ; compare 3-byte score at (de) vs hiscore_hi (carry=lower)
 213F  214C80  	    ld   hl,hiscore_hi
 2142  D5      	    push de
@@ -2866,6 +2860,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 22FF  CBA7    	    res  4,a
 2301  323980  	    ld   (screen_state),a
 2304  C3D11F  	    jp   $1FD1
+
                 draw_player_lives: ; draw cur_player remaining lives (lives_copy) as tile $79 at $939F
 2307  3A3180  	    ld   a,(cur_player)
 230A  210082  	    ld   hl,lives_copy
@@ -2888,6 +2883,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 232A  19      	    add  hl,de
 232B  10FB    	    djnz $2328
 232D  C9      	    ret
+
                 draw_lives: ; draw active lives count as tile $79 icons at $939F
 232E  210081  	    ld   hl,lives
 2331  7E      	    ld   a,(hl)
@@ -2898,6 +2894,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 233B  A7      	    and  a
 233C  CA2823  	    jp   z,$2328
 233F  C31C23  	    jp   $231C
+
                 attract_display_list: ; [VRAM_addr_LE, text.., $FF] records, drawn by draw_column
 2342               db   $AE, $92, $18, $17, $15, $22, $24, $01              ; |..ONLY 1|
 234A               db   $24, $19, $15, $0A, $22, $0E, $1B, $FF              ; | PLAYER||
@@ -2978,6 +2975,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2423  3E01    	    ld   a,$01
 2425  323280  	    ld   (req_level_done),a
 2428  C9      	    ret
+
                 check_level_done:   ; all 9 food_returned set? -> start end-of-level seq
 2429  214081  	    ld   hl,food_returned
 242C  3E00    	    ld   a,$00
@@ -3461,6 +3459,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2839  C3D627  	    jp   $27D6
 283C  00      	    nop
 283D  C9      	    ret
+
                 player_stop_y: ; zero player y-speed (checks x-speed)
 283E  3E00    	    ld   a,$00
 2840  320984  	    ld   (player_sp_y),a
@@ -3473,6 +3472,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 284E  C31027  	    jp   $2710
 2851  00      	    nop
 2852  C9      	    ret
+
                 player_commit: ; commit player pos/tile into sprite mirror (checks $8422)
 2853  3A2284  	    ld   a,($8422)
 2856  A7      	    and  a
@@ -3597,6 +3597,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2945  3A0784  	    ld   a,(player_y)
 2948  32C385  	    ld   ($85C3),a
 294B  C9      	    ret
+
                 player_enter_hole: ; player on $FE -> $841F=4 (enter hole)
 294C  01E2FF  	    ld   bc,$FFE2
 294F  09      	    add  hl,bc
@@ -3606,6 +3607,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2954  3E04    	    ld   a,$04
 2956  321F84  	    ld   ($841F),a
 2959  C9      	    ret
+
                 player_home_entry: ; player on $FF over-hole -> scripted home entry $80E0, $841F=5
 295A  01E2FF  	    ld   bc,$FFE2
 295D  09      	    add  hl,bc
@@ -4147,6 +4149,7 @@ _
 2D0A  C0      	    ret  nz
 2D0B  3608    	    ld   (hl),$08
 2D0D  C9      	    ret
+
                 ;; enemy_chase: greedily steer this enemy one step toward the player.
                 ;; Corrects ONE axis per call, ALTERNATING via the axis-toggle byte at
                 ;; record +$12 (catN_axis):
@@ -4888,10 +4891,10 @@ _
 31C5  CDCF31  	    call load_level_ptr
 31C8  CD9C30  	    call enemy_sprite_commit
 31CB  C9      	    ret
+
 31CC  00      	    nop
 31CD  00      	    nop
 31CE  00      	    nop
-
 
                 load_level_ptr: ; load level-indexed 16-bit table ptr into enemy record
 31CF  E5      	    push hl
@@ -4942,6 +4945,7 @@ _
 3203  00      	    nop
 3204  00      	    nop
 3205  00      	    nop
+
                 snake_mgr:      ; snakes A/B
 3206  00      	    nop
 3207  00      	    nop
@@ -5020,33 +5024,11 @@ _
 328E  CD3F33  	    call snake_ai
 3291  C9      	    ret
     ;;
-                snake1_init_data:
-3292  00      	    nop
-3293  00      	    nop
-3294  00      	    nop
-3295  15      	    dec  d
-3296  2C      	    inc  l
-3297  00      	    nop
-3298  00      	    nop
-3299  01B4C2  	    ld   bc,$C2B4
-329C  00      	    nop
-329D  00      	    nop
-329E  00      	    nop
-329F  FF      	    rst  $38
-32A0  010001  	    ld   bc,$0100
-32A3  FF      	    rst  $38
-32A4  00      	    nop
-32A5  00      	    nop
-32A6  00      	    nop
-32A7  00      	    nop
-32A8  00      	    nop
-32A9  00      	    nop
-32AA  00      	    nop
-32AB  00      	    nop
-32AC  00      	    nop
-32AD  010000  	    ld   bc,$0000
-32B0  00      	    nop
-32B1  00      	    nop
+                snake1_init_data: ; ldir'd to snake A record $8610 (32 = $20 bytes): +07 state=1(appear), +04 code=$2C, +08 X=$B4, +09 Y=$C2, +1B busy=1
+3292               db   $00, $00, $00, $15, $2C, $00, $00, $01
+329A               db   $B4, $C2, $00, $00, $00, $FF, $01, $00
+32A2               db   $01, $FF, $00, $00, $00, $00, $00, $00
+32AA               db   $00, $00, $00, $01, $00, $00, $00, $00
 
                 setup_snake2:
 32B2  23      	    inc  hl
@@ -5068,33 +5050,11 @@ _
 32D3  CD3F33  	    call snake_ai
 32D6  C9      	    ret
 
-                snake2_init_data:
-32D7  00      	    nop
-32D8  00      	    nop
-32D9  00      	    nop
-32DA  19      	    add  hl,de
-32DB  2C      	    inc  l
-32DC  00      	    nop
-32DD  00      	    nop
-32DE  01B4C2  	    ld   bc,$C2B4
-32E1  00      	    nop
-32E2  00      	    nop
-32E3  00      	    nop
-32E4  FF      	    rst  $38
-32E5  010001  	    ld   bc,$0100
-32E8  FF      	    rst  $38
-32E9  00      	    nop
-32EA  00      	    nop
-32EB  00      	    nop
-32EC  00      	    nop
-32ED  00      	    nop
-32EE  00      	    nop
-32EF  00      	    nop
-32F0  00      	    nop
-32F1  00      	    nop
-32F2  010000  	    ld   bc,$0000
-32F5  00      	    nop
-32F6  00      	    nop
+                snake2_init_data: ; ldir'd to snake B record $8630 (32 = $20 bytes): +07 state=1(appear), +04 code=$2C, +08 X=$B4, +09 Y=$C2, +1B busy=1
+32D7               db   $00, $00, $00, $19, $2C, $00, $00, $01
+32DF               db   $B4, $C2, $00, $00, $00, $FF, $01, $00
+32E7               db   $01, $FF, $00, $00, $00, $00, $00, $00
+32EF               db   $00, $00, $00, $01, $00, $00, $00, $00
 
                 snake_spawn_delay: ; level-indexed snake spawn-delay lookup (spawn_delay_sa/sb)
 32F7  E5      	    push hl
@@ -5118,36 +5078,33 @@ _
 3312  23      	    inc  hl
 3313  70      	    ld   (hl),b
 3314  C9      	    ret
-3315  3001    	    jr   nc,$3318
-3317  00      	    nop
-3318  01B000  	    ld   bc,$00B0
-331B  70      	    ld   (hl),b
-331C  00      	    nop
-331D  3000    	    jr   nc,$331F
-331F  3000    	    jr   nc,$3321
-3321  3000    	    jr   nc,$3323
-3323  3000    	    jr   nc,$3325
-3325  3000    	    jr   nc,$3327
-3327  00      	    nop
-3328  00      	    nop
-3329  00      	    nop
-332A  00      	    nop
-332B  90      	    sub  b
-332C  03      	    inc  bc
-332D  2003    	    jr   nz,$3332
-332F  E0      	    ret  po
-3330  02      	    ld   (bc),a
-3331  A0      	    and  b
-3332  02      	    ld   (bc),a
-3333  60      	    ld   h,b
-3334  02      	    ld   (bc),a
-3335  40      	    ld   b,b
-3336  02      	    ld   (bc),a
-3337  2002    	    jr   nz,$333B
-3339  D0      	    ret  nc
-333A  019001  	    ld   bc,$0190
-333D  50      	    ld   d,b
-333E  00      	    nop
+
+                spawn_delay_sa: ; level-indexed spawn-delay table (snake A)
+3315               db   $30, $01   ; level 0: delay $0130
+3317               db   $00, $01   ; level 1: delay $0100
+3319               db   $B0, $00   ; level 2: delay $00B0
+331B               db   $70, $00   ; level 3: delay $0070
+331D               db   $30, $00   ; level 4: delay $0030
+331F               db   $30, $00   ; level 5: delay $0030
+3321               db   $30, $00   ; level 6: delay $0030
+3323               db   $30, $00   ; level 7: delay $0030
+3325               db   $30, $00   ; level 8: delay $0030
+3327               db   $00, $00   ; level 9: delay $0000
+3329               db   $00, $00   ; (padding, index clamps to level 9)
+
+                spawn_delay_sb: ; level-indexed spawn-delay table (snake B)
+332B               db   $90, $03   ; level 0: delay $0390
+332D               db   $20, $03   ; level 1: delay $0320
+332F               db   $E0, $02   ; level 2: delay $02E0
+3331               db   $A0, $02   ; level 3: delay $02A0
+3333               db   $60, $02   ; level 4: delay $0260
+3335               db   $40, $02   ; level 5: delay $0240
+3337               db   $20, $02   ; level 6: delay $0220
+3339               db   $D0, $01   ; level 7: delay $01D0
+333B               db   $90, $01   ; level 8: delay $0190
+333D               db   $50, $00   ; level 9: delay $0050
+
+                snake_ai:   ; per-enemy state engine (snakes)
 333F  7E      	    ld   a,(hl)
 3340  FE01    	    cp   $01
 3342  CA5F33  	    jp   z,$335F
@@ -6050,6 +6007,8 @@ _
 3944  CDD239  	    call player_vs_snakeA
 3947  CDED39  	    call player_vs_snakeB
 394A  C9      	    ret
+
+                enemy_eaten_sm: ; enemy death/return-home driver, award escalating points
 394B  CD083A  	    call return_catA
 394E  CD153A  	    call return_catB
 3951  CD223A  	    call return_catC
@@ -6057,6 +6016,7 @@ _
 3957  CD5D3A  	    call return_snakeB
 395A  CDCC3A  	    call boulder_squash
 395D  C9      	    ret
+
 395E  DD7E03  	    ld   a,(ix+$03)
 3961  FD4603  	    ld   b,(iy+$03)
 3964  94      	    sub  h
@@ -6320,6 +6280,8 @@ _
 3B70  EB      	    ex   de,hl
 3B71  3604    	    ld   (hl),$04
 3B73  C9      	    ret
+
+                boulder_vs_enemy:   ; AABB overlap test: falling boulder ($801C) vs one enemy sprite -> kill on hit
 3B74  DD211C80	    ld   ix,$801C
 3B78  D9      	    exx
 3B79  111008  	    ld   de,$0810
@@ -6965,65 +6927,12 @@ _
 3FC0               db   $FB, $91   ; slot 6: VRAM $91FB
 3FC2               db   $BB, $91   ; slot 7: VRAM $91BB
 3FC4               db   $DB, $91   ; slot 8: VRAM $91DB
-3FC6  C490DC  	    call nz,$DC90
-3FC9  90      	    sub  b
-3FCA  C8      	    ret  z
-3FCB  91      	    sub  c
-3FCC  48      	    ld   c,b
-3FCD  92      	    sub  d
-3FCE  50      	    ld   d,b
-3FCF  92      	    sub  d
-3FD0  D8      	    ret  c
-3FD1  92      	    sub  d
-3FD2  44      	    ld   b,h
-3FD3  93      	    sub  e
-3FD4  50      	    ld   d,b
-3FD5  93      	    sub  e
-3FD6  5C      	    ld   e,h
-3FD7  93      	    sub  e
-3FD8  C490CC  	    call nz,$CC90
-3FDB  90      	    sub  b
-3FDC  DC90C8  	    call c,$C890
-3FDF  91      	    sub  c
-3FE0  D49144  	    call nc,$4491
-3FE3  92      	    sub  d
-3FE4  D8      	    ret  c
-3FE5  92      	    sub  d
-3FE6  44      	    ld   b,h
-3FE7  93      	    sub  e
-3FE8  5C      	    ld   e,h
-3FE9  93      	    sub  e
-3FEA  C490CC  	    call nz,$CC90
-3FED  90      	    sub  b
-3FEE  D0      	    ret  nc
-3FEF  90      	    sub  b
-3FF0  DC90CC  	    call c,$CC90
-3FF3  91      	    sub  c
-3FF4  DC9248  	    call c,$4892
-3FF7  93      	    sub  e
-3FF8  54      	    ld   d,h
-3FF9  93      	    sub  e
-3FFA  58      	    ld   e,b
-3FFB  93      	    sub  e
-3FFC  C490CC  	    call nz,$CC90
 
-                ;;; ============ start of suprmous.x5 =============
-
-3FFF  90      	    sub  b
-4000  D0      	    ret  nc
-4001  90      	    sub  b
-4002  44      	    ld   b,h
-4003  91      	    sub  c
-4004  D0      	    ret  nc
-4005  91      	    sub  c
-4006  44      	    ld   b,h
-4007  93      	    sub  e
-4008  48      	    ld   c,b
-4009  93      	    sub  e
-400A  4C      	    ld   c,h
-400B  93      	    sub  e
-400C  54      	    ld   d,h
-400D  93      	    sub  e
+                food_pos_tbl:   ; per-maze food vram-cell pointer table (stride $12, 9x2)
+3FC6               db   $C4, $90, $DC, $90, $C8, $91, $48, $92, $50, $92, $D8, $92, $44, $93, $50, $93, $5C, $93  ; maze 0: $90C4 $90DC $91C8 $9248 $9250 $92D8 $9344 $9350 $935C
+3FD8               db   $C4, $90, $CC, $90, $DC, $90, $C8, $91, $D4, $91, $44, $92, $D8, $92, $44, $93, $5C, $93  ; maze 1: $90C4 $90CC $90DC $91C8 $91D4 $9244 $92D8 $9344 $935C
+3FEA               db   $C4, $90, $CC, $90, $D0, $90, $DC, $90, $CC, $91, $DC, $92, $48, $93, $54, $93, $58, $93  ; maze 2: $90C4 $90CC $90D0 $90DC $91CC $92DC $9348 $9354 $9358
+3FFC               db   $C4, $90, $CC, $90, $D0, $90, $44, $91, $D0, $91, $44, $93, $48, $93, $4C, $93, $54, $93  ; maze 3: $90C4 $90CC $90D0 $9144 $91D0 $9344 $9348 $934C $9354
                 food_gfx_ptr_tbl: ; per-maze 9x 2-byte LE ptr into food_gfx_data (stride $12)
 400E               db   $5D, $40, $62, $40, $67, $40, $6C, $40, $71, $40, $5D, $40, $62, $40, $67, $40, $6C, $40  ; maze 0: 9 food-graphic pointers
 4020               db   $71, $40, $5D, $40, $62, $40, $67, $40, $6C, $40, $71, $40, $5D, $40, $62, $40, $67, $40  ; maze 1: 9 food-graphic pointers
@@ -7039,6 +6948,8 @@ _
 4071               db   $DC, $DD, $DE, $DF, $87                             ; food type 4: tiles $DC-$DF, color $87
                 ; -- padding --
 4076               db   $00, $00, $00, $00, $00, $00, $00
+
+                platform_update:    ; sliding platform (slot 2), block $80A0-$80A8
 407D  3AA080  	    ld   a,(carrying_1)
 4080  A7      	    and  a
 4081  C2A940  	    jp   nz,$40A9
