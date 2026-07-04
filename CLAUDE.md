@@ -71,11 +71,13 @@ as an instruction in sequence. Therefore:
 - To study a routine: grep its address as an operand (`call $XXXX`, `jp $XXXX`,
   `ld hl,$XXXX`) and read around the target line.
 
-See §7 for the code/data region map.
-
 ---
 
 ## 3. Hardware / memory map
+
+**The screen is ROT90** (MAME `thepit.cpp:1474` — `funnymou … ROT90`), so game-space **X**
+(`$8406`, joystick L/R) is written to the hardware **Y** sprite byte (`$8000`, sprite +0),
+and game-space **Y** (`$8407`) to the hardware **X** byte (`$8003`, sprite +3).
 
 Main CPU: **Z80**. Source: `funnymou.org` + `thepit/thepit_v.cpp`.
 
@@ -107,6 +109,25 @@ Main CPU: **Z80**. Source: `funnymou.org` + `thepit/thepit_v.cpp`.
 `0x03`=coinage, `0x04`=game speed, `0x08`=time limit, `0x10`=flip screen,
 `0x20`=cabinet (upright/cocktail), `0x40`=lives (3/5), `0x80`=diagnostic tests.
 
+### Sound: a SEPARATE audio CPU — **no sound data lives in `funnymou.asm`**
+"The Pit" hardware has **two Z80s**. `funnymou.asm` (`dump/suprmous.x1..x5` = `fm.1..fm.5`,
+main CPU `$0000-$4FFF`) is only the **main** CPU. All sound *data* — melodies, effect
+definitions, AY register sequences — lives on the **audio CPU**, whose ROM is the separate
+**`fm.6` (dumped as `dump/sm.6`, 4 KB)**. Audio-CPU map (`thepit.cpp:295`, `audio_map`):
+`$0000-$1FFF` ROM, `$3800-$3BFF` RAM.
+
+The main ROM holds only **1-byte sound *command numbers*** (e.g. `$95` splash, `$84`
+food/return, `$E0/$E8/$EC` level-end — see §5/§6), never sample/tune data. Hand-off:
+- Main CPU **writes command `n` → the sound latch at `$B800`** (`soundlatch`, `thepit.cpp:242`;
+  = "latch a sound" throughout the disassembly). `B003` sound-enable gates the audio section.
+- Audio CPU **reads the latch via AY-8910 #1 port A** (`ay1.port_a_read`, `thepit.cpp:790`),
+  looks `n` up in its command→routine dispatch and plays it on **2× AY-8910** PSGs
+  (I/O ports `$8e/$8f` = AY1, `$8c/$8d` = AY2), then **clears the latch by writing I/O port
+  `$00`** (`audio_io_map`, `thepit.cpp:305`).
+
+So to decode what each sound *is*, disassemble **`dump/sm.6`** as its own Z80 program (org
+`$0000`, RAM `$3800`) — it is **not** in `build.sh` and does not affect the hash-correct main ROM.
+
 ### Sprite RAM format (`$9840`, and the `$8000` mirror — see §5)
 4 bytes per sprite:
 - `+0` = **Y** (displayed as `240 - value`)
@@ -129,14 +150,40 @@ group = `color % 4` (gfx has 4 color sets, granularity 8): pen = `group*8 + pixe
   (`$800-$FFF`), 32 bytes each. Sprite code *n* → gfx byte `$800 + n*32`. Row/col bit layout:
   y ∈ `{0,8,…,56}` then `{128,…,184}`, x ∈ `{0,…,7}` then `{64,…,71}` (MSB-first per byte).
 
-**Actor sprite codes** (from the ROM init templates + confirmed by decoding the gfx):
-- **Mouse** (player): walk `$00-$03` (horizontal, orient base `$8414`=`$00`; `$80`=flipX for
-  right), climb `$08-$0B` (vertical, orient `$08`); respawn/death frames `$0C-$0F`. **Color
-  group 1** (player color `$8412`=`$05`).
-- **Cat**: `$1C-$1F` (base tile `$1C`). **Snake**: `$2C-$2F` (base tile `$2C`).
-  **All enemies use color `$06` → group 2**: the shared commit `$309C` writes the *constant*
-  `$06` into sprite `+2` (`ld (hl),$06`), so enemy colour is not a per-record field.
-- Not actors: sprites **`$28-$2B` = the "100/200/400/800" score-popup digits**.
+#### Font tile → glyph map (text codes) — **fully decoded**
+The char tiles `$00-$31` double as the **font**; text tables store these tile codes. Glyphs are
+stored **rotated for the ROT90 screen** (rotate a tile 90° CW to read it), and a *word* of tiles
+renders **right-to-left** on screen (same handedness as the maze columns). The map is a simple
+contiguous ASCII-like ordering:
+
+- **`$00`–`$09` = digits `0`–`9`**  (`tile = $00 + digit`)
+- **`$0A`–`$23` = letters `A`–`Z`**  (`tile = $0A + (letter - 'A')`; e.g. C=`$0C`, H=`$11`, O=`$18`, T=`$1D`)
+- **`$24` = space**
+- **Punctuation:** `$28`=`©`, `$2E`=`-` (hyphen), `$30`=`.`, `$31`=`.,` (combined period+comma glyph).
+  `$25-$27` blank; `$29`/`$2A/$2C/$2D/$2F` minor punctuation (unverified); `$32+` are graphic/maze tiles, not font.
+
+Decoder (Python): `chr(ord('0')+v)` for `v≤9`, `chr(ord('A')+v-0x0A)` for `$0A≤v≤$23`, `' '` for `$24`.
+
+**In-ROM text strings** (decoded with the above; all confirmed — memory order, screen shows each
+word reversed). These are the message/HUD tables:
+
+| addr | string | drawn by / use |
+|------|--------|----------------|
+| `$05FA` | `SCORE-1  HI-SCORE  SCORE-2 CREDIT-0` | top status bar |
+| `$090C`/`$0915`/`$091D`/`$0925` | `SRAM NG` / `VRAM NG` / `CRAM NG` / `ORAM NG` | boot self-test fail (`$08DD`) |
+| `$09A1` | `PLEASE PRESS SHOT BUTTON` | attract prompt (via `draw_intermission`?) |
+| `$20AB` | `PLAYER` | player-ready (`draw` from `$2082`) |
+| `$2344` | `ONLY 1 PLAYER` | display list `$2342` |
+| `$2354`/`$235B`/`$2364` | `PUSH` / `BUTTON` / `1 OR 2 PLAYER` | credit prompt |
+| `$2374`/`$2380`/`$238A` | `GAME OVER` / `PLAYER` / `LEVEL` | game-over / ready |
+| `$43C2` | `SPECIAL BONUS  CREDIT PLUS 1` | bonus award (`bonus_update`) |
+| `$45C9` | `VERY LUCKY MOUSE` | bonus/hi-score |
+| `$488F`/`$48A7` | `INSERT  COIN` / `COIN     PLAY` | coin prompts (`$4892`) |
+| `$48D7` | `© 1982 CHUO CO., LTD` | title copyright (`$48EF` diag path draws to `$9100`) |
+| `$491A` | `licensee_text` → `CHUO CO.,LTD` | licensee credit (see label) |
+
+`licensee_text` at **`$491A`** (`db $24,$0D,$1D,$15,$24,$31,$18,$0C,$24,$18,$1E,$11,$0C,$24`)
+renders as **"CHUO CO.,LTD"** — MAME: *Taito Corporation (Chuo Co. Ltd license)* (`thepit.cpp:1474`).
 
 ---
 
@@ -182,22 +229,6 @@ the most-referenced variable) and `$803B` (a linear sequence state 0-8):
 `4`=game-over(timed), `5`=player-ready(timed), `6`=**active play**, `7`=intermission,
 `8`=next-level rebuild. Cycle during play: `6 → 7 → 8 → rebuild → 6`.
 
-### In-game per-frame update — `$23A0` (only runs while `$803B==6`)
-Calls in order:
-`$407D` (**sliding-platform** update, slot 2) · `$3BFF` (**bridge** open/close tile anim) ·
-`$3D0A` (scripted player move/cutscene, e.g. entering the home hole) ·
-**`$2A51`** (cat manager) · **`$3206`** (snake manager) · **`$2539`** (player update) ·
-**`$394B`** (enemy "eaten"/return-home + score) · `$23D3` (**level-complete check `$2429` + end-level timer**; see §5) ·
-**`$392A`** (player↔enemy collision/death) · `$116D` (bomb-explosion collision) · `$100F` (bomb update) ·
-`$41BC` (**boulder** update — `boulder_update`).
-
-### Two-player alternation
-`$8030` = mode (0=attract, 1=1P, 2=2P). `$8031` = current player. On death/turn-end in a
-2P game, `$8031` toggles and the **per-player page is swapped** via `ldir` between the
-active page `$8100` and the saved pages `$8200` (P1) / `$8300` (P2).
-
----
-
 ## 5. Actor / object model
 
 ### Sprite mirror (`$8000-$801F`) → hardware
@@ -205,19 +236,7 @@ Work RAM `$8000-$801F` is a **shadow copy** of the 8 hardware sprites. Every fra
 calls **`$062C`** (`ld hl,$8000; ld de,$9840; ld bc,$0020; ldir`) to DMA it to sprite RAM.
 So game code only ever writes sprites into `$8000-$801F`.
 
-### Sprite slot → actor assignment
-| Slot | Mirror bytes | Actor | State record | Committed by |
-|------|-------------|-------|--------------|--------------|
-| 0 | `$8000-$8003` | **Player (mouse)** | `$8400` | `$28BB` |
-| 1 | `$8004-$8007` | Cat A | `$8510` | `$309C` |
-| 2 | `$8008-$800B` | **Sliding platform** (not a cat — drawn by `$407D` from `$80A5-$80A8`) | `$80A0` block | `$4092` |
-| 3 | `$800C-$800F` | Cat B | `$8550` | `$309C` |
-| 4 | `$8010-$8013` | Cat C | `$8570` | `$309C` |
-| 5 | `$8014-$8017` | Snake A | `$8610` | `$309C` |
-| 6 | `$8018-$801B` | Snake B | `$8630` | `$309C` |
-| 7 | `$801C-$801F` | **Bomb** *or* **boulder** (mutually exclusive) | `$8680` / `$85C0` | `$10D6` / `$4232` |
-
-So there are up to **3 cats + 2 snakes** (5 enemies) + the player's bomb + a falling boulder.
+There are up to **3 cats + 2 snakes** (5 enemies) + the player's bomb + a falling boulder.
 The two enemy types share the same per-actor engine but run under different managers:
 cats (A/B/C) under manager A (`$2A51`), snakes (A/B) under manager B (`$3206`).
 
@@ -248,13 +267,6 @@ cats (A/B/C) under manager A (`$2A51`), snakes (A/B) under manager B (`$3206`).
 | +$29 / +$2A | | death-sequence step / death-fall trigger |
 | +$2D | `$842D` | "over exit/hole" flag (maze tile `$F5`) |
 
-Player position is committed to sprite slot 0 by `$28BB`:
-`$8406→$8000`, `$8413→$8001`(tile), `$8412→$8002`(color), `$8407→$8003`.
-**The screen is ROT90** (MAME `thepit.cpp:1474` — `funnymou … ROT90`), so game-space **X**
-(`$8406`, joystick L/R) is written to the hardware **Y** sprite byte (`$8000`, sprite +0),
-and game-space **Y** (`$8407`) to the hardware **X** byte (`$8003`, sprite +3). Verified from
-the movement code: `move_player_left`/`right` ($2710/$2752) modify `$8406` (clamped `$14..$D4`),
-`move_player_down`/`up` ($2794/$27D6) modify `$8407`.
 **`$8000`/`$8003` (player sprite bytes = game-X / game-Y) is what the enemies chase** (see §6).
 
 ### Enemy record (32 = `$20` bytes each — same layout for cats and snakes)
@@ -325,10 +337,6 @@ logic `$100F` (update) / `$116D` (explosion collision). Confirmed in-listing:
 - **Supply regenerated at each life start**: the play-start handler `$200A` sets `$867F`=`$05`
   (`$206C`) and redraws the count — so the player gets **5 bombs** afresh each life (i.e.
   replenished on death → respawn).
-
-Fields recap: `$867F`=bomb supply, `$8680`=active flag, `$8684`/`$8685`=Y/X, `$8686`=tile,
-`$8687`=color, `$8683`=explosion-lethal flag, `$8688`/`$8689`=explosion frame/stage,
-`$868A`=arming timer, `$868B`=detonate flag.
 
 Boulder — the **falling boulder** (`$85C0` block, slot 7). Two boulders rest at **fixed edge
 cells** (tiles `$39`/`$3A` = `TILE_BOULDER`; redrawn at `$9065`/`$9085` and `$9385`/`$93A5`
@@ -447,9 +455,36 @@ data. Shared helper **`$3EB2`/`$3EB3`** (`food_set_state`): given a VRAM cell in
   **`$8032` (`req_level_done`) = 1** → the top-level state machine advances the level
   (`6 → 7 → 8 → rebuild`).
 
-### Bonus subsystem `$8480`
-Separate state machine (handler `$4247`, from the level-end timer path). Not a sprite actor;
-manages a bonus/score display. Per-field semantics only partially traced.
+### Gamble / slot-machine bonus (`gamble_update` `$4247`, state `gamble_state` `$8480`)
+A hidden **one-armed-bandit** mini-game (this is the "gamble" the `screen_state` equate hints at).
+Runs from the level-end timer path; not a sprite actor. Three on-screen **reels** spin and the
+player **stops them with the shot button** to win a **free credit** (jackpot) or score.
+
+- **Reels.** Symbols `gamble_reel1/2/3` (`$8483/$8484/$8485`, values 0-3) are drawn to VRAM
+  `$9268`/`$91E8`/`$9168`. Each is fed from its own strip — `gamble_reel1_strip` (`$4526`, 17),
+  `gamble_reel2_strip` (`$4537`, 16), `gamble_reel3_strip` (`$4547`, 15) — via position counters
+  `gamble_pos1/2/3` (`$8486-$8488`). `gamble_spin_reels` (`$4453`) advances all three one step and
+  redraws them; the spin path (`$4443`) calls it every 8th frame, so the reels visibly spin.
+- **Trigger to stop.** In `gamble_update`, while `gamble_state` bit5 (`$20`) is set (reels active),
+  `$427E` checks **`is_playing` AND the shot button** (`hw_in_0 & $10`). Pressing it runs the win
+  check `$428A`.
+- **Win check `$428A`.** Compares the three reels:
+  - `reel1 ≠ reel2` → no win (`gamble_state` → `$40`).
+  - all three equal → `a = 2·symbol`;  first two equal only → `a = 2·symbol + 1`.
+  - `a` is stored as **`gamble_outcome`** (`$8489`, 0-7) and indexes both `gamble_prize_pos`
+    (`$4516`, win-display VRAM cell) and `gamble_score_tbl` (`$44FE`, 3-byte BCD score bonus).
+  - **`a == 0` ⇒ three-of-a-kind of symbol 0 = the JACKPOT** → sets **`gamble_credit` `$8474` = 1**.
+- **Payout.** When the state resolves, `$4306 → $4312 → gamble_award_credit` (`$432E`) reads
+  `gamble_credit`: if set (and `is_playing`) it does **`credits = min(credits+1, 9)`** (BCD),
+  calls the credit-grant routine (`$07BC`), and draws **`str_special_bonus`** = *"SPECIAL BONUS /
+  CREDIT PLUS 1"*. Every other outcome instead awards the `gamble_score_tbl` points (three 1s =
+  1000, three 2s = 800, …); one tier shows **`str_lucky_mouse`** *"VERY LUCKY MOUSE"*.
+
+**In one line: line up all three reels on symbol 0 with the shot button → free credit.**
+
+Draw helpers: `gamble_reel_step` (`$44A7`), `gamble_reel_draw` (`$44B3`), `gamble_draw_text`
+(`$439C`), `gamble_draw_blank` (`$43AE`). `gamble_state` bits: bit7=win-display phase,
+bit6=countdown, bit5=reels spinning.
 
 ---
 
@@ -589,18 +624,7 @@ bytes, not VRAM. (The `$14…`/`$22…` values are position coordinates, *not* "
   enemy. There is no "powered/invincible" player state — enemies are killed only by water, bomb,
   or boulder.)
 
-### One-line summary
-> Each enemy (cat or snake) greedily chases the player's on-screen sprite (`$8000`/`$8003`),
-> re-deciding at maze cells **one axis at a time, alternating Y↔X via the toggle at `+$12`
-> (Y first at spawn)**, with an R-register random component for imperfection and
-> `$9000`-tilemap wall checks (walls are all `$F0+` in the shipped mazes; cats and snakes use
-> separate movers but navigate them identically — see step 3). Stepping onto an open-water tile
-> `$FE` (opened by a bridge/platform) kills the enemy → state 4 (`$2DD0` cats / `$34B5` snakes,
-> splash sound `$95`). Difficulty rises via level-indexed spawn-delay tables (`$3315`/`$332B` on
-> `$8101`) and per-enemy speed/waypoint data.
-
----
-
+### 
 ## 7. Code / data region map (`$0000-$4928`)
 
 ```
@@ -663,50 +687,6 @@ baked-in **address column (cols 1–15) went stale** (e.g. shows `$13B8` where t
 - **`$3FB4`/`$3FC6`** — 2-byte LE VRAM-position pointer tables.
 - Computed `jp (hl)` sites: `$11D8`, `$3B98`, `$4068`.
 
----
-
-## 8. Work RAM variable map (`$8000-$83FF`)
-
-### Globals `$8020-$80FF`
-| Addr | Name | Meaning |
-|------|------|---------|
-| `$8020` | `dsw_raw` | raw DIP copy |
-| `$8021` | `in_a800` | raw coin/start input (per frame) |
-| `$8023` | `credits_bcd` | credits (BCD) |
-| `$8025-$8028` | `dsw_*` | coinage / lives / cocktail / cabinet DIP fields |
-| `$8030` | `game_mode` | 0=attract, 1=1P, 2=2P |
-| `$8031` | `cur_player` | 0=P1, 1=P2 |
-| `$8032` | `req_level_done` | level-complete pending (in-game→dispatcher) |
-| `$8033` | `req_death` | player-death pending (in-game→dispatcher) |
-| `$8034`/`$8035` | `p1_done`/`p2_done` | player finished/out of lives |
-| `$8036` | `flip_state` | current screen-flip mirror |
-| `$8038` | `first_turn` | first-turn-of-game flag |
-| `$8039` | `req_flags` | **event bitmask** (producer/consumer handshake; see §4) |
-| `$803B` | `seq_state` | **top-level state 0-8** (see §4) |
-| `$803C` | `is_2player` | 1 = 2P game |
-| `$803D` | `disp_timer` | down-counter for timed screens |
-| `$803E` | `endlevel_active` | level-end / freeze gate (also gates enemy spawn/move) |
-| `$803F` | `endlevel_ctr` | level-end sub-counter |
-| `$8040` | `score_add_trig` | score-add trigger |
-| `$8041-$8043` | `score_add` | amount to add (BCD3) |
-| `$8044-$8046` | `p1_score` | P1 score (BCD3) |
-| `$8047-$8049` | `p2_score` | P2 score (BCD3) |
-| `$804C-$804E` | `hi_score` | high score (BCD3) |
-| `$809C-$80FB` | `play_scratch` | 96-byte in-game working block, zeroed each play. Sub-blocks: `$80A0-$80A8` sliding-platform (`$407D`, slot 2), `$80C0-$80C7` bridge anim (`$3BFF`), `$80E0-$80E7` scripted-move (`$3D0A`) |
-
-### Per-player pages: `$8100` (active) / `$8200` (P1) / `$8300` (P2)
-256-byte pages, swapped via `ldir`. Same layout each:
-| Off | Field |
-|-----|-------|
-| +$00 | **lives** (3 or 5) |
-| +$01 | **level number** (BCD) — `(level & 3)` picks the maze |
-| +$02 | extra-life bonus counter |
-| +$03… | per-level working data |
-| +$20 (`$8120`) | 9-byte food-piece state table: `0`=uncollected · `2`=carried · `1`=returned home. Pickup 0→2 (`$29C8`), return 2→1 (`$4167`), drop-on-death 2→0 (`$3E29`). See §5. |
-| +$40 (`$8140`) | **9 × 2-byte returned-food log** (`$8140-$8151`); fill-from-front, appended by `$3EF2` when a piece is carried home. All 9 nonzero ⇒ **level complete** (`$2429`). See §5. |
-| +$80/$81 | two special-item consumed flags |
-
----
 
 ## 9. Labeling workflow
 
@@ -780,6 +760,82 @@ bridge_update       $3BFF ; bridge open/close tile animation, block $80C0-$80C7
 scripted_move       $3D0A ; scripted player move (home-entry), block $80E0-$80E7
 food_return_home    $4167 ; home-entry: log carried piece (food_return_add) + food_state 2->1
 boulder_update      $41BC ; boulder: spawn-on-touch / fall (boulder_y+=2, ROT90=>down) / despawn
+
+; --- routine-labelling pass (2026-07): entry points named from documented behaviour ---
+bomb_clear          $1038 ; zero the 16-byte bomb block ($8680)
+bomb_count_redraw   $106C ; redraw on-screen bomb-count row ($91C3/$95C3)
+bomb_kill_player    $119F ; explosion AABB vs player -> $841F=2
+bomb_vs_catA        $11D9 ; explosion AABB vs cat A ($8501) -> enemy state $06
+bomb_vs_slot        $1205 ; explosion AABB vs unused enemy slot ($8503)
+bomb_vs_catB        $1231 ; explosion AABB vs cat B ($8504) -> enemy state $06
+bomb_vs_catC        $125D ; explosion AABB vs cat C ($8507) -> enemy state $06
+bomb_vs_snakeA      $1291 ; explosion AABB vs snake A ($8601) -> enemy state $06
+bomb_vs_snakeB      $12BD ; explosion AABB vs snake B ($8603) -> enemy state $06
+hiscore_compare     $213F ; compare 3-byte score at (de) vs hiscore_hi (carry=lower)
+player_update_move  $2598 ; player state machine, stage 2 (reads $841F)
+player_stop         $2818 ; zero player speed x/y + moving flag $8416
+player_stop_x       $2829 ; zero player x-speed (checks y-speed)
+player_stop_y       $283E ; zero player y-speed (checks x-speed)
+player_commit       $2853 ; commit player pos/tile into sprite mirror (checks $8422)
+player_touch_boulder $2923 ; player on TILE_BOULDER $39/$3A -> boulder_req $85C1=1
+player_enter_hole   $294C ; player on $FE -> $841F=4 (enter hole)
+player_home_entry   $295A ; player on $FF over-hole -> scripted home entry $80E0, $841F=5
+player_trigger_bridge $29A1 ; player on $FC -> bridge subsystem $80C0=1
+player_trigger_platform $29AF ; player on $F9 -> sliding platform $80A2
+enemy_spawn_gate    $2AF1 ; per-enemy spawn countdown + tile-validity gate
+enemy_sprite_commit $309C ; write enemy Y/tile/color/X into its sprite mirror slot
+check_tile_wall     $30CE ; (de)=1 if tile at (hl+bc)==$F4 (wall) else 0
+load_level_ptr      $31CF ; load level-indexed 16-bit table ptr into enemy record
+snake_spawn_delay   $32F7 ; level-indexed snake spawn-delay lookup (spawn_delay_sa/sb)
+player_vs_catA      $3981 ; AABB player vs cat A ($8501) -> player death
+player_vs_catB      $399C ; AABB player vs cat B ($8504) -> player death
+player_vs_catC      $39B7 ; AABB player vs cat C ($8507) -> player death
+player_vs_snakeA    $39D2 ; AABB player vs snake A ($8601) -> player death
+player_vs_snakeB    $39ED ; AABB player vs snake B ($8603) -> player death
+return_catA         $3A08 ; cat A death->return-home handler (cat1_state)
+return_catB         $3A15 ; cat B death->return-home handler (cat2_state)
+return_catC         $3A22 ; cat C death->return-home handler (cat3_state)
+return_snakeA       $3A50 ; snake A death->return-home handler (snake1_state)
+return_snakeB       $3A5D ; snake B death->return-home handler (snake2_state)
+kill_enemies_bonus  $3A8C ; level-end: award points for + clear surviving enemies
+score_add_request   $3BBD ; request a score add (score_add_trig=1) with pending BCD
+bridge_select_cells $3C92 ; pick per-maze bridge cell set (table $3BE3)
+bridge_blit         $3CA9 ; blit open/closed bridge tile blocks to VRAM
+gamble_update       $4247 ; slot-machine bonus state machine (gamble_state $8480)
+gamble_award_credit $432E ; jackpot payout: credits+=1 (max 9) + draw str_special_bonus
+gamble_draw_text    $439C ; draw a text column (de=str) + color to VRAM
+gamble_draw_blank   $43AE ; draw a blank/spacer column + color to VRAM
+gamble_spin_reels   $4453 ; advance the 3 reels one step from their strips + redraw
+gamble_reel_step    $44A7 ; reel += strip[pos]; wrap pos; store symbol -> (de)
+gamble_reel_draw    $44B3 ; draw one reel symbol to VRAM (de)
+gamble_score_tbl    $44FE ; 8 outcomes x 3-byte BCD score bonus (index gamble_outcome)  [data]
+gamble_prize_pos    $4516 ; 8 outcomes x 2-byte LE win-display VRAM cell                [data]
+gamble_reel1_strip  $4526 ; reel 1 symbol strip (17 steps, 0-3)                         [data]
+gamble_reel2_strip  $4537 ; reel 2 symbol strip (16 steps)                              [data]
+gamble_reel3_strip  $4547 ; reel 3 symbol strip (15 steps)                              [data]
+debug_draw_check    $48EF ; if hw_in_1 & $40 draw debug text at $9100 (else no-op)
+boulder_hit_catA    $3AE1 ; enable+busy gate then boulder_vs_enemy (cat A $8501)
+boulder_hit_catB    $3AF8 ; enable+busy gate then boulder_vs_enemy (cat B $8505)
+boulder_hit_catC    $3B0F ; enable+busy gate then boulder_vs_enemy (cat C $8507)
+boulder_hit_snakeA  $3B36 ; enable+busy gate then boulder_vs_enemy (snake A $8601)
+boulder_hit_snakeB  $3B4D ; enable+busy gate then boulder_vs_enemy (snake B $8603)
+draw_column         $212E ; draw [VRAM_addr_LE, tiles.., $FF] column upward (-$20 stride)
+clear_playfield     $20EC ; fill VRAM $9002 region ($20 x $1D) with blank tile $24
+draw_player_lives   $2307 ; draw cur_player remaining lives (lives_copy) as tile $79 at $939F
+draw_lives          $232E ; draw active lives count as tile $79 icons at $939F
+draw_intermission   $09BB ; blit intermission screen ($1C x $1D) to VRAM $9043 via blit_rect_up
+blit_rect_up        $09DC ; blit_rect clone (row stride -$20), used by draw_intermission
+
+; --- text/string tables (converted misdecoded code -> labelled db; §3 font map) ---
+hud_score_hdr       $05FA ; "SCORE-1/HI-SCORE/SCORE-2/CREDIT-0" status text        [data]
+str_ram_test_msgs   $090D ; boot self-test fail msgs sRAM/vRAM/cRAM/oRAM "NG" ($FF-term) [data]
+str_please_press    $09A1 ; "PLEASE PRESS SHOT BUTTON"                             [data]
+str_player          $20AB ; "PLAYER  "                                            [data]
+attract_display_list $2342 ; [VRAM_addr_LE, text.., $FF] records, drawn by draw_column [data]
+str_special_bonus   $43C2 ; "SPECIAL BONUS  CREDIT PLUS 1"                         [data]
+str_lucky_mouse     $45C9 ; "VERY LUCKY MOUSE" ($FE-term)                          [data]
+coin_copyright_table $488F ; INSERT COIN / COIN PLAY / (c)1982 CHUO CO.,LTD        [data]
+licensee_text       $491A ; "CHUO CO.,LTD" credit -> VRAM $9100 by draw at $48FA   [data]
 ```
 
 (`spawn_delay_sa`/`sb` and `food_pos_tbl` are *data tables*, but they are pointer-load targets
@@ -790,44 +846,9 @@ at the table's first byte rather than an equate.)
 
 ## 10. Open questions / next steps
 
-- **Enemy record scratch fields** +$01/+$02/+$05/+$06/+$0B/+$13/+$14 — not yet pinned.
-  (+$0A = chase direction, +$12 = chase axis toggle, +$17 = re-steer counter, +$1C = drift
-  step-counter — now pinned; see §5/§6.)
-- ~~**Maze "control tile" encoding**~~ **RESOLVED**: junctions are **not** tile-encoded — they
-  are detected geometrically from the enemy's own X/Y hitting the decision lattice (X ∈
-  `$14+$20·n`, Y ∈ `$22+$20·n`; see §6). The `$14/$34/…`, `$22/$42/…` values are position
-  coordinates compared against record `+$08`/`+$09`, not tilemap bytes. Still open: the full
-  wall/path/item **tile** legend
-  (`$37`=water (funnymou `TILE_WATER`; player drowns) & enemy return-home scan target,
-  `$39/$3A`=`TILE_BOULDER` (boulder rest cell; touch → boulder falls), `$F4`=wall (both cats and
-  snakes; all maze structure is `$F0+` — see §6 step 3), `$FE`=open water/gap (enemy death; player
-  enter-hole), `$F5`=exit/hole/ladder, `$F6`=?, `$FC`=bridge, `$FD`=?, `$F9`=sliding-platform,
-  `$FF`=home-entry — see the §5 tile-effect table. (Actual maze-bank tile set:
-  `$25`/`$35`/`$36`/`$37`/`$38`/`$F4`/`$F5`/`$F6`/`$F9`/`$FC`/`$FD`/`$FF`.)
-- **Player bomb subsystem** — *located* (`$100F`/`$116D`/`$8680`, see §5). Remaining detail:
-  the exact meaning of the drop-gate maze-tile check (`$251B`+`$FFE2`, tile ≥ `$F0`) and
-  the full explosion-stage tile/animation table (`$110D`).
-- **`$8480` bonus subsystem** field semantics (handler `$4247`).
-- ~~Snake manager (`$3206`) internals inferred as a twin of the cat manager — confirm what
-  distinguishes cats from snakes~~ **RESOLVED**: snakes are a genuine twin (separate movers, chase
-  helper `$3421`, water-die `$34B5`), but the differences are **graphics + spawn timing + speed**,
-  **not navigation**. Both die on the same open-water tile `$FE`. The movers' differing thresholds
-  (cat `$EF` / snake `$DF`) only diverge over tile codes `$E0-$EF`, which **no maze bank contains**
-  (mazes use only `$25`/`$35`/`$36`/`$37`/`$38`/`$F4`/`$F5`/`$F6`/`$F9`/`$FC`/`$FD`/`$FF`), so both
-  navigate identically. Snake-specific behaviours: delayed + staggered + level-scaled entry
-  (`$3315`/`$332B`), and surviving snakes are force-killed at level-complete (`$2429`).
-- ~~Difference between enemy states 3 and 4~~ **RESOLVED**: only **3** is active chase (`$2CB6`);
-  **4** is the dying/return-home start (`$30DD`). State 1→3 promotes when the emerge counter
-  (record `+$13`) reaches `$80`; there is no persistent walk-vs-chase mode (chase-vs-drift is a
-  per-enemy dice roll on the step counter `+$1C`, gate selected by record-address low byte —
-  see §6). Remaining: states 5/6/7 animation details.
-- Sound command values (writes to `$B800`) → map to audio-CPU behaviors (`fm.6`).
-- The attract-demo script (`attract_demo_script` `$249B`-`$24FC`, now `db` data) decoding: it's
-  `$0F`-prefixed FF-terminated byte pairs consumed from `$2507` (`ld de,attract_demo_script`) —
-  confirm what the second byte of each pair encodes (direction/duration?).
 
 ### How to extend
-1. Pick a routine/region from §7 or an open question.
+1. Pick a routine/region  or an open question.
 2. Grep its address as an operand; re-decode by hand if it sits after a data block (§2).
 3. Label it in `funnymou.asm` per §9: an **inline label** at the address for a code entry point
    (and swap obvious `$addr` operand refs → the name), or an **equate** for a RAM/HW/constant

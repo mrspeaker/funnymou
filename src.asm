@@ -199,6 +199,15 @@
      score_add       = $8041 ; amount to add (BCD3, $8041-$8043)
      food_state      = $8120 ; 9x1 per-piece: 0 uncollected, 2 carried, 1 returned
      food_returned   = $8140 ; 9x2 fill-from-front log; all set => level clear
+     gamble_state    = $8480 ; slot-bonus state (bit7=win display, bit6=countdown, bit5=reels spinning)
+     gamble_credit   = $8474 ; jackpot flag: 3x symbol-0 => grant free credit (gamble_award_credit)
+     gamble_reel1    = $8483 ; reel 1 current symbol (0-3)
+     gamble_reel2    = $8484 ; reel 2 current symbol
+     gamble_reel3    = $8485 ; reel 3 current symbol
+     gamble_pos1     = $8486 ; reel 1 strip position (into gamble_reel1_strip)
+     gamble_pos2     = $8487 ; reel 2 strip position
+     gamble_pos3     = $8488 ; reel 3 strip position
+     gamble_outcome  = $8489 ; win index 0-7 (0=jackpot); indexes gamble_prize_pos / gamble_score_tbl
      boulder         = $85C0 ; boulder active flag (slot 7: a boulder is falling)
      boulder_req     = $85C1 ; trigger request (set when player touches TILE_BOULDER $39/$3A)
      boulder_x       = $85C5 ; frozen horizontal pos -> sprite +0 (constant during fall)
@@ -839,7 +848,7 @@ start:
      dc   38,0
 
     ld   hl,$9380
-    ld   de,$05FA
+    ld   de,hud_score_hdr
     ld   b,$1A
     call $061D
     ld   hl,$915F
@@ -866,30 +875,12 @@ start:
     djnz $05F5
     ret
 
-    inc  e
-    inc  c
-    jr   $0619
-    ld   c,$2E
-    ld   bc,$2424
-    ld   de,$2E12
-    inc  e
-    inc  c
-    jr   $0625
-    ld   c,$24
-    inc  h
-    inc  e
-    inc  c
-    jr   copy_sprites
-    ld   c,$2E
-    ld   (bc),a
-    inc  c
-    dec  de
-    ld   c,$0D
-    ld   (de),a
-    dec  e
-    ld   l,$00
-    inc  h
-
+ hud_score_hdr: ; SCORE-1 / HI-SCORE / SCORE-2 / CREDIT-0 (drawn down columns)
+    db   $1C, $0C, $18, $1B, $0E, $2E, $01, $24              ; |SCORE-1 |
+    db   $24, $11, $12, $2E, $1C, $0C, $18, $1B              ; | HI-SCOR|
+    db   $0E, $24, $24, $1C, $0C, $18, $1B, $0E              ; |E  SCORE|
+    db   $2E, $02, $0C, $1B, $0E, $0D, $12, $1D              ; |-2CREDIT|
+    db   $2E, $00, $24                                       ; |-0 |
     ld   a,(de)
     ld   (hl),a
     push de
@@ -977,7 +968,7 @@ start:
     ld   a,($8102)
     add  a,$01
     ld   ($8102),a
-    call $232E
+    call draw_lives
     pop  de
     pop  bc
     dec  de
@@ -1313,29 +1304,11 @@ start:
     add  hl,bc
     dec  h
     add  hl,bc
-    inc  e
-    dec  de
-    ld   a,(bc)
-    ld   d,$24
-    rla
-    djnz $0914
-    rra
-    dec  de
-    ld   a,(bc)
-    ld   d,$24
-    rla
-    djnz $091C
-    inc  c
-    dec  de
-    ld   a,(bc)
-    ld   d,$24
-    rla
-    djnz $0924
-    jr   $0942
-    ld   a,(bc)
-    ld   d,$24
-    rla
-    djnz $092C
+ str_ram_test_msgs: ; boot self-test fail: sRAM/vRAM/cRAM/oRAM 'NG' ($FF-term)
+    db   $1C, $1B, $0A, $16, $24, $17, $10, $FF              ; |SRAM NG||
+    db   $1F, $1B, $0A, $16, $24, $17, $10, $FF              ; |VRAM NG||
+    db   $0C, $1B, $0A, $16, $24, $17, $10, $FF              ; |CRAM NG||
+    db   $18, $1B, $0A, $16, $24, $17, $10, $FF              ; |ORAM NG||
     ld   a,(watchdog) ; infinite loop
     jp   $092D
 
@@ -1368,7 +1341,7 @@ start:
     nop
     ld   hl,$92CE
     ld   b,$0D
-    ld   de,$09A1
+    ld   de,str_please_press
     call $0995
     ld   hl,$96CE
     call $098A
@@ -1396,27 +1369,12 @@ start:
     pop  bc
     djnz $0995
     ret
-    inc  h
-    add  hl,de
-    dec  d
-    ld   c,$0A
-    inc  e
-    ld   c,$24
-    add  hl,de
-    dec  de
-    ld   c,$1C
-    inc  e
-    inc  h
-    inc  e
-    ld   de,$1D18
-    inc  h
-    dec  bc
-    ld   e,$1D
-    dec  e
-    jr   $09D1
-    inc  h
-
-
+ str_please_press: ; 'PLEASE PRESS SHOT BUTTON' attract prompt
+    db   $24, $19, $15, $0E, $0A, $1C, $0E, $24              ; | PLEASE |
+    db   $19, $1B, $0E, $1C, $1C, $24, $1C, $11              ; |PRESS SH|
+    db   $18, $1D, $24, $0B, $1E, $1D, $1D, $18              ; |OT BUTTO|
+    db   $17, $24                                            ; |N |
+ draw_intermission:  ; blit intermission screen ($1C x $1D) to VRAM $9043 via blit_rect_up
     nop
     nop
     nop
@@ -1424,15 +1382,16 @@ start:
     ld   b,$1C
     ld   c,$1D
     ld   de,intermission_screen
-    call $09DC
+    call blit_rect_up
     ld   hl,$9443
     ld   b,$1C
     ld   c,$1D
     ld   de,intermission_screen_color
-    call $09DC
+    call blit_rect_up
     call $0962
     ret
 
+ blit_rect_up: ; blit_rect clone (row stride -$20), used by draw_intermission
     push bc
     push hl
     ld   a,(de)
@@ -1665,6 +1624,7 @@ start:
     and  a
     ret  z
     jp   $1046
+ bomb_clear: ; zero the 16-byte bomb block $8680
     ld   hl,bomb_placed
     ld   a,$00
     ld   b,$10
@@ -1689,10 +1649,11 @@ start:
     ret  z      ; out of bombs
     sub  $01    ; use a bomb
     ld   (bombs),a
-    call $106C
+    call bomb_count_redraw
     jp   $109E
 
  ;; drop bomb?
+ bomb_count_redraw: ; redraw on-screen bomb-count row ($91C3/$95C3)
     push hl
     push de
     push bc
@@ -1823,7 +1784,7 @@ start:
     ld   a,$87
     ld   ($8687),a
     jp   $10D6
-    jp   $1038
+    jp   bomb_clear
     nop
     nop
 
@@ -1840,14 +1801,15 @@ start:
     ld   a,(endlevel_active)
     and  a
     jp   nz,$118C
-    call $119F
-    call $11D9
-    call $1205
-    call $1231
-    call $125D
-    call $1291
-    call $12BD
+    call bomb_kill_player
+    call bomb_vs_catA
+    call bomb_vs_slot
+    call bomb_vs_catB
+    call bomb_vs_catC
+    call bomb_vs_snakeA
+    call bomb_vs_snakeB
     ret
+ bomb_kill_player: ; explosion AABB vs player -> $841F=2
     ld   ix,ram_start
     ld   iy,$801C
     ld   hl,$11B4
@@ -1878,6 +1840,7 @@ start:
     ret  c
     exx
     jp   (hl)
+ bomb_vs_catA: ; explosion AABB vs cat A ($8501) -> state $06
     ld   a,($8501)
     and  a
     ret  z
@@ -1896,6 +1859,7 @@ start:
     ld   hl,cat1_busy
     ld   (hl),$01
     jp   $1286
+ bomb_vs_slot: ; explosion AABB vs unused enemy slot ($8503)
     ld   a,($8503)
     and  a
     ret  z
@@ -1914,6 +1878,7 @@ start:
     ld   hl,$854B
     ld   (hl),$01
     jp   $1286
+ bomb_vs_catB: ; explosion AABB vs cat B ($8504) -> state $06
     ld   a,($8504)
     and  a
     ret  z
@@ -1932,6 +1897,7 @@ start:
     ld   hl,cat2_busy
     ld   (hl),$01
     jp   $1286
+ bomb_vs_catC: ; explosion AABB vs cat C ($8507) -> state $06
     ld   a,($8507)
     and  a
     ret  z
@@ -1954,6 +1920,7 @@ start:
     ld   d,$04
     call $12F1
     ret
+ bomb_vs_snakeA: ; explosion AABB vs snake A ($8601) -> state $06
     ld   a,($8601)
     and  a
     ret  z
@@ -1972,6 +1939,7 @@ start:
     ld   hl,snake1_busy
     ld   (hl),$01
     jp   $12E6
+ bomb_vs_snakeB: ; explosion AABB vs snake B ($8603) -> state $06
     ld   a,($8603)
     and  a
     ret  z
@@ -2533,7 +2501,7 @@ start:
     ld   (screen_state),a
     jp   main_game_loop
 
-    call $20EC
+    call clear_playfield
     ld   hl,cat1_enable ; clear cat enable data
     ld   b,$10          ; 16 bytes
     ld   a,$00
@@ -2577,7 +2545,7 @@ start:
     djnz $2066
     ld   a,$05
     ld   (bombs),a
-    call $106C
+    call bomb_count_redraw
     ld   a,$06
     ld   (cur_screen),a
     ld   a,(screen_state)
@@ -2587,7 +2555,7 @@ start:
 
 
     ld   hl,$9262
-    ld   de,$20AB
+    ld   de,str_player
     ld   b,$08
     push bc
     ld   a,(de)
@@ -2610,27 +2578,23 @@ start:
     add  hl,de
     djnz $20A5
     ret
-    add  hl,de
-    dec  d
-    ld   a,(bc)
-    ld   ($1B0E),hl
-    inc  h
-    inc  h
-    call $20EC
+ str_player: ; 'PLAYER  ' (player-ready)
+    db   $19, $15, $0A, $22, $0E, $1B, $24, $24              ; |PLAYER  |
+    call clear_playfield
     call $2082
     call $209D
-    call $09BB
+    call draw_intermission
     ld   a,$07
     ld   (cur_screen),a
     ld   a,$E0
     ld   (watchdog),a
     ld   a,$00
-    ld   ($8480),a
+    ld   (gamble_state),a
     ld   a,(screen_state)
     res  6,a
     ld   (screen_state),a
     jp   $1FD1
-    call $20EC
+    call clear_playfield
     ld   a,$01
     ld   (cur_screen),a
     ld   a,(screen_state)
@@ -2638,6 +2602,7 @@ start:
     ld   (screen_state),a
     jp   $1FD1
 
+ clear_playfield: ; fill VRAM $9002 region ($20x$1D) with blank tile $24
     ld   hl,$9002
     ld   de,$0020
     ld   b,$20
@@ -2676,6 +2641,7 @@ start:
     inc  l
     djnz $2128
     ret
+ draw_column: ; draw [VRAM_addr_LE, tiles.., $FF] column upward (-$20 stride)
     ld   e,(hl)
     inc  hl
     ld   d,(hl)
@@ -2689,6 +2655,7 @@ start:
     inc  de
     add  hl,bc
     jr   $2136
+ hiscore_compare: ; compare 3-byte score at (de) vs hiscore_hi (carry=lower)
     ld   hl,hiscore_hi
     push de
     ld   b,$03
@@ -2745,13 +2712,13 @@ start:
     add  hl,bc
     pop  bc
     ret
-    call $20EC
-    ld   hl,$2342
-    call $212E
+    call clear_playfield
+    ld   hl,attract_display_list
+    call draw_column
     ld   hl,$2352
-    call $212E
+    call draw_column
     ld   hl,$2359
-    call $212E
+    call draw_column
     xor  a
     ld   (req_death),a
     ld   (req_level_done),a
@@ -2761,13 +2728,13 @@ start:
     res  0,a
     ld   (screen_state),a
     jp   $1FD1
-    call $20EC
+    call clear_playfield
     ld   hl,$2362
-    call $212E
+    call draw_column
     ld   hl,$2352
-    call $212E
+    call draw_column
     ld   hl,$2359
-    call $212E
+    call draw_column
     xor  a
     ld   (req_death),a
     ld   (req_level_done),a
@@ -2777,14 +2744,14 @@ start:
     res  1,a
     ld   (screen_state),a
     jp   $1FD1
-    call $20EC
+    call clear_playfield
     ld   a,(screen_state)
     res  2,a
     ld   (screen_state),a
     jp   $1FD1
-    call $20EC
+    call clear_playfield
     ld   hl,$2372
-    call $212E
+    call draw_column
     ld   a,(is_playing)
     cp   $01
     jp   z,$2240
@@ -2799,17 +2766,17 @@ start:
     ld   a,c
     ex   af,af' ; '
     ld   hl,$237E
-    call $212E
+    call draw_column
     ex   af,af' ; '
     ld   (hl),a
     ld   de,score_hi
     rrca
     jp   c,$223A
     ld   de,$8049
-    call $213F
+    call hiscore_compare
     jp   $2261
     ld   de,score_hi
-    call $213F
+    call hiscore_compare
     xor  a
     ld   (flip_state),a
     ld   (sound_enable),a
@@ -2831,15 +2798,15 @@ start:
     ld   (screen_state),a
     jp   $1FD1
     ld   de,score_hi
-    call $213F
+    call hiscore_compare
     nop
     nop
     nop
     nop
     ld   de,$8049
-    call $213F
+    call hiscore_compare
     jp   $2246
-    call $20EC
+    call clear_playfield
     ld   a,(first_turn)
     and  a
     jp   z,$22AE
@@ -2870,7 +2837,7 @@ start:
     inc  l
     ld   (hl),a
     ld   hl,$237E
-    call $212E
+    call draw_column
     ld   a,(cur_player)
     inc  a
     ld   (hl),a
@@ -2884,13 +2851,13 @@ start:
     daa
     ex   af,af' ; '
     ld   hl,$2388
-    call $212E
+    call draw_column
     ex   af,af' ; '
     ld   ($8037),a
     ld   de,$8037
     ld   b,$02
     call $216A
-    call $2307
+    call draw_player_lives
     ld   a,$05
     ld   (cur_screen),a
     ld   a,$40
@@ -2899,6 +2866,7 @@ start:
     res  4,a
     ld   (screen_state),a
     jp   $1FD1
+ draw_player_lives: ; draw cur_player remaining lives (lives_copy) as tile $79 at $939F
     ld   a,(cur_player)
     ld   hl,lives_copy
     and  a
@@ -2920,6 +2888,7 @@ start:
     add  hl,de
     djnz $2328
     ret
+ draw_lives: ; draw active lives count as tile $79 icons at $939F
     ld   hl,lives
     ld   a,(hl)
     dec  a
@@ -2929,65 +2898,17 @@ start:
     and  a
     jp   z,$2328
     jp   $231C
-    xor  (hl)
-    sub  d
-    jr   $235D
-    dec  d
-    ld   ($0124),hl
-    inc  h
-    add  hl,de
-    dec  d
-    ld   a,(bc)
-    ld   ($1B0E),hl
-    rst  $38
-    inc  l
-    sub  d
-    add  hl,de
-    ld   e,$1C
-    ld   de,$50FF
-    sub  d
-    dec  bc
-    ld   e,$1D
-    dec  e
-    jr   $2378
-    rst  $38
-    xor  (hl)
-    sub  d
-    ld   bc,$1824
-    dec  de
-    inc  h
-    ld   (bc),a
-    inc  h
-    add  hl,de
-    dec  d
-    ld   a,(bc)
-    ld   ($1B0E),hl
-    rst  $38
-    adc  a,h
-    sub  d
-    djnz $2380
-    ld   d,$0E
-    inc  h
-    jr   $239A
-    ld   c,$1B
-    rst  $38
-    adc  a,a
-    sub  d
-    add  hl,de
-    dec  d
-    ld   a,(bc)
-    ld   ($1B0E),hl
-    inc  h
-    rst  $38
-    sub  h
-    sub  d
-    dec  d
-    ld   c,$1F
-    ld   c,$15
-    inc  h
-    rst  $38
-
-
+ attract_display_list: ; [VRAM_addr_LE, text.., $FF] records, drawn by draw_column
+    db   $AE, $92, $18, $17, $15, $22, $24, $01              ; |..ONLY 1|
+    db   $24, $19, $15, $0A, $22, $0E, $1B, $FF              ; | PLAYER||
+    db   $2C, $92, $19, $1E, $1C, $11, $FF, $50              ; |..PUSH|.|
+    db   $92, $0B, $1E, $1D, $1D, $18, $17, $FF              ; |.BUTTON||
+    db   $AE, $92, $01, $24, $18, $1B, $24, $02              ; |..1 OR 2|
+    db   $24, $19, $15, $0A, $22, $0E, $1B, $FF              ; | PLAYER||
+    db   $8C, $92, $10, $0A, $16, $0E, $24, $18              ; |..GAME O|
+    db   $1F, $0E, $1B, $FF, $8F, $92, $19, $15              ; |VER|..PL|
+    db   $0A, $22, $0E, $1B, $24, $FF, $94, $92              ; |AYER |..|
+    db   $15, $0E, $1F, $0E, $15, $24, $FF                   ; |LEVEL ||
     ld   a,($841F)
     cp   $02
     jp   z,$23C5
@@ -3051,7 +2972,7 @@ start:
     ld   (watchdog),a
     ret
     ld   a,$00
-    ld   ($8480),a
+    ld   (gamble_state),a
     ld   (endlevel_active),a
     ld   (endlevel_ctr),a
     ld   a,$01
@@ -3085,7 +3006,7 @@ start:
     add  a,d
     daa
     ld   d,a
-    call $3A8C
+    call kill_enemies_bonus
     ld   a,$01
     ld   (endlevel_active),a
     ld   a,$E0
@@ -3093,7 +3014,7 @@ start:
     ret
 
  ;;; called several times
-    call $4247
+    call gamble_update
     ret
 
  player_init_template:  ; ldir'd to player record $8400 (46 = $2E bytes)
@@ -3172,7 +3093,7 @@ start:
     ldir
     ld   a,$C9
     ld   (watchdog),a
-    call $1038
+    call bomb_clear
     ret
     ld   hl,$8402
     inc  (hl)
@@ -3190,7 +3111,7 @@ start:
     jp   $2574
     ld   a,(hw_in_0)
     ld   (controls),a
-    call $2598
+    call player_update_move
     ld   a,($8422)
     and  a
     jp   nz,$2594
@@ -3202,9 +3123,10 @@ start:
     jp   nz,$2594
     ld   a,$00
     ld   ($8416),a
-    call $2853
+    call player_commit
     ret
 
+ player_update_move: ; player state machine, stage 2 (reads $841F)
     ld   a,($841F)
     cp   $01
     jp   z,$25BC
@@ -3237,7 +3159,7 @@ start:
     ld   ($8422),a
     ld   a,$0C
     ld   ($8413),a
-    call $2818
+    call player_stop
     ret
     inc  hl
     dec  (hl)
@@ -3288,7 +3210,7 @@ mthing
     ld   a,$00
     ld   ($8429),a
     ld   ($842A),a
-    call $2818
+    call player_stop
     ret
 
     ld   a,($842A)
@@ -3389,7 +3311,7 @@ mthing
     ld   a,(player_sp_y)
     and  a
     jp   z,$283E
-    jp   $2818
+    jp   player_stop
 
  move_player_left:
     ld   a,(player_x)
@@ -3398,7 +3320,7 @@ mthing
     jp   nc,$2723
     ld   a,$14  ; min $14 x
     ld   (player_x),a
-    jp   $2829
+    jp   player_stop_x
     call get_player_tile_pos
     ld   bc,$0002
     push hl
@@ -3410,7 +3332,7 @@ mthing
     cp   (hl)
     jp   c,$273B
     pop  hl
-    jp   $2829
+    jp   player_stop_x
     pop  hl
     ld   a,($840B)
     ld   (player_sp_x),a
@@ -3429,7 +3351,7 @@ mthing
     jp   c,$2765
     ld   a,$D4  ; max $d4 x
     ld   (player_x),a
-    jp   $2829
+    jp   player_stop_x
     call get_player_tile_pos
     ld   bc,$FFC2
     push hl
@@ -3441,7 +3363,7 @@ mthing
     cp   (hl)
     jp   c,$277D
     pop  hl
-    jp   $2829
+    jp   player_stop_x
     pop  hl
     ld   a,($840D)
     ld   (player_sp_x),a
@@ -3461,7 +3383,7 @@ mthing
     jp   c,$27A7
     ld   a,$E2
     ld   (player_y),a
-    jp   $283E
+    jp   player_stop_y
     call get_player_tile_pos
     ld   bc,$FFE3
     push hl
@@ -3473,7 +3395,7 @@ mthing
     cp   (hl)
     jp   c,$27BF
     pop  hl
-    jp   $283E
+    jp   player_stop_y
     pop  hl
     ld   a,($840F)
     ld   (player_sp_y),a
@@ -3492,7 +3414,7 @@ mthing
     jp   nc,$27E9
     ld   a,$22
     ld   (player_y),a
-    jp   $283E
+    jp   player_stop_y
     call get_player_tile_pos
     ld   bc,$FFE1
     push hl
@@ -3504,7 +3426,7 @@ mthing
     cp   (hl)
     jp   c,$2801
     pop  hl
-    jp   $283E
+    jp   player_stop_y
     pop  hl
     ld   a,($8411)
     ld   (player_sp_y),a
@@ -3517,6 +3439,7 @@ mthing
     ret
 
 
+ player_stop: ; zero player speed x/y + moving flag $8416
     ld   a,$00
     ld   (player_sp_x),a
     ld   a,$00
@@ -3526,6 +3449,7 @@ mthing
     nop
     ret
 
+ player_stop_x: ; zero player x-speed (checks y-speed)
     ld   a,$00
     ld   (player_sp_x),a
     nop
@@ -3537,6 +3461,7 @@ mthing
     jp   $27D6
     nop
     ret
+ player_stop_y: ; zero player y-speed (checks x-speed)
     ld   a,$00
     ld   (player_sp_y),a
     nop
@@ -3548,6 +3473,7 @@ mthing
     jp   $2710
     nop
     ret
+ player_commit: ; commit player pos/tile into sprite mirror (checks $8422)
     ld   a,($8422)
     and  a
     jp   nz,$28BB
@@ -3628,16 +3554,16 @@ mthing
     and  a
     jp   nz,$2922
     push hl
-    call $294C
+    call player_enter_hole
     pop  hl
     push hl
-    call $2923
+    call player_touch_boulder
     pop  hl
     push hl
-    call $29A1
+    call player_trigger_bridge
     pop  hl
     push hl
-    call $29AF
+    call player_trigger_platform
     pop  hl
     push hl
     call food_pickup
@@ -3646,10 +3572,11 @@ mthing
     and  a
     jp   nz,$2922
     push hl
-    call $295A
+    call player_home_entry
     pop  hl
     ret
 
+ player_touch_boulder: ; player on TILE_BOULDER $39/$3A -> boulder_req $85C1=1
     ld   bc,$FFE1
     add  hl,bc
     ld   a,(hl)
@@ -3670,6 +3597,7 @@ mthing
     ld   a,(player_y)
     ld   ($85C3),a
     ret
+ player_enter_hole: ; player on $FE -> $841F=4 (enter hole)
     ld   bc,$FFE2
     add  hl,bc
     ld   a,(hl)
@@ -3678,6 +3606,7 @@ mthing
     ld   a,$04
     ld   ($841F),a
     ret
+ player_home_entry: ; player on $FF over-hole -> scripted home entry $80E0, $841F=5
     ld   bc,$FFE2
     add  hl,bc
     ld   a,(hl)
@@ -3712,6 +3641,7 @@ mthing
     ld   a,$00
     ld   ($842D),a
     ret
+ player_trigger_bridge: ; player on $FC -> bridge subsystem $80C0=1
     ld   bc,$FFE2
     add  hl,bc
     ld   a,(hl)
@@ -3720,6 +3650,7 @@ mthing
     ld   a,$01
     ld   ($80C0),a
     ret
+ player_trigger_platform: ; player on $F9 -> sliding platform $80A2
     ld   bc,$FFE2
     add  hl,bc
     ld   a,(hl)
@@ -3818,10 +3749,10 @@ mthing
     ld   (hl),$01
     ld   hl,cat1_ai_ptr
     ld   bc,$2B5A
-    call $31CF
+    call load_level_ptr
     ld   hl,cat1_ptr2
     ld   bc,$2B28
-    call $31CF
+    call load_level_ptr
     call $2B1F
 
     ld   hl,$8529
@@ -3837,10 +3768,10 @@ mthing
     ld   (hl),$01
     ld   hl,cat2_ai_ptr
     ld   bc,$2BB0
-    call $31CF
+    call load_level_ptr
     ld   hl,cat2_ptr2
     ld   bc,$2B28
-    call $31CF
+    call load_level_ptr
     call $2B1F
     ld   hl,$8569
     ld   de,cat2_enable
@@ -3855,10 +3786,10 @@ mthing
     ld   (hl),$01
     ld   hl,cat3_ai_ptr
     ld   bc,$2C06
-    call $31CF
+    call load_level_ptr
     ld   hl,cat3_ptr2
     ld   bc,$2B28
-    call $31CF
+    call load_level_ptr
     call $2B1F
     ld   hl,$8589
     ld   de,cat3_enable
@@ -3880,6 +3811,7 @@ mthing
     call nz,setup_cat_3
     ret
 
+ enemy_spawn_gate: ; per-enemy spawn countdown + tile-validity gate
     push bc
     ld   b,(hl)
     dec  hl
@@ -4138,7 +4070,7 @@ mthing
     and  $1F
     cp   $10
     jp   c,$2C92
-    call $309C
+    call enemy_sprite_commit
     ret
     ld   b,$1F
     call $2CA2
@@ -4147,7 +4079,7 @@ mthing
     ld   (hl),$00
     ld   a,$03
     ld   (bc),a
-    call $309C
+    call enemy_sprite_commit
     ret
     ld   a,(de)
     ld   hl,$0005
@@ -4496,11 +4428,11 @@ mthing
     add  hl,de
     ex   de,hl
     ld   hl,$FFE2
-    call $30CE
+    call check_tile_wall
     and  a
     jp   nz,$2EFC
     ld   hl,$0002
-    call $30CE
+    call check_tile_wall
     ld   hl,$FFF7
     add  hl,de
     ld   d,h
@@ -4537,11 +4469,11 @@ mthing
     add  hl,de
     ex   de,hl
     ld   hl,$FFE2
-    call $30CE
+    call check_tile_wall
     and  a
     jp   nz,$2F48
     ld   hl,$FFC2
-    call $30CE
+    call check_tile_wall
     ld   hl,$FFF7
     add  hl,de
     ld   d,h
@@ -4578,11 +4510,11 @@ mthing
     add  hl,de
     ex   de,hl
     ld   hl,$FFE2
-    call $30CE
+    call check_tile_wall
     and  a
     jp   nz,$2F94
     ld   hl,$FFE3
-    call $30CE
+    call check_tile_wall
     ld   hl,$FFF7
     add  hl,de
     ld   a,$00
@@ -4621,11 +4553,11 @@ mthing
     add  hl,de
     ex   de,hl
     ld   hl,$FFE2
-    call $30CE
+    call check_tile_wall
     and  a
     jp   nz,$2FE2
     ld   hl,$FFE1
-    call $30CE
+    call check_tile_wall
     ld   hl,$FFF7
     add  hl,de
     ld   a,$00
@@ -4742,7 +4674,7 @@ mthing
     dec  hl
     dec  de
     call $308A
-    call $309C
+    call enemy_sprite_commit
     ret
 
 
@@ -4763,6 +4695,7 @@ mthing
     ret
 
 
+ enemy_sprite_commit: ; write enemy Y/tile/color/X into its sprite mirror slot
     ld   a,(de)
     ld   l,a
     ld   h,$80
@@ -4812,6 +4745,7 @@ mthing
     ret
 
 
+ check_tile_wall: ; (de)=1 if tile at (hl+bc)==$F4 (wall) else 0
     add  hl,bc
     ld   a,$F4
     cp   (hl)
@@ -4857,7 +4791,7 @@ mthing
     ld   hl,$FFFC
     add  hl,de
     ex   de,hl
-    call $309C
+    call enemy_sprite_commit
     ret
 
     ex   de,hl
@@ -4886,7 +4820,7 @@ mthing
     ld   (de),a
     ex   de,hl
     dec  de
-    call $309C
+    call enemy_sprite_commit
     ret
     ex   de,hl
     ld   hl,$FFFA
@@ -4914,7 +4848,7 @@ mthing
     ld   (de),a
     ex   de,hl
     dec  de
-    call $309C
+    call enemy_sprite_commit
     ret
     ld   c,$00
     inc  hl
@@ -4951,14 +4885,15 @@ mthing
     ld   hl,$0015
     ld   bc,$31EF
     add  hl,de
-    call $31CF
-    call $309C
+    call load_level_ptr
+    call enemy_sprite_commit
     ret
     nop
     nop
     nop
 
 
+ load_level_ptr: ; load level-indexed 16-bit table ptr into enemy record
     push hl
     ld   h,b
     ld   l,c
@@ -5018,7 +4953,7 @@ mthing
     ld   (hl),$01
     ld   hl,snake1_dly_ptr
     ld   bc,spawn_delay_sa
-    call $32F7
+    call snake_spawn_delay
     ld   de,snake1_enable
     ld   hl,$8629
     ld   a,(de)
@@ -5031,7 +4966,7 @@ mthing
     ld   (hl),$01
     ld   hl,snake2_dly_ptr
     ld   bc,spawn_delay_sb
-    call $32F7
+    call snake_spawn_delay
     ld   de,$8602
     ld   hl,$8649
     ld   a,(de)
@@ -5161,6 +5096,7 @@ mthing
     nop
     nop
 
+ snake_spawn_delay: ; level-indexed snake spawn-delay lookup (spawn_delay_sa/sb)
     push hl
     ld   h,b
     ld   l,c
@@ -6063,7 +5999,7 @@ mthing
     ld   bc,$3910
     ld   hl,$0015
     add  hl,de
-    call $32F7
+    call snake_spawn_delay
     call $37B3
     ret
  ;; some data?
@@ -6108,17 +6044,17 @@ mthing
     ld   a,(endlevel_active)
     and  a
     ret  nz
-    call $3981
-    call $399C
-    call $39B7
-    call $39D2
-    call $39ED
+    call player_vs_catA
+    call player_vs_catB
+    call player_vs_catC
+    call player_vs_snakeA
+    call player_vs_snakeB
     ret
-    call $3A08
-    call $3A15
-    call $3A22
-    call $3A50
-    call $3A5D
+    call return_catA
+    call return_catB
+    call return_catC
+    call return_snakeA
+    call return_snakeB
     call boulder_squash
     ret
     ld   a,(ix+$03)
@@ -6143,6 +6079,7 @@ mthing
     ld   (hl),$02
     ret
 
+ player_vs_catA: ; AABB player vs cat A ($8501) -> player death
     ld   a,($8501)
     and  a
     ret  z
@@ -6154,6 +6091,7 @@ mthing
     ld   de,$070E
     ld   hl,$070E
     jp   $395E
+ player_vs_catB: ; AABB player vs cat B ($8504) -> player death
     ld   a,($8504)
     and  a
     ret  z
@@ -6165,6 +6103,7 @@ mthing
     ld   de,$070E
     ld   hl,$070E
     jp   $395E
+ player_vs_catC: ; AABB player vs cat C ($8507) -> player death
     ld   a,($8507)
     and  a
     ret  z
@@ -6176,6 +6115,7 @@ mthing
     ld   de,$070E
     ld   hl,$070E
     jp   $395E
+ player_vs_snakeA: ; AABB player vs snake A ($8601) -> player death
     ld   a,($8601)
     and  a
     ret  z
@@ -6187,6 +6127,7 @@ mthing
     ld   de,$050A
     ld   hl,$050A
     jp   $395E
+ player_vs_snakeB: ; AABB player vs snake B ($8603) -> player death
     ld   a,($8603)
     and  a
     ret  z
@@ -6198,18 +6139,21 @@ mthing
     ld   de,$050A
     ld   hl,$050A
     jp   $395E
+ return_catA: ; cat A death->return-home handler (cat1_state)
     ld   hl,cat1_state
     ld   a,(hl)
     cp   $04
     ret  nz
     ld   de,$8007
     jp   $3A2C
+ return_catB: ; cat B death->return-home handler (cat2_state)
     ld   hl,cat2_state
     ld   a,(hl)
     cp   $04
     ret  nz
     ld   de,$800F
     jp   $3A2C
+ return_catC: ; cat C death->return-home handler (cat3_state)
     ld   hl,cat3_state
     ld   a,(hl)
     cp   $04
@@ -6230,14 +6174,16 @@ mthing
     ld   a,$83
     ld   (watchdog),a
     ld   d,$04
-    call $3BBD
+    call score_add_request
     ret
+ return_snakeA: ; snake A death->return-home handler (snake1_state)
     ld   hl,snake1_state
     ld   a,(hl)
     cp   $04
     ret  nz
     ld   de,$8017
     jp   $3A67
+ return_snakeB: ; snake B death->return-home handler (snake2_state)
     ld   hl,snake2_state
     ld   a,(hl)
     cp   $04
@@ -6255,17 +6201,18 @@ mthing
     ld   a,$82
     ld   (watchdog),a
     ld   d,$08
-    call $3BBD
+    call score_add_request
     ret
     ld   a,$97
     ld   (watchdog),a
     ld   d,$08
-    call $3BBD
+ kill_enemies_bonus: ; level-end: award points for + clear surviving enemies
+    call score_add_request
     ld   d,$04
     ld   a,(cat1_busy)
     and  a
     jp   nz,$3AA5
-    call $3BBD
+    call score_add_request
     ld   hl,cat1_state
     ld   (hl),$06
     ld   hl,cat1_busy
@@ -6273,7 +6220,7 @@ mthing
     ld   a,(cat2_busy)
     and  a
     jp   nz,$3AB9
-    call $3BBD
+    call score_add_request
     ld   hl,cat2_state
     ld   (hl),$06
     ld   hl,cat2_busy
@@ -6281,7 +6228,7 @@ mthing
     ld   a,(cat3_busy)
     and  a
     ret  nz
-    call $3BBD
+    call score_add_request
     ld   hl,cat3_state
     ld   (hl),$06
     ld   hl,cat3_busy
@@ -6292,13 +6239,14 @@ mthing
     ld   a,(boulder)
     and  a
     ret  z
-    call $3AE1
-    call $3AF8
-    call $3B0F
-    call $3B36
-    call $3B4D
+    call boulder_hit_catA
+    call boulder_hit_catB
+    call boulder_hit_catC
+    call boulder_hit_snakeA
+    call boulder_hit_snakeB
     ret
 
+ boulder_hit_catA: ; enable+busy gate then boulder_vs_enemy (cat A $8501)
     ld   a,($8501)
     and  a
     ret  z
@@ -6309,6 +6257,7 @@ mthing
     ld   hl,$3B26
     ld   de,cat1_state
     jp   boulder_vs_enemy
+ boulder_hit_catB: ; enable+busy gate then boulder_vs_enemy (cat B $8505)
     ld   a,($8505)
     and  a
     ret  z
@@ -6319,6 +6268,7 @@ mthing
     ld   hl,$3B26
     ld   de,cat2_state
     jp   boulder_vs_enemy
+ boulder_hit_catC: ; enable+busy gate then boulder_vs_enemy (cat C $8507)
     ld   a,($8507)
     and  a
     ret  z
@@ -6339,6 +6289,7 @@ mthing
     ld   (hl),$04
     ret
 
+ boulder_hit_snakeA: ; enable+busy gate then boulder_vs_enemy (snake A $8601)
     ld   a,($8601)
     and  a
     ret  z
@@ -6349,6 +6300,7 @@ mthing
     ld   hl,$3B64
     ld   de,snake1_state
     jp   boulder_vs_enemy
+ boulder_hit_snakeB: ; enable+busy gate then boulder_vs_enemy (snake B $8603)
     ld   a,($8603)
     and  a
     ret  z
@@ -6420,6 +6372,7 @@ mthing
     ex   de,hl
     ret
 
+ score_add_request: ; request a score add (score_add_trig=1) with pending BCD
     xor  a
     ld   hl,score_add_trig
     ld   (hl),$01
@@ -6496,14 +6449,14 @@ mthing
     jp   z,$3C4D
     cp   $02
     jp   z,$3C78
-    call $3C92
+    call bridge_select_cells
     ld   b,(ix+$00)
     ld   a,b
     and  a
     ret  z
     inc  ix
     ld   de,open_bridge_tiles
-    call $3CA9
+    call bridge_blit
     ld   hl,$80C2
     ld   (hl),$01
     inc  hl
@@ -6522,14 +6475,14 @@ mthing
     ld   a,(hl)
     cp   $08
     ret  c
-    call $3C92
+    call bridge_select_cells
     ld   b,(ix+$00)
     ld   a,b
     and  a
     ret  z
     inc  ix
     ld   de,closed_bridge_tiles
-    call $3CA9
+    call bridge_blit
     ld   hl,$80C2
     ld   (hl),$02
     inc  hl
@@ -6555,7 +6508,8 @@ mthing
     inc  hl
     djnz $3C8D
     ret
-    call $48EF
+ bridge_select_cells: ; pick per-maze bridge cell set (table $3BE3)
+    call debug_draw_check
     ld   ix,$3BE3
     ld   a,(cur_map)
     and  $03
@@ -6565,6 +6519,7 @@ mthing
     add  ix,de
     dec  a
     jp   $3CA1
+ bridge_blit: ; blit open/closed bridge tile blocks to VRAM
     ld   l,(ix+$00)
     ld   h,(ix+$01)
     push bc
@@ -7314,7 +7269,7 @@ mthing
     ld   ($97A5),a
     ret
  boulder_update:  ; boulder: spawn-on-touch / fall / despawn (slot 7)
-    call $48EF
+    call debug_draw_check
     ld   a,(boulder_req)
     and  a
     jp   nz,$41D3
@@ -7382,7 +7337,8 @@ mthing
     ret
 
 
-    call $48EF
+ gamble_update: ; bonus/score display state machine ($8480)
+    call debug_draw_check
     ld   hl,$8479
     ld   a,(hl)
     and  a
@@ -7392,8 +7348,8 @@ mthing
     ld   a,$03
     ld   (hl),a
     ld   a,$00
-    ld   ($8474),a
-    ld   a,($8480)
+    ld   (gamble_credit),a
+    ld   a,(gamble_state)
     ld   b,a
     and  a
     jp   z,$441B
@@ -7413,7 +7369,7 @@ mthing
     jp   z,$4443
     ld   a,$E0
     ld   (watchdog),a
-    ld   hl,$8483
+    ld   hl,gamble_reel1
     ld   a,(hl)
     inc  hl
     cp   (hl)
@@ -7430,10 +7386,10 @@ mthing
     jp   nz,$42A9
     push af
     ld   a,$01
-    ld   ($8474),a
+    ld   (gamble_credit),a
     pop  af
-    ld   ($8489),a
-    ld   hl,$44FE
+    ld   (gamble_outcome),a
+    ld   hl,gamble_score_tbl
     ld   b,a
     sla  a
     add  a,b
@@ -7447,17 +7403,17 @@ mthing
     ld   bc,$0003
     ldir
     ld   a,$80
-    ld   ($8480),a
+    ld   (gamble_state),a
     ret
     ld   a,$40
-    ld   ($8480),a
+    ld   (gamble_state),a
     ret
-    ld   a,($8480)
+    ld   a,(gamble_state)
     and  $BF
     jr   nz,$42E5
     inc  a
     or   $40
-    ld   ($8480),a
+    ld   (gamble_state),a
     ld   hl,$00B4
     ld   ($8481),hl
     ret
@@ -7473,7 +7429,7 @@ mthing
     jp   z,$42FD
     ld   (hl),a
     xor  a
-    ld   ($8480),a
+    ld   (gamble_state),a
     ret
     ld   (hl),a
     inc  hl
@@ -7483,16 +7439,16 @@ mthing
     ret
 
  ;;
-    ld   a,($8480)
+    ld   a,(gamble_state)
     and  $7F
     cp   $03
     jp   nc,$43E7
     cp   $02
-    jp   nc,$432E
+    jp   nc,gamble_award_credit
     inc  a
     or   $80
-    ld   ($8480),a
-    ld   a,($8474)
+    ld   (gamble_state),a
+    ld   a,(gamble_credit)
     and  a
     jp   z,$4328
     ld   a,$9A
@@ -7503,12 +7459,13 @@ mthing
     ret
 
  ;;
+ gamble_award_credit: ; special bonus: credits+=1 (max 9) + draw 'CREDIT PLUS 1'
     inc  a
     or   $80
-    ld   ($8480),a
-    ld   a,($8489)
+    ld   (gamble_state),a
+    ld   a,(gamble_outcome)
     sla  a
-    ld   hl,$4516
+    ld   hl,gamble_prize_pos
     add  a,l
     ld   l,a
     ld   a,h
@@ -7519,7 +7476,7 @@ mthing
     inc  hl
     ld   a,(hl)
     ld   ($848B),a
-    ld   a,($8474)
+    ld   a,(gamble_credit)
     and  a
     jp   z,$43E0
     ld   a,(is_playing)
@@ -7536,21 +7493,22 @@ mthing
     ld   hl,$92EC
     ld   de,$FFE0
     ld   b,$0F
-    call $43AE
+    call gamble_draw_blank
     ld   hl,$92ED
-    ld   de,$43C2
+    ld   de,str_special_bonus
     ld   b,$0F
-    call $439C
+    call gamble_draw_text
     ld   hl,$92EE
     ld   b,$0F
-    call $439C
+    call gamble_draw_text
     ld   hl,$92EF
     ld   de,$FFE0
     ld   b,$0F
-    call $43AE
+    call gamble_draw_blank
     ld   hl,$00C8
     ld   ($8481),hl
     ret
+ gamble_draw_text: ; draw a text column (de=str) + color to VRAM
     ld   a,(de)
     ld   (hl),a
     set  2,h
@@ -7563,6 +7521,7 @@ mthing
     inc  de
     djnz $439C
     ret
+ gamble_draw_blank: ; draw a blank/spacer column + color to VRAM
     ld   (hl),$24
     set  2,h
     ld   (hl),$80
@@ -7573,30 +7532,11 @@ mthing
     ld   a,$09
     ld   (credits),a
     jp   $4367
-    inc  h
-    inc  e
-    add  hl,de
-    ld   c,$0C
-    ld   (de),a
-    ld   a,(bc)
-    dec  d
-    inc  h
-    dec  bc
-    jr   $43E5
-    ld   e,$1C
-    inc  h
-    inc  h
-    inc  c
-    dec  de
-    ld   c,$0D
-    ld   (de),a
-    dec  e
-    inc  h
-    add  hl,de
-    dec  d
-    ld   e,$1C
-    inc  h
-    ld   bc,$2124
+ str_special_bonus: ; 'SPECIAL BONUS  CREDIT PLUS 1' (+$21 marker)
+    db   $24, $1C, $19, $0E, $0C, $12, $0A, $15              ; | SPECIAL|
+    db   $24, $0B, $18, $17, $1E, $1C, $24, $24              ; | BONUS  |
+    db   $0C, $1B, $0E, $0D, $12, $1D, $24, $19              ; |CREDIT P|
+    db   $15, $1E, $1C, $24, $01, $24, $21                   ; |LUS 1 X|
     ret  p
     nop
     ld   ($8481),hl
@@ -7632,18 +7572,18 @@ mthing
     djnz $4410
     ret
     inc  a
-    ld   ($8480),a
+    ld   (gamble_state),a
     ld   a,$E0
     ld   (watchdog),a
     ld   hl,$0190
     ld   ($8481),hl
     ret
-    ld   a,($8480)
+    ld   a,(gamble_state)
     inc  a
-    ld   ($8480),a
+    ld   (gamble_state),a
     cp   $04
     jr   nz,$443D
-    call $4453
+    call gamble_spin_reels
     ld   a,$20
     jr   $442F
     ld   a,$CA
@@ -7658,40 +7598,42 @@ mthing
     ld   a,l
     and  $07
     ret  nz
-    ld   de,$8483
-    ld   hl,$4526
-    ld   a,($8486)
-    call $44A7
+ gamble_spin_reels: ; advance the 3 reels one step from their strips + redraw
+    ld   de,gamble_reel1
+    ld   hl,gamble_reel1_strip
+    ld   a,(gamble_pos1)
+    call gamble_reel_step
     cp   $11
     jr   nz,$4464
     xor  a
     inc  de
-    ld   ($8486),a
-    ld   hl,$4537
-    ld   a,($8487)
-    call $44A7
+    ld   (gamble_pos1),a
+    ld   hl,gamble_reel2_strip
+    ld   a,(gamble_pos2)
+    call gamble_reel_step
     cp   $10
     jr   nz,$4476
     xor  a
     inc  de
-    ld   ($8487),a
-    ld   hl,$4547
-    ld   a,($8488)
-    call $44A7
+    ld   (gamble_pos2),a
+    ld   hl,gamble_reel3_strip
+    ld   a,(gamble_pos3)
+    call gamble_reel_step
     cp   $0F
     jr   nz,$4488
     xor  a
-    ld   ($8488),a
+    ld   (gamble_pos3),a
     ld   de,$9268
-    ld   a,($8483)
-    call $44B3
+    ld   a,(gamble_reel1)
+    call gamble_reel_draw
     ld   de,$91E8
-    ld   a,($8484)
-    call $44B3
+    ld   a,(gamble_reel2)
+    call gamble_reel_draw
     ld   de,$9168
-    ld   a,($8485)
-    call $44B3
+    ld   a,(gamble_reel3)
+    call gamble_reel_draw
     ret
+ gamble_reel_step: ; reel += strip[pos]; wrap pos; store symbol -> (de)
     push af
     add  a,l
     ld   l,a
@@ -7703,6 +7645,7 @@ mthing
     pop  af
     inc  a
     ret
+ gamble_reel_draw: ; draw one reel symbol to VRAM (de)
     cp   $03
     jr   nz,$44BD
     ld   a,$92
@@ -7753,71 +7696,25 @@ mthing
     pop  bc
     djnz $44E0
     ret
-    nop
-    dec  d
-    nop
-    nop
-    ex   af,af' ; '
-    nop
-    nop
-    djnz $4507
-    nop
-    dec  b
-    nop
-    nop
-    ex   af,af' ; '
-    nop
-    nop
-    inc  b
-    nop
-    nop
-    ld   b,$00
-    nop
-    ld   (bc),a
-    nop
-    ld   sp,$3596
-    sub  (hl)
-    add  hl,sp
-    sub  (hl)
-    dec  a
-    sub  (hl)
-    ld   d,c
-    sub  h
-    ld   d,l
-    sub  h
-    ld   e,c
-    sub  h
-    ld   e,l
-    sub  h
-    ld   bc,$0100
-    ld   (bc),a
-    inc  bc
-    ld   (bc),a
-    ld   bc,$0103
-    inc  bc
-    ld   (bc),a
-    ld   bc,$0203
-    nop
-    ld   bc,$0102
-    ld   (bc),a
-    inc  bc
-    ld   (bc),a
-    ld   bc,$0203
-    ld   bc,$0203
-    ld   bc,$0103
-    ld   (bc),a
-    nop
-    ld   (bc),a
-    ld   (bc),a
-    nop
-    ld   bc,$0303
-    ld   (bc),a
-    ld   bc,$0203
-    ld   bc,$0203
-    inc  bc
-    ld   bc,$2102
-    ld   h,b
-    add  a,b
+ gamble_score_tbl: ; 8 outcomes x 3-byte BCD score bonus (index = gamble_outcome)
+    db   $00, $15, $00, $00, $08, $00, $00, $10
+    db   $00, $00, $05, $00, $00, $08, $00, $00
+    db   $04, $00, $00, $06, $00, $00, $02, $00
+ gamble_prize_pos: ; 8 outcomes x 2-byte LE VRAM pos for the win display
+    db   $31, $96, $35, $96, $39, $96, $3D, $96
+    db   $51, $94, $55, $94, $59, $94, $5D, $94
+ gamble_reel1_strip: ; reel 1 symbol strip (17 steps, values 0-3)
+    db   $01, $00, $01, $02, $03, $02, $01, $03
+    db   $01, $03, $02, $01, $03, $02, $00, $01
+    db   $02
+ gamble_reel2_strip: ; reel 2 symbol strip (16 steps)
+    db   $01, $02, $03, $02, $01, $03, $02, $01
+    db   $03, $02, $01, $03, $01, $02, $00, $02
+ gamble_reel3_strip: ; reel 3 symbol strip (15 steps)
+    db   $02, $00, $01, $03, $03, $02, $01, $03
+    db   $02, $01, $03, $02, $03, $01, $02
+ gamble_tbl_pad: ; trailing bytes ($21,$60,$80)
+    db   $21, $60, $80
     ld   a,(hl)
     and  a
     jp   nz,$456D
@@ -7862,7 +7759,7 @@ mthing
     cp   $2D
     jp   nz,$45D9
     ld   hl,$92F5
-    ld   de,$45C9
+    ld   de,str_lucky_mouse
     ld   b,$10
     ld   c,$86
     ld   a,(de)
@@ -7887,15 +7784,10 @@ mthing
     inc  a
     ld   ($91EF),a
     ret
-    rra
-    ld   c,$1B
-    ld   ($1524),hl
-    ld   e,$0C
-    inc  d
-    ld   ($1624),hl
-    jr   $45F5
-    inc  e
-    ld   c,$FE
+ str_lucky_mouse: ; 'VERY LUCKY MOUSE' ($FE-term)
+    db   $1F, $0E, $1B, $22, $24, $15, $1E, $0C              ; |VERY LUC|
+    db   $14, $22, $24, $16, $18, $1E, $1C, $0E              ; |KY MOUSE|
+    db   $FE                                                 ; |.|
     dec  sp
     jp   z,$45F1
     cp   $46
@@ -8390,87 +8282,20 @@ mthing
     ld   (hl),$93
     inc  d
     add  a,(hl)
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    ld   (de),a
-    rla
-    inc  e
-    ld   c,$1B
-    dec  e
-    inc  h
-    inc  h
-    inc  c
-    jr   $48B0
-    rla
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    jr   c,$4838
-    inc  d
-    add  a,d
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  c
-    jr   $48C1
-    rla
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    add  hl,de
-    dec  d
-    ld   a,(bc)
-    ld   ($2424),hl
-    ld   a,($1493)
-    add  a,b
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    inc  h
-    ld   a,h
-    sub  e
-    jr   $485D
-    inc  h
-    inc  h
-    jr   z,$48FF
-    ld   bc,$0809
-    ld   (bc),a
-    inc  h
-    inc  c
-    ld   de,$181E
-    inc  h
-    inc  c
-    jr   $4919
-    inc  h
-    dec  d
-    dec  e
-    dec  c
-    dec  hl
-    inc  h
-    inc  h
+ coin_copyright_table: ; INSERT COIN / COIN PLAY / (c)1982 CHUO CO.,LTD (text+VRAM addr+color)
+    db   $24, $24, $24, $24, $12, $17, $1C, $0E              ; |    INSE|
+    db   $1B, $1D, $24, $24, $0C, $18, $12, $17              ; |RT  COIN|
+    db   $24, $24, $24, $24, $38, $93, $14, $82              ; |    ..K.|
+    db   $24, $24, $24, $24, $24, $0C, $18, $12              ; |     COI|
+    db   $17, $24, $24, $24, $24, $24, $19, $15              ; |N     PL|
+    db   $0A, $22, $24, $24, $3A, $93, $14, $80              ; |AY  ..K.|
+    db   $24, $24, $24, $24, $24, $24, $24, $24              ; |        |
+    db   $24, $24, $24, $24, $24, $24, $24, $24              ; |        |
+    db   $24, $24, $24, $24, $7C, $93, $18, $86              ; |    ..O.|
+    db   $24, $24, $28, $24, $01, $09, $08, $02              ; |  (c) 1982|
+    db   $24, $0C, $11, $1E, $18, $24, $0C, $18              ; | CHUO CO|
+    db   $31, $24, $15, $1D, $0D, $2B, $24, $24              ; |., LTD.  |
+ debug_draw_check: ; if hw_in_1 & $40 draw debug text at $9100 (else no-op)
     push af
     ld   a,(hw_in_1)
     and  $40
@@ -8495,15 +8320,9 @@ mthing
     pop  bc
     djnz $490E
     ret
-    inc  h
-    dec  c
-    dec  e
-    dec  d
-    inc  h
-    ld   sp,$0C18
-    inc  h
-    jr   $4943
-    ld   de,$240C
+ licensee_text:  ; font tiles -> VRAM $9100 via draw at $48FA; ROT90 reads "CHUO CO.,LTD"
+    db   $24, $0D, $1D, $15, $24, $31, $18, $0C  ; _ D T L _ [.,] O C
+    db   $24, $18, $1E, $11, $0C, $24            ; _ O U H C _
 
     org $4fff
     nop
