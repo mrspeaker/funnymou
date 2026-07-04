@@ -434,8 +434,9 @@ data. Shared helper **`$3EB2`/`$3EB3`** (`food_set_state`): given a VRAM cell in
 - **Return home (2 → 1) — `$4167`** (`food_return_home`, reached from the home-entry path at
   `$412F`). Reads the carried-food block (`$809C`/`$809E`/`$809F`), calls **`$3EF2`**
   (`food_return_add`): scans `$8140` for the first empty (`==0`) slot, stores the piece's identity
-  (`d`=tile, `e`=color), draws it onto the on-screen "home" display via the **`$3FB4`** pointer
-  table (`set 2,h` → color RAM), and awards **500 pts** (`$8040`, BCD from `$3F31`=`00 05 00`) +
+  (`d`=tile, `e`=color), draws it onto the on-screen "home" display via the **`food_home_pos_tbl`
+  (`$3FB4`)** pointer table (9× 2-byte LE VRAM cells, one per returned piece; `set 2,h` → color
+  RAM), and awards **500 pts** (`$8040`, BCD from `$3F31`=`00 05 00`) +
   sound `$84`. Then `c=$01`, `$3EB2` flips that piece's `$8120` slot **carried → returned**. So
   `$8140` is a **fill-from-front log of returned pieces** (one 2-byte entry each). (`$3F36`,
   `food_log_redraw`, just repaints every logged entry to VRAM on maze rebuild / page swap.)
@@ -691,7 +692,7 @@ baked-in **address column (cols 1–15) went stale** (e.g. shows `$13B8` where t
 - **`$1FD1`** — main state dispatcher: reads `$8039` bitmask, `rrca`+`jp c` chain to
   `$219E/$21CA/$21F6/$2204/$2284/$200A/$20B3/$20D9`.
 - **`$130B`** — level→maze-bank selector: `($8101 & 3)` → `$1391/$16A1/$19B1/$1CC1`.
-- **`$3FB4`/`$3FC6`** — 2-byte LE VRAM-position pointer tables.
+- **`food_home_pos_tbl` `$3FB4`** (9× returned-food home HUD slots) / **`food_pos_tbl` `$3FC6`** — 2-byte LE VRAM-position pointer tables.
 - Computed `jp (hl)` sites: `$11D8`, `$3B98`, `$4068`.
 
 
@@ -761,6 +762,7 @@ food_set_state      $3EB2 ; find food piece at VRAM cell (hl), write reg c into 
 food_return_add     $3EF2 ; append a carried-home piece to food_returned, draw it, +500 pts
 food_log_redraw     $3F36 ; repaint all food_returned entries to VRAM (maze rebuild/page swap)
 food_maze_erase     $3F62 ; blank carried (state 2) food cells in the maze (tile $25/$87)
+food_home_pos_tbl   $3FB4 ; 9x 2-byte LE VRAM cells = returned-food 'home' HUD slots   [data table]
 food_pos_tbl        $3FC6 ; per-maze food VRAM-cell pointer table (stride $12, 9x2)   [data table]
 platform_update     $407D ; sliding platform (slot 2), block $80A0-$80A8
 bridge_update       $3BFF ; bridge open/close tile animation, block $80C0-$80C7

@@ -6855,7 +6855,7 @@ _
 3F04  72      	    ld   (hl),d
 3F05  23      	    inc  hl
 3F06  73      	    ld   (hl),e
-3F07  DD21B43F	    ld   ix,very_chunk_data_3
+3F07  DD21B43F	    ld   ix,food_home_pos_tbl
 3F0B  DD09    	    add  ix,bc
 3F0D  DD6E00  	    ld   l,(ix+$00)
 3F10  DD6601  	    ld   h,(ix+$01)
@@ -6904,7 +6904,7 @@ _
 3F4D  56      	    ld   d,(hl)
 3F4E  23      	    inc  hl
 3F4F  5E      	    ld   e,(hl)
-3F50  DD21B43F	    ld   ix,very_chunk_data_3
+3F50  DD21B43F	    ld   ix,food_home_pos_tbl
 3F54  DD09    	    add  ix,bc
 3F56  DD6E00  	    ld   l,(ix+$00)
 3F59  DD6601  	    ld   h,(ix+$01)
@@ -6955,20 +6955,16 @@ _
 3FB0  C1      	    pop  bc
 3FB1  C3833F  	    jp   $3F83
 
-                very_chunk_data_3:
-3FB4  FD      	    db   $fd
-3FB5  91      	    sub  c
-3FB6  BD      	    cp   l
-3FB7  91      	    sub  c
-3FB8  DD      	    db   $dd
-3FB9  91      	    sub  c
-3FBA  FC91BC  	    call m,$BC91
-3FBD  91      	    sub  c
-3FBE  DC91FB  	    call c,$FB91
-3FC1  91      	    sub  c
-3FC2  BB      	    cp   e
-3FC3  91      	    sub  c
-3FC4  DB91    	    in   a,($91)
+                food_home_pos_tbl: ; 9x 2-byte LE VRAM cells = returned-food 'home' HUD slots (3x3)
+3FB4               db   $FD, $91   ; slot 0: VRAM $91FD
+3FB6               db   $BD, $91   ; slot 1: VRAM $91BD
+3FB8               db   $DD, $91   ; slot 2: VRAM $91DD
+3FBA               db   $FC, $91   ; slot 3: VRAM $91FC
+3FBC               db   $BC, $91   ; slot 4: VRAM $91BC
+3FBE               db   $DC, $91   ; slot 5: VRAM $91DC
+3FC0               db   $FB, $91   ; slot 6: VRAM $91FB
+3FC2               db   $BB, $91   ; slot 7: VRAM $91BB
+3FC4               db   $DB, $91   ; slot 8: VRAM $91DB
 3FC6  C490DC  	    call nz,$DC90
 3FC9  90      	    sub  b
 3FCA  C8      	    ret  z

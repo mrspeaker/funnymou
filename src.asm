@@ -6855,7 +6855,7 @@ mthing
     ld   (hl),d
     inc  hl
     ld   (hl),e
-    ld   ix,very_chunk_data_3
+    ld   ix,food_home_pos_tbl
     add  ix,bc
     ld   l,(ix+$00)
     ld   h,(ix+$01)
@@ -6904,7 +6904,7 @@ mthing
     ld   d,(hl)
     inc  hl
     ld   e,(hl)
-    ld   ix,very_chunk_data_3
+    ld   ix,food_home_pos_tbl
     add  ix,bc
     ld   l,(ix+$00)
     ld   h,(ix+$01)
@@ -6955,20 +6955,16 @@ mthing
     pop  bc
     jp   $3F83
 
- very_chunk_data_3:
-    db   $fd
-    sub  c
-    cp   l
-    sub  c
-    db   $dd
-    sub  c
-    call m,$BC91
-    sub  c
-    call c,$FB91
-    sub  c
-    cp   e
-    sub  c
-    in   a,($91)
+ food_home_pos_tbl: ; 9x 2-byte LE VRAM cells = returned-food 'home' HUD slots (3x3)
+    db   $FD, $91   ; slot 0: VRAM $91FD
+    db   $BD, $91   ; slot 1: VRAM $91BD
+    db   $DD, $91   ; slot 2: VRAM $91DD
+    db   $FC, $91   ; slot 3: VRAM $91FC
+    db   $BC, $91   ; slot 4: VRAM $91BC
+    db   $DC, $91   ; slot 5: VRAM $91DC
+    db   $FB, $91   ; slot 6: VRAM $91FB
+    db   $BB, $91   ; slot 7: VRAM $91BB
+    db   $DB, $91   ; slot 8: VRAM $91DB
     call nz,$DC90
     sub  b
     ret  z
