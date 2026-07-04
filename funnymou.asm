@@ -4886,7 +4886,7 @@ _
 31BC  19      	    add  hl,de
 31BD  EB      	    ex   de,hl
 31BE  211500  	    ld   hl,$0015
-31C1  01EF31  	    ld   bc,$31EF
+31C1  01EF31  	    ld   bc,enemy_lvl_param_tbl
 31C4  19      	    add  hl,de
 31C5  CDCF31  	    call load_level_ptr
 31C8  CD9C30  	    call enemy_sprite_commit
@@ -4922,26 +4922,17 @@ _
 
 31ED  00      	    nop
 31EE  00      	    nop
-31EF  00      	    nop
-31F0  08      	    ex   af,af' ; '
-31F1  14      	    inc  d
-31F2  04      	    inc  b
-31F3  00      	    nop
-31F4  04      	    inc  b
-31F5  00      	    nop
-31F6  04      	    inc  b
-31F7  14      	    inc  d
-31F8  03      	    inc  bc
-31F9  14      	    inc  d
-31FA  03      	    inc  bc
-31FB  14      	    inc  d
-31FC  03      	    inc  bc
-31FD  14      	    inc  d
-31FE  02      	    ld   (bc),a
-31FF  14      	    inc  d
-3200  02      	    ld   (bc),a
-3201  14      	    inc  d
-3202  02      	    ld   (bc),a
+                enemy_lvl_param_tbl: ; level-indexed 16-bit enemy AI param -> record +$15/+$16 (via load_level_ptr, at respawn); trends down w/ level
+31EF               db   $00, $08   ; level 0: $0800
+31F1               db   $14, $04   ; level 1: $0414
+31F3               db   $00, $04   ; level 2: $0400
+31F5               db   $00, $04   ; level 3: $0400
+31F7               db   $14, $03   ; level 4: $0314
+31F9               db   $14, $03   ; level 5: $0314
+31FB               db   $14, $03   ; level 6: $0314
+31FD               db   $14, $02   ; level 7: $0214
+31FF               db   $14, $02   ; level 8: $0214
+3201               db   $14, $02   ; level 9: $0214
 3203  00      	    nop
 3204  00      	    nop
 3205  00      	    nop

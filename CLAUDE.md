@@ -800,6 +800,7 @@ player_trigger_platform $29AF ; player on $F9 -> sliding platform $80A2
 enemy_spawn_gate    $2AF1 ; per-enemy spawn countdown + tile-validity gate
 enemy_sprite_commit $309C ; write enemy Y/tile/color/X into its sprite mirror slot
 check_tile_wall     $30CE ; (de)=1 if tile at (hl+bc)==$F4 (wall) else 0
+enemy_lvl_param_tbl $31EF ; 10x level-indexed 16-bit AI param -> enemy record +$15/+$16   [data]
 load_level_ptr      $31CF ; load level-indexed 16-bit table ptr into enemy record
 snake_spawn_delay   $32F7 ; level-indexed snake spawn-delay lookup (spawn_delay_sa/sb)
 player_vs_catA      $3981 ; AABB player vs cat A ($8501) -> player death

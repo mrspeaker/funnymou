@@ -4886,7 +4886,7 @@ mthing
     add  hl,de
     ex   de,hl
     ld   hl,$0015
-    ld   bc,$31EF
+    ld   bc,enemy_lvl_param_tbl
     add  hl,de
     call load_level_ptr
     call enemy_sprite_commit
@@ -4922,26 +4922,17 @@ mthing
 
     nop
     nop
-    nop
-    ex   af,af' ; '
-    inc  d
-    inc  b
-    nop
-    inc  b
-    nop
-    inc  b
-    inc  d
-    inc  bc
-    inc  d
-    inc  bc
-    inc  d
-    inc  bc
-    inc  d
-    ld   (bc),a
-    inc  d
-    ld   (bc),a
-    inc  d
-    ld   (bc),a
+ enemy_lvl_param_tbl: ; level-indexed 16-bit enemy AI param -> record +$15/+$16 (via load_level_ptr, at respawn); trends down w/ level
+    db   $00, $08   ; level 0: $0800
+    db   $14, $04   ; level 1: $0414
+    db   $00, $04   ; level 2: $0400
+    db   $00, $04   ; level 3: $0400
+    db   $14, $03   ; level 4: $0314
+    db   $14, $03   ; level 5: $0314
+    db   $14, $03   ; level 6: $0314
+    db   $14, $02   ; level 7: $0214
+    db   $14, $02   ; level 8: $0214
+    db   $14, $02   ; level 9: $0214
     nop
     nop
     nop
