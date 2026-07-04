@@ -7742,7 +7742,7 @@ mthing
     rlca
     ld   c,a
     ld   b,$00
-    ld   hl,$4604
+    ld   hl,lucky_mouse_pic
     add  hl,bc
     ld   e,(hl)
     inc  hl
@@ -7756,6 +7756,8 @@ mthing
     set  2,h
     ld   (hl),c
     ret
+
+ ;;; win some points
     cp   $2D
     jp   nz,$45D9
     ld   hl,$92F5
@@ -7784,6 +7786,7 @@ mthing
     inc  a
     ld   ($91EF),a
     ret
+
  str_lucky_mouse: ; 'VERY LUCKY MOUSE' ($FE-term)
     db   $1F, $0E, $1B, $22, $24, $15, $1E, $0C              ; |VERY LUC|
     db   $14, $22, $24, $16, $18, $1E, $1C, $0E              ; |KY MOUSE|
@@ -7808,137 +7811,45 @@ mthing
     ld   a,$61
     ld   ($91EF),a
     ret
-    call z,$5891
-    add  a,h
-    cpl
-    sub  d
-    ld   l,l
-    add  a,h
-    adc  a,$91
-    ld   e,d
-    add  a,h
-    dec  l
-    sub  d
-    ld   l,e
-    add  a,h
-    ld   c,e
-    sub  d
-    ld   l,a
-    add  a,h
-    ld   d,b
-    sub  d
-    ld   (hl),h
-    add  a,h
-    ret  nc
-    sub  c
-    ld   e,h
-    add  a,h
-    xor  e
-    sub  c
-    ld   d,c
-    add  a,h
-    ex   de,hl
-    sub  c
-    ld   e,l
-    add  a,h
-    ld   c,$92
-    ld   h,(hl)
-    add  a,h
-    xor  a
-    sub  c
-    ld   d,l
-    add  a,h
-    inc  c
-    sub  d
-    ld   h,h
-    add  a,h
-    dec  hl
-    sub  d
-    ld   l,c
-    add  a,h
-    ld   c,(hl)
-    sub  d
-    ld   (hl),d
-    add  a,h
-    xor  l
-    sub  c
-    ld   d,e
-    add  a,h
-    res  2,c
-    ld   d,a
-    add  a,h
-    djnz $45D8
-    ld   l,b
-    add  a,h
-    xor  (hl)
-    sub  c
-    ld   d,h
-    add  a,h
-    or   b
-    sub  c
-    ld   d,(hl)
-    add  a,h
-    db   $ed
-    sub  c
-    ld   e,a
-    add  a,h
-    rst  $08
-    sub  c
-    ld   e,e
-    add  a,h
-    ld   c,h
-    sub  d
-    ld   (hl),b
-    add  a,h
-    ld   c,a
-    sub  d
-    ld   (hl),e
-    add  a,h
-    xor  h
-    sub  c
-    ld   d,d
-    add  a,h
-    ret  p
-    sub  c
-    ld   h,d
-    add  a,h
-    jr   nc,$45FC
-    ld   l,(hl)
-    add  a,h
-    dec  bc
-    sub  d
-    ld   h,e
-    add  a,h
-    rst  $28
-    sub  c
-    ld   h,c
-    add  a,h
-    inc  l
-    sub  d
-    ld   l,d
-    add  a,h
-    call $5991
-    add  a,h
-    call pe,$5E91
-    add  a,h
-    ld   l,$92
-    ld   l,h
-    add  a,h
-    rrca
-    sub  d
-    ld   h,a
-    add  a,h
-    dec  c
-    sub  d
-    ld   h,l
-    add  a,h
-    ld   c,l
-    sub  d
-    ld   (hl),c
-    add  a,h
-    xor  $91
-    ld   h,b
-    add  a,h
+ lucky_mouse_pic: ; 'VERY LUCKY MOUSE' bonus picture: 36x [VRAM_dest_LE, tile, color]
+ ;   6x6 grid of unique tiles $51-$74; drawn one record at a time by index (eye winks)
+    db   $CC, $91, $58, $84   ; VRAM $91CC tile $58 color $84
+    db   $2F, $92, $6D, $84
+    db   $CE, $91, $5A, $84
+    db   $2D, $92, $6B, $84
+    db   $4B, $92, $6F, $84
+    db   $50, $92, $74, $84
+    db   $D0, $91, $5C, $84
+    db   $AB, $91, $51, $84
+    db   $EB, $91, $5D, $84
+    db   $0E, $92, $66, $84
+    db   $AF, $91, $55, $84
+    db   $0C, $92, $64, $84
+    db   $2B, $92, $69, $84
+    db   $4E, $92, $72, $84
+    db   $AD, $91, $53, $84
+    db   $CB, $91, $57, $84
+    db   $10, $92, $68, $84
+    db   $AE, $91, $54, $84
+    db   $B0, $91, $56, $84
+    db   $ED, $91, $5F, $84
+    db   $CF, $91, $5B, $84
+    db   $4C, $92, $70, $84
+    db   $4F, $92, $73, $84
+    db   $AC, $91, $52, $84
+    db   $F0, $91, $62, $84
+    db   $30, $92, $6E, $84
+    db   $0B, $92, $63, $84
+    db   $EF, $91, $61, $84
+    db   $2C, $92, $6A, $84
+    db   $CD, $91, $59, $84
+    db   $EC, $91, $5E, $84
+    db   $2E, $92, $6C, $84
+    db   $0F, $92, $67, $84
+    db   $0D, $92, $65, $84
+    db   $4D, $92, $71, $84
+    db   $EE, $91, $60, $84
+ ;;; ...
     ld   hl,$8068
     ld   a,(hl)
     and  a
@@ -7953,7 +7864,7 @@ mthing
     inc  hl
     ld   (hl),$00
     ld   hl,$9065
-    ld   de,$46FE
+    ld   de,gamble_frame_tiles
     ld   b,$05
     push hl
     ld   a,(de)
@@ -8004,13 +7915,9 @@ mthing
     dec  c
     jp   nz,$46F0
     ret
-    ld   b,b
-    ld   b,b
-    ld   b,b
-    ld   b,b
-    ld   b,e
-    ld   (hl),a
-    ld   b,c
+ gamble_frame_tiles: ; border tiles for the 'VERY LUCKY MOUSE' gamble screen (color $84)
+ ;   [0..4]=5-tile bottom row  [5]=corner @$9349  [6]=vertical-edge tile (22-col)
+    db   $40, $40, $40, $40, $43, $77, $41   ; $40 x4 + $43 corner, $77 corner, $41 v-edge
     inc  hl
     ld   a,(hl)
     and  a
@@ -8055,7 +7962,7 @@ mthing
     rlca
     ld   c,a
     ld   b,$00
-    ld   hl,$4604
+    ld   hl,lucky_mouse_pic
     call $4724
     ret
     ld   (hl),$00

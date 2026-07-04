@@ -482,6 +482,13 @@ player **stops them with the shot button** to win a **free credit** (jackpot) or
 
 **In one line: line up all three reels on symbol 0 with the shot button → free credit.**
 
+**Win picture — `lucky_mouse_pic` (`$4604`, 36×4-byte records).** The "VERY LUCKY MOUSE" win
+screen shows a large **48×48 mouse** built from a 6×6 grid of unique graphic tiles `$51-$74`
+(cols `$AB-$B0`; rows `$91AB/$91CB/$91EB/$920B/$922B/$924B`), color `$84`. Each record is
+`[VRAM_dest_LE, tile, color]`; the drawers (`$4582`, `$4724`) paint **one record per call by
+index** rather than blitting the whole image — that's how the mouse's **eye winks** (the eye tile
+is redrawn on its own).
+
 Draw helpers: `gamble_reel_step` (`$44A7`), `gamble_reel_draw` (`$44B3`), `gamble_draw_text`
 (`$439C`), `gamble_draw_blank` (`$43AE`). `gamble_state` bits: bit7=win-display phase,
 bit6=countdown, bit5=reels spinning.
@@ -813,6 +820,8 @@ gamble_prize_pos    $4516 ; 8 outcomes x 2-byte LE win-display VRAM cell        
 gamble_reel1_strip  $4526 ; reel 1 symbol strip (17 steps, 0-3)                         [data]
 gamble_reel2_strip  $4537 ; reel 2 symbol strip (16 steps)                              [data]
 gamble_reel3_strip  $4547 ; reel 3 symbol strip (15 steps)                              [data]
+lucky_mouse_pic     $4604 ; 36x [VRAM_dest_LE, tile, color] "VERY LUCKY MOUSE" picture   [data]
+gamble_frame_tiles  $46FE ; 7 border tiles for the gamble win screen (drawn by $46AD)    [data]
 debug_draw_check    $48EF ; if hw_in_1 & $40 draw debug text at $9100 (else no-op)
 boulder_hit_catA    $3AE1 ; enable+busy gate then boulder_vs_enemy (cat A $8501)
 boulder_hit_catB    $3AF8 ; enable+busy gate then boulder_vs_enemy (cat B $8505)

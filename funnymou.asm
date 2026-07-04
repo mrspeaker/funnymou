@@ -7742,7 +7742,7 @@ _
 457E  07      	    rlca
 457F  4F      	    ld   c,a
 4580  0600    	    ld   b,$00
-4582  210446  	    ld   hl,$4604
+4582  210446  	    ld   hl,lucky_mouse_pic
 4585  09      	    add  hl,bc
 4586  5E      	    ld   e,(hl)
 4587  23      	    inc  hl
@@ -7756,6 +7756,8 @@ _
 458F  CBD4    	    set  2,h
 4591  71      	    ld   (hl),c
 4592  C9      	    ret
+
+                ;;; win some points
 4593  FE2D    	    cp   $2D
 4595  C2D945  	    jp   nz,$45D9
 4598  21F592  	    ld   hl,$92F5
@@ -7784,6 +7786,7 @@ _
 45C4  3C      	    inc  a
 45C5  32EF91  	    ld   ($91EF),a
 45C8  C9      	    ret
+
                 str_lucky_mouse: ; 'VERY LUCKY MOUSE' ($FE-term)
 45C9               db   $1F, $0E, $1B, $22, $24, $15, $1E, $0C              ; |VERY LUC|
 45D1               db   $14, $22, $24, $16, $18, $1E, $1C, $0E              ; |KY MOUSE|
@@ -7808,137 +7811,45 @@ _
 45FE  3E61    	    ld   a,$61
 4600  32EF91  	    ld   ($91EF),a
 4603  C9      	    ret
-4604  CC9158  	    call z,$5891
-4607  84      	    add  a,h
-4608  2F      	    cpl
-4609  92      	    sub  d
-460A  6D      	    ld   l,l
-460B  84      	    add  a,h
-460C  CE91    	    adc  a,$91
-460E  5A      	    ld   e,d
-460F  84      	    add  a,h
-4610  2D      	    dec  l
-4611  92      	    sub  d
-4612  6B      	    ld   l,e
-4613  84      	    add  a,h
-4614  4B      	    ld   c,e
-4615  92      	    sub  d
-4616  6F      	    ld   l,a
-4617  84      	    add  a,h
-4618  50      	    ld   d,b
-4619  92      	    sub  d
-461A  74      	    ld   (hl),h
-461B  84      	    add  a,h
-461C  D0      	    ret  nc
-461D  91      	    sub  c
-461E  5C      	    ld   e,h
-461F  84      	    add  a,h
-4620  AB      	    xor  e
-4621  91      	    sub  c
-4622  51      	    ld   d,c
-4623  84      	    add  a,h
-4624  EB      	    ex   de,hl
-4625  91      	    sub  c
-4626  5D      	    ld   e,l
-4627  84      	    add  a,h
-4628  0E92    	    ld   c,$92
-462A  66      	    ld   h,(hl)
-462B  84      	    add  a,h
-462C  AF      	    xor  a
-462D  91      	    sub  c
-462E  55      	    ld   d,l
-462F  84      	    add  a,h
-4630  0C      	    inc  c
-4631  92      	    sub  d
-4632  64      	    ld   h,h
-4633  84      	    add  a,h
-4634  2B      	    dec  hl
-4635  92      	    sub  d
-4636  69      	    ld   l,c
-4637  84      	    add  a,h
-4638  4E      	    ld   c,(hl)
-4639  92      	    sub  d
-463A  72      	    ld   (hl),d
-463B  84      	    add  a,h
-463C  AD      	    xor  l
-463D  91      	    sub  c
-463E  53      	    ld   d,e
-463F  84      	    add  a,h
-4640  CB91    	    res  2,c
-4642  57      	    ld   d,a
-4643  84      	    add  a,h
-4644  1092    	    djnz $45D8
-4646  68      	    ld   l,b
-4647  84      	    add  a,h
-4648  AE      	    xor  (hl)
-4649  91      	    sub  c
-464A  54      	    ld   d,h
-464B  84      	    add  a,h
-464C  B0      	    or   b
-464D  91      	    sub  c
-464E  56      	    ld   d,(hl)
-464F  84      	    add  a,h
-4650  ED      	    db   $ed
-4651  91      	    sub  c
-4652  5F      	    ld   e,a
-4653  84      	    add  a,h
-4654  CF      	    rst  $08
-4655  91      	    sub  c
-4656  5B      	    ld   e,e
-4657  84      	    add  a,h
-4658  4C      	    ld   c,h
-4659  92      	    sub  d
-465A  70      	    ld   (hl),b
-465B  84      	    add  a,h
-465C  4F      	    ld   c,a
-465D  92      	    sub  d
-465E  73      	    ld   (hl),e
-465F  84      	    add  a,h
-4660  AC      	    xor  h
-4661  91      	    sub  c
-4662  52      	    ld   d,d
-4663  84      	    add  a,h
-4664  F0      	    ret  p
-4665  91      	    sub  c
-4666  62      	    ld   h,d
-4667  84      	    add  a,h
-4668  3092    	    jr   nc,$45FC
-466A  6E      	    ld   l,(hl)
-466B  84      	    add  a,h
-466C  0B      	    dec  bc
-466D  92      	    sub  d
-466E  63      	    ld   h,e
-466F  84      	    add  a,h
-4670  EF      	    rst  $28
-4671  91      	    sub  c
-4672  61      	    ld   h,c
-4673  84      	    add  a,h
-4674  2C      	    inc  l
-4675  92      	    sub  d
-4676  6A      	    ld   l,d
-4677  84      	    add  a,h
-4678  CD9159  	    call $5991
-467B  84      	    add  a,h
-467C  EC915E  	    call pe,$5E91
-467F  84      	    add  a,h
-4680  2E92    	    ld   l,$92
-4682  6C      	    ld   l,h
-4683  84      	    add  a,h
-4684  0F      	    rrca
-4685  92      	    sub  d
-4686  67      	    ld   h,a
-4687  84      	    add  a,h
-4688  0D      	    dec  c
-4689  92      	    sub  d
-468A  65      	    ld   h,l
-468B  84      	    add  a,h
-468C  4D      	    ld   c,l
-468D  92      	    sub  d
-468E  71      	    ld   (hl),c
-468F  84      	    add  a,h
-4690  EE91    	    xor  $91
-4692  60      	    ld   h,b
-4693  84      	    add  a,h
+                lucky_mouse_pic: ; 'VERY LUCKY MOUSE' bonus picture: 36x [VRAM_dest_LE, tile, color]
+                ;   6x6 grid of unique tiles $51-$74; drawn one record at a time by index (eye winks)
+4604               db   $CC, $91, $58, $84   ; VRAM $91CC tile $58 color $84
+4608               db   $2F, $92, $6D, $84
+460C               db   $CE, $91, $5A, $84
+4610               db   $2D, $92, $6B, $84
+4614               db   $4B, $92, $6F, $84
+4618               db   $50, $92, $74, $84
+461C               db   $D0, $91, $5C, $84
+4620               db   $AB, $91, $51, $84
+4624               db   $EB, $91, $5D, $84
+4628               db   $0E, $92, $66, $84
+462C               db   $AF, $91, $55, $84
+4630               db   $0C, $92, $64, $84
+4634               db   $2B, $92, $69, $84
+4638               db   $4E, $92, $72, $84
+463C               db   $AD, $91, $53, $84
+4640               db   $CB, $91, $57, $84
+4644               db   $10, $92, $68, $84
+4648               db   $AE, $91, $54, $84
+464C               db   $B0, $91, $56, $84
+4650               db   $ED, $91, $5F, $84
+4654               db   $CF, $91, $5B, $84
+4658               db   $4C, $92, $70, $84
+465C               db   $4F, $92, $73, $84
+4660               db   $AC, $91, $52, $84
+4664               db   $F0, $91, $62, $84
+4668               db   $30, $92, $6E, $84
+466C               db   $0B, $92, $63, $84
+4670               db   $EF, $91, $61, $84
+4674               db   $2C, $92, $6A, $84
+4678               db   $CD, $91, $59, $84
+467C               db   $EC, $91, $5E, $84
+4680               db   $2E, $92, $6C, $84
+4684               db   $0F, $92, $67, $84
+4688               db   $0D, $92, $65, $84
+468C               db   $4D, $92, $71, $84
+4690               db   $EE, $91, $60, $84
+                ;;; ...
 4694  216880  	    ld   hl,$8068
 4697  7E      	    ld   a,(hl)
 4698  A7      	    and  a
@@ -7953,7 +7864,7 @@ _
 46A7  23      	    inc  hl
 46A8  3600    	    ld   (hl),$00
 46AA  216590  	    ld   hl,$9065
-46AD  11FE46  	    ld   de,$46FE
+46AD  11FE46  	    ld   de,gamble_frame_tiles
 46B0  0605    	    ld   b,$05
 46B2  E5      	    push hl
 46B3  1A      	    ld   a,(de)
@@ -8004,13 +7915,9 @@ _
 46F9  0D      	    dec  c
 46FA  C2F046  	    jp   nz,$46F0
 46FD  C9      	    ret
-46FE  40      	    ld   b,b
-46FF  40      	    ld   b,b
-4700  40      	    ld   b,b
-4701  40      	    ld   b,b
-4702  43      	    ld   b,e
-4703  77      	    ld   (hl),a
-4704  41      	    ld   b,c
+                gamble_frame_tiles: ; border tiles for the 'VERY LUCKY MOUSE' gamble screen (color $84)
+                ;   [0..4]=5-tile bottom row  [5]=corner @$9349  [6]=vertical-edge tile (22-col)
+46FE               db   $40, $40, $40, $40, $43, $77, $41   ; $40 x4 + $43 corner, $77 corner, $41 v-edge
 4705  23      	    inc  hl
 4706  7E      	    ld   a,(hl)
 4707  A7      	    and  a
@@ -8055,7 +7962,7 @@ _
 473E  07      	    rlca
 473F  4F      	    ld   c,a
 4740  0600    	    ld   b,$00
-4742  210446  	    ld   hl,$4604
+4742  210446  	    ld   hl,lucky_mouse_pic
 4745  CD2447  	    call $4724
 4748  C9      	    ret
 4749  3600    	    ld   (hl),$00
