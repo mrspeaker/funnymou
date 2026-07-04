@@ -62,8 +62,9 @@
                     cat1_state      = $8517 ; +7  AI state
                     cat1_x          = $8518
                     cat1_y          = $8519
-                    cat1_fr         = $851A
-                    cat1_dir        = $851B ; 1 = L, 2 = R, 4 = U, 5 = d
+                    cat1_dir        = $851A ; +0A chase direction bitmask: $01=X- $02=X+ $04=Y+ $08=Y- (game axes); $00=aligned. Written by enemy_chase, read by mover dispatch $2DF8
+                    cat1_scr0b      = $851B ; +0B unidentified (previously mislabeled "dir")
+                    cat1_axis       = $8522 ; +12 chase axis toggle: 0=>steer Y next (vs $8003), 1=>steer X next (vs $8000). Init 0 so Y is checked first (see enemy_chase)
                     cat1_ai_ptr     = $8528 ; +18 AI-waypoint ptr (from $2B5A via $31CF)
                     cat1_busy       = $852B ; +1B busy / no-collide lock
                     cat1_ptr2       = $852D ; +1D secondary ptr (from $2B28 via $31CF)
@@ -74,7 +75,8 @@
                     cat2_state      = $8557
                     cat2_x          = $8558
                     cat2_y          = $8559
-                    cat2_fr         = $855A
+                    cat2_dir        = $855A ; +0A chase direction bitmask (see cat1_dir)
+                    cat2_axis       = $8562 ; +12 chase axis toggle (see cat1_axis)
                     cat2_ai_ptr     = $8568 ; from $2BB0
                     cat2_busy       = $856B
                     cat2_ptr2       = $856D ; from $2B28
@@ -82,7 +84,8 @@
                     cat3_bytes      = $8570 ; 29 bytes
                     cat3_x          = $8578
                     cat3_y          = $8579
-                    cat3_fr         = $857A
+                    cat3_dir        = $857A ; +0A chase direction bitmask (see cat1_dir)
+                    cat3_axis       = $8582 ; +12 chase axis toggle (see cat1_axis)
                     cat3_slot       = $8573
                     cat3_tile       = $8574
                     cat3_state      = $8577
@@ -103,7 +106,8 @@
                     snake1_state    = $8617 ;
                     snake1_x        = $8618
                     snake1_y        = $8619
-                    snake1_fr       = $861A
+                    snake1_dir      = $861A ; +0A chase direction bitmask (see cat1_dir)
+                    snake1_axis     = $8622 ; +12 chase axis toggle (see cat1_axis)
                     snake1_dly_ptr  = $8628 ; +18 spawn-delay ptr (from spawn_delay_sa $3315 via $32F7)
                     snake1_busy     = $862B ; +1B
 
@@ -113,7 +117,8 @@
                     snake2_state    = $8637
                     snake2_x        = $8638
                     snake2_y        = $8639
-                    snake2_fr       = $863A
+                    snake2_dir      = $863A ; +0A chase direction bitmask (see cat1_dir)
+                    snake2_axis     = $8642 ; +12 chase axis toggle (see cat1_axis)
                     snake2_dly_ptr  = $8648 ; from spawn_delay_sb $332B
                     snake2_busy     = $864B
 
@@ -4210,6 +4215,18 @@ _
 2D0A  C0      	    ret  nz
 2D0B  3608    	    ld   (hl),$08
 2D0D  C9      	    ret
+                ;; enemy_chase: greedily steer this enemy one step toward the player.
+                ;; Corrects ONE axis per call, ALTERNATING via the axis-toggle byte at
+                ;; record +$12 (catN_axis):
+                ;;   toggle == 0 -> compare player game-Y ($8003) vs enemy Y (+$09), set toggle=1
+                ;;   toggle != 0 -> compare player game-X ($8000) vs enemy X (+$08), clear toggle
+                ;; Templates spawn +$12 = 0, so the FIRST steer after spawn is ALWAYS the Y axis
+                ;; (why an enemy on your line beelines: its Y check is always "aligned", and the
+                ;;  X check points straight at you). Result = a cardinal bitmask written to the
+                ;; direction byte +$0A (catN_dir), consumed by the mover dispatch at $2DF8:
+                ;;   Y axis: player below -> $04 (Y+),  player above -> $08 (Y-)
+                ;;   X axis: player right -> $02 (X+),  player left  -> $01 (X-);  aligned -> $00
+                ;; in: hl = &dir (+$0A), de = &axis-toggle (+$12); $8000/$8003 = player game X/Y
                 enemy_chase:    ; steer toward player sprite ($8000/$8003)
 2D0E  42      	    ld   b,d
 2D0F  4B      	    ld   c,e
@@ -4217,36 +4234,36 @@ _
 2D11  5D      	    ld   e,l
 2D12  1B      	    dec  de
 2D13  EB      	    ex   de,hl
-2D14  0A      	    ld   a,(bc)
+2D14  0A      	    ld   a,(bc)           ; axis toggle (+$12)
 2D15  A7      	    and  a
-2D16  C2312D  	    jp   nz,$2D31
+2D16  C2312D  	    jp   nz,$2D31         ; toggle set -> do X axis instead
 2D19  3E01    	    ld   a,$01
-2D1B  02      	    ld   (bc),a
-2D1C  3A0380  	    ld   a,($8003)
-2D1F  BE      	    cp   (hl)
+2D1B  02      	    ld   (bc),a           ; toggle = 1 (next re-steer does X)
+2D1C  3A0380  	    ld   a,($8003)        ; player game-Y
+2D1F  BE      	    cp   (hl)             ; vs enemy Y (+$09)
 2D20  2B      	    dec  hl
 2D21  EB      	    ex   de,hl
 2D22  CA2E2D  	    jp   z,$2D2E
 2D25  DA2B2D  	    jp   c,$2D2B
-2D28  3604    	    ld   (hl),$04
+2D28  3604    	    ld   (hl),$04         ; dir (+$0A) = $04 : player below -> move Y+
 2D2A  C9      	    ret
-2D2B  3608    	    ld   (hl),$08
+2D2B  3608    	    ld   (hl),$08         ; dir = $08 : player above -> move Y-
 2D2D  C9      	    ret
-2D2E  3600    	    ld   (hl),$00
+2D2E  3600    	    ld   (hl),$00         ; aligned on Y -> no move this axis
 2D30  C9      	    ret
 2D31  2B      	    dec  hl
 2D32  3E00    	    ld   a,$00
-2D34  02      	    ld   (bc),a
-2D35  3A0080  	    ld   a,(ram_start)
-2D38  BE      	    cp   (hl)
+2D34  02      	    ld   (bc),a           ; toggle = 0 (next re-steer does Y)
+2D35  3A0080  	    ld   a,(ram_start)    ; player game-X ($8000)
+2D38  BE      	    cp   (hl)             ; vs enemy X (+$08)
 2D39  EB      	    ex   de,hl
 2D3A  CA462D  	    jp   z,$2D46
 2D3D  DA432D  	    jp   c,$2D43
-2D40  3602    	    ld   (hl),$02
+2D40  3602    	    ld   (hl),$02         ; dir (+$0A) = $02 : player right -> move X+
 2D42  C9      	    ret
-2D43  3601    	    ld   (hl),$01
+2D43  3601    	    ld   (hl),$01         ; dir = $01 : player left -> move X-
 2D45  C9      	    ret
-2D46  3600    	    ld   (hl),$00
+2D46  3600    	    ld   (hl),$00         ; aligned on X -> no move this axis
 2D48  C9      	    ret
 2D49  E5      	    push hl
 2D4A  011300  	    ld   bc,$0013
@@ -4260,10 +4277,13 @@ _
 2D54  E6F0    	    and  $F0
 2D56  FE10    	    cp   $10
 2D58  C26D2D  	    jp   nz,$2D6D
-2D5B  0A      	    ld   a,(bc)
+                ;; per-enemy "drift" gate (imperfection): re-aim at the player UNLESS the step
+                ;; counter (+$1C) hits an excluded value, in which case skip the re-aim and keep
+                ;; walking straight. mask/excluded picked by record-addr low nibble ($10 here).
+2D5B  0A      	    ld   a,(bc)           ; step counter (+$1C)
 2D5C  E603    	    and  $03
 2D5E  FE00    	    cp   $00
-2D60  C40E2D  	    call nz,enemy_chase
+2D60  C40E2D  	    call nz,enemy_chase   ; (cnt&3)!=0 -> re-aim; ==0 -> drift straight
 2D63  EB      	    ex   de,hl
 2D64  210D00  	    ld   hl,$000D
 2D67  19      	    add  hl,de
@@ -4347,15 +4367,17 @@ _
 2DF5  5D      	    ld   e,l
 2DF6  23      	    inc  hl
 2DF7  1B      	    dec  de
-2DF8  7E      	    ld   a,(hl)
+                ;; mover dispatch: consume the direction bitmask (+$0A, catN_dir) set by
+                ;; enemy_chase; rrca-chain routes each set bit to its per-direction mover.
+2DF8  7E      	    ld   a,(hl)           ; direction bitmask (+$0A)
 2DF9  0F      	    rrca
-2DFA  DAC42E  	    jp   c,$2EC4
+2DFA  DAC42E  	    jp   c,$2EC4          ; bit0 $01 -> X- mover
 2DFD  0F      	    rrca
-2DFE  DA102F  	    jp   c,$2F10
+2DFE  DA102F  	    jp   c,$2F10          ; bit1 $02 -> X+ mover
 2E01  0F      	    rrca
-2E02  DA5C2F  	    jp   c,$2F5C
+2E02  DA5C2F  	    jp   c,$2F5C          ; bit2 $04 -> Y+ mover
 2E05  0F      	    rrca
-2E06  DAAA2F  	    jp   c,$2FAA
+2E06  DAAA2F  	    jp   c,$2FAA          ; bit3 $08 -> Y- mover
 2E09  EB      	    ex   de,hl
 2E0A  21FCFF  	    ld   hl,$FFFC
 2E0D  19      	    add  hl,de

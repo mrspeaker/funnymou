@@ -269,13 +269,17 @@ Bases: **`$8510`, `$8550`, `$8570`** (cats A/B/C, page-$85 manager `$2A51`) and
 | +$07 | **AI state**: 1=appear/emerge (→3 when emerge-ctr `+$13`≥`$80`), 3=active chase (only active state), 4=dying/return start, 5/6/7=return-home→respawn |
 | +$08 | **X** (game-logic, joystick axis) → sprite +0 (HW-Y; ROT90). funnymou `cat1_x`=`$8518` |
 | +$09 | **Y** (game-logic) → sprite +3 (HW-X; ROT90). funnymou `cat1_y`=`$8519` |
+| +$0A | **chase direction bitmask** (`catN_dir`): `$01`=X− `$02`=X+ `$04`=Y+ `$08`=Y−; `$00`=aligned. Written by `enemy_chase`, read by mover dispatch `$2DF8` |
 | +$0D..+$11 | velocity/direction deltas (`$FF`/`$01` = ±1) |
+| +$12 | **chase axis toggle** (`catN_axis`): `0`⇒steer Y next (vs `$8003`), `1`⇒steer X next (vs `$8000`). Init `0` → Y checked first (see §6) |
+| +$17 | move-timing / re-steer gate counter (decrements; re-evaluates dir at 0) |
 | +$18/$19 | 16-bit AI waypoint-table pointer (level-indexed; via `$31CF`) |
 | +$1A | appear/spawn timer |
 | +$1B | busy/not-collidable lock (1 while appearing or dying) |
+| +$1C | step counter (per-enemy "drift" gate; see §6) |
 | +$1D/$1E | 16-bit secondary pointer (level-indexed) |
 
-*(Offsets +$01/+$02/+$05/+$06/+$0A/+$0B/+$13/+$14 are enemy scratch fields not yet pinned down.)*
+*(Offsets +$01/+$02/+$05/+$06/+$0B/+$13/+$14 are enemy scratch fields not yet pinned down.)*
 
 ### Enemy control blocks
 Small 16-byte blocks `$8500-$850F` (page 85, cats) and `$8600-$860F` (page 86, snakes) hold,
@@ -490,21 +494,34 @@ both axes means the enemy sits exactly on the maze's decision lattice → it's a
 maze tile is read for this decision** — `cp (hl)` compares against the record's own position
 bytes, not VRAM. (The `$14…`/`$22…` values are position coordinates, *not* "control tiles".)
 
-1. **Greedy pursuit toward the player.** Chase helper **`$2D0E`** (cats; duplicated at
-   `$3421` for snakes) reads the **player's sprite position** and steers toward it:
+1. **Greedy pursuit toward the player — ONE axis per re-steer, alternating (Y first).** Chase
+   helper **`enemy_chase` `$2D0E`** (cats; duplicated at `$3421` for snakes) corrects a **single
+   axis** each call, alternating via the per-enemy **axis toggle at record `+$12`** (`catN_axis`):
    ```
-   2D1C: ld a,($8003)   ; player sprite X
-   2D1F: cp (hl)        ; vs this enemy's X
-   2D22: jp z,$2D2E     ; aligned  -> dir 0 on this axis
-   2D25: jp c,$2D2B
-   2D28: ld (hl),$04    ; player is one side -> dir bit $04
-   2D2B: ld (hl),$08    ; other side        -> dir bit $08
-   ...
-   2D35: ld a,($8000)   ; player sprite Y ; sets dir bits $01/$02/$00 on the other axis
+   2D14: ld a,(bc)      ; axis toggle (+$12)
+   2D16: jp nz,$2D31    ; toggle set -> do the X axis instead
+   2D1B: ld (bc),a      ; toggle = 1  (next re-steer does X)
+   2D1C: ld a,($8003)   ; player game-Y
+   2D1F: cp (hl)        ; vs enemy Y (+$09)
+   2D28: ld (hl),$04    ; player below -> dir $04 (Y+)     ; \ written to the
+   2D2B: ld (hl),$08    ; player above -> dir $08 (Y-)     ; / direction byte +$0A
+   2D2E: ld (hl),$00    ; aligned on Y -> $00
+   ...  (toggle-set path)
+   2D34: ld (bc),a      ; toggle = 0  (next re-steer does Y)
+   2D35: ld a,($8000)   ; player game-X
+   2D38: cp (hl)        ; vs enemy X (+$08)
+   2D40: ld (hl),$02    ; player right -> dir $02 (X+)
+   2D43: ld (hl),$01    ; player left  -> dir $01 (X-)
    ```
-   Directions are a **bitmask $01/$02/$04/$08** (four cardinals). (`$8003`/`$8000` are the
-   *hardware* sprite X/Y bytes; under ROT90 they hold game-Y/game-X respectively — see §5. The
-   enemy compares its own matching sprite byte, so the chase is self-consistent either way.)
+   The result is a cardinal **bitmask $01/$02/$04/$08** (`$01`=X−, `$02`=X+, `$04`=Y+, `$08`=Y−;
+   `$00`=aligned) written to the **direction byte `+$0A` (`catN_dir`)**, consumed by the mover
+   dispatch at `$2DF8` (`rrca` chain → per-direction movers). `$8000`/`$8003` are the player
+   *sprite* bytes = game-X / game-Y respectively (ROT90; see §5).
+   **All templates spawn the toggle `+$12`=0, so the first steer after spawn is always the Y
+   axis** — matching the observed behaviour that an enemy sharing your line beelines 100% (its Y
+   check is permanently "aligned → no turn", and the alternate X check points straight at you),
+   while an enemy off both axes shows a varied opening move (two axes to resolve + the drift/RNG
+   below). The alternation is *not* a persistent X-vs-Y preference; it flips every re-steer.
 
 2. **Semi-random imperfection (per-enemy chase-vs-drift).** At a junction (detected as above)
    the re-steer is gated by a per-enemy **step counter (record `+$1C`**, bumped at `$2D4E`):
@@ -521,11 +538,17 @@ bytes, not VRAM. (The `$14…`/`$22…` values are position coordinates, *not* "
    snake twins `$33DB`, `$3509`), used to pick a turn when blocked.
 
 3. **Wall / maze checks.** Helper **`$30B3`** (a per-actor clone of `$251B`) converts the
-   enemy's own X/Y into a VRAM tile address (`$9000`+). Each per-direction mover
-   (`$2EC4`=$01, `$2F10`=$02, `$2F5C`=$04, `$2FAA`=$08) reads the tile ahead and compares
-   it to wall/gate codes (cats: **`$F4`**, `$EF`; snakes: `$E1-$E4`); if blocked it re-rolls a
-   direction. (Junctions themselves are *not* marked by maze tiles — they are detected from the
-   enemy's own X/Y hitting the decision lattice; see "Junction detection is geometric" above.)
+   enemy's own X/Y into a VRAM tile address (`$9000`+). Each per-direction mover reads the tile
+   ahead and compares it to a threshold; if blocked it re-rolls a direction. Cats and snakes have
+   **separate copies** of the movers (cats `$2EC4`/`$2F10`/`$2F5C`/`$2FAA`; snakes the twins at
+   `$3541`/`$353B`/`$3535`/`$358C`…), and the copies use **slightly different thresholds** (cats
+   compare against `$EF`, snakes against `$DF`, plus `$E4`/`$EC` checks). **But this makes no
+   practical difference in the shipped mazes**: the 4 maze banks contain only tile codes
+   `$25`/`$35`/`$36`/`$37`/`$38`/`$F4`/`$F5`/`$F6`/`$F9`/`$FC`/`$FD`/`$FF` — **nothing in the
+   `$E0-$EF` band** where the two thresholds diverge — so cats and snakes navigate the *same*
+   walls identically. (Junctions themselves are *not* marked by maze tiles — they are detected
+   from the enemy's own X/Y hitting the decision lattice; see "Junction detection is geometric"
+   above.)
 
 4. **Fall-and-die on open water (bridge/platform).** *Before* moving, once grid-aligned, the
    engine reads the enemy's **current cell** (`$30B3`→addr, `+$FFE2`) and compares it to `$FE`
@@ -568,11 +591,13 @@ bytes, not VRAM. (The `$14…`/`$22…` values are position coordinates, *not* "
 
 ### One-line summary
 > Each enemy (cat or snake) greedily chases the player's on-screen sprite (`$8000`/`$8003`),
-> re-deciding at maze cells, with an R-register random component for imperfection and
-> `$9000`-tilemap wall checks (cat codes `$F4`/`$EF`, snake codes `$E1-$E4`). Stepping onto an
-> open-water tile `$FE` (opened by a bridge/platform) kills the enemy → state 4 (`$2DD0` cats /
-> `$34B5` snakes, splash sound `$95`). Difficulty rises via level-indexed spawn-delay tables
-> (`$3315`/`$332B` on `$8101`) and per-enemy speed/waypoint data.
+> re-deciding at maze cells **one axis at a time, alternating Y↔X via the toggle at `+$12`
+> (Y first at spawn)**, with an R-register random component for imperfection and
+> `$9000`-tilemap wall checks (walls are all `$F0+` in the shipped mazes; cats and snakes use
+> separate movers but navigate them identically — see step 3). Stepping onto an open-water tile
+> `$FE` (opened by a bridge/platform) kills the enemy → state 4 (`$2DD0` cats / `$34B5` snakes,
+> splash sound `$95`). Difficulty rises via level-indexed spawn-delay tables (`$3315`/`$332B` on
+> `$8101`) and per-enemy speed/waypoint data.
 
 ---
 
@@ -765,23 +790,32 @@ at the table's first byte rather than an equate.)
 
 ## 10. Open questions / next steps
 
-- **Enemy record scratch fields** +$01/+$02/+$05/+$06/+$0A/+$0B/+$13/+$14 — not yet pinned.
+- **Enemy record scratch fields** +$01/+$02/+$05/+$06/+$0B/+$13/+$14 — not yet pinned.
+  (+$0A = chase direction, +$12 = chase axis toggle, +$17 = re-steer counter, +$1C = drift
+  step-counter — now pinned; see §5/§6.)
 - ~~**Maze "control tile" encoding**~~ **RESOLVED**: junctions are **not** tile-encoded — they
   are detected geometrically from the enemy's own X/Y hitting the decision lattice (X ∈
   `$14+$20·n`, Y ∈ `$22+$20·n`; see §6). The `$14/$34/…`, `$22/$42/…` values are position
   coordinates compared against record `+$08`/`+$09`, not tilemap bytes. Still open: the full
   wall/path/item **tile** legend
   (`$37`=water (funnymou `TILE_WATER`; player drowns) & enemy return-home scan target,
-  `$39/$3A`=`TILE_BOULDER` (boulder rest cell; touch → boulder falls), `$F4`/`$EF`=cat walls, `$E1-$E4`=snake walls,
-  `$FE`=open water/gap (enemy death; player enter-hole), `$F5`=exit/hole, `$FC`=bridge,
-  `$F9`=sliding-platform, `$FF`=home-entry — see the §5 tile-effect table).
+  `$39/$3A`=`TILE_BOULDER` (boulder rest cell; touch → boulder falls), `$F4`=wall (both cats and
+  snakes; all maze structure is `$F0+` — see §6 step 3), `$FE`=open water/gap (enemy death; player
+  enter-hole), `$F5`=exit/hole/ladder, `$F6`=?, `$FC`=bridge, `$FD`=?, `$F9`=sliding-platform,
+  `$FF`=home-entry — see the §5 tile-effect table. (Actual maze-bank tile set:
+  `$25`/`$35`/`$36`/`$37`/`$38`/`$F4`/`$F5`/`$F6`/`$F9`/`$FC`/`$FD`/`$FF`.)
 - **Player bomb subsystem** — *located* (`$100F`/`$116D`/`$8680`, see §5). Remaining detail:
   the exact meaning of the drop-gate maze-tile check (`$251B`+`$FFE2`, tile ≥ `$F0`) and
   the full explosion-stage tile/animation table (`$110D`).
 - **`$8480` bonus subsystem** field semantics (handler `$4247`).
-- Snake manager (`$3206`) internals were inferred as a twin of the cat manager — verify
-  directly, and confirm what actually distinguishes cats from snakes (graphics only, or
-  behaviour — e.g. the different wall-code set `$FE`/`$E1-$E4`).
+- ~~Snake manager (`$3206`) internals inferred as a twin of the cat manager — confirm what
+  distinguishes cats from snakes~~ **RESOLVED**: snakes are a genuine twin (separate movers, chase
+  helper `$3421`, water-die `$34B5`), but the differences are **graphics + spawn timing + speed**,
+  **not navigation**. Both die on the same open-water tile `$FE`. The movers' differing thresholds
+  (cat `$EF` / snake `$DF`) only diverge over tile codes `$E0-$EF`, which **no maze bank contains**
+  (mazes use only `$25`/`$35`/`$36`/`$37`/`$38`/`$F4`/`$F5`/`$F6`/`$F9`/`$FC`/`$FD`/`$FF`), so both
+  navigate identically. Snake-specific behaviours: delayed + staggered + level-scaled entry
+  (`$3315`/`$332B`), and surviving snakes are force-killed at level-complete (`$2429`).
 - ~~Difference between enemy states 3 and 4~~ **RESOLVED**: only **3** is active chase (`$2CB6`);
   **4** is the dying/return-home start (`$30DD`). State 1→3 promotes when the emerge counter
   (record `+$13`) reaches `$80`; there is no persistent walk-vs-chase mode (chase-vs-drift is a
