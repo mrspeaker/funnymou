@@ -200,39 +200,15 @@
      boulder_y       = $85C6 ; falling vertical pos -> sprite +3 (+=2/frame; ROT90 => physical DOWN)
      bomb_lethal     = $8683 ; explosion active/lethal flag (checked by bomb_collide)
 
- ;;; ============ RE: engine routines ============
- ;;; already labelled: main_loop=$0100 (nmi service), init_game_RAM_test=$07F1
- ;;;  (boot selftest), main_game_loop=$1FD1 (fg loop / consumes screen_state),
- ;;;  draw_cur_level_map=$130B (load maze), get_player_tile_pos=$251B (pos->vram),
- ;;;  get_tile_pos=$30B3 (actor pos->vram)
+ ;;; ============ engine routines ============
 
-     copy_sprites    = $062C ; DMA sprite_mirror ($8000) -> sprite_ram each frame
-     score_add_apply = $063B ; apply pending score_add to score
-     read_inputs     = $0743 ; read joystick / coin inputs
-     ingame_update   = $23A0 ; per-frame game pipeline (cats,snakes,player,bombs,...)
-     level_end_seq   = $23D3 ; run check_level_done, else end timer -> req_level_done
-     check_level_done = $2429 ; all 9 food_returned set? -> start end-of-level seq
-     player_update   = $2539 ; player state machine
-
-     cat_mgr         = $2A51 ; cat manager (cats A/B/C)
-     cat_ai          = $2C3E ; per-enemy state engine (cats)
-     enemy_rand_dir  = $2CEC ; ld a,r random-direction source
-     enemy_chase     = $2D0E ; steer toward player sprite ($8000/$8003)
-     cat_water_die   = $2DD0 ; cat on $FE tile -> state 4, splash tile $1C, sound $95
-
-     snake_mgr       = $3206 ; snake manager (snakes A/B)
      spawn_delay_sa  = $3315 ; level-indexed spawn-delay table (snake A)
      spawn_delay_sb  = $332B ; level-indexed spawn-delay table (snake B)
      snake_ai        = $333F ; per-enemy state engine (snakes)
      snake_water_die = $34B5 ; snake on $FE tile -> state 4, splash tile $2C, sound $95
 
-     player_vs_enemy = $392A ; AABB player sprite vs each enemy -> player death
      enemy_eaten_sm  = $394B ; enemy death/return-home driver, award escalating points
-     boulder_squash  = $3ACC ; while boulder active: AABB-test it vs each enemy, squash the ones it overlaps
      boulder_vs_enemy = $3B74 ; AABB overlap test: falling boulder ($801C) vs one enemy sprite -> kill on hit
-
-     bomb_update     = $100F ; drop / arm+detonate / explode dispatch
-     bomb_collide    = $116D ; explosion AABB vs player + each cat/snake
 
      food_pickup     = $29C8 ; player over food tile ($DC-$EF) -> mark carried (0->2)
      food_maze_redraw = $3E29 ; repaint maze food from food_state (drops carried 2->0)
@@ -246,7 +222,6 @@
      platform_update = $407D ; sliding platform (slot 2), block $80A0-$80A8
      bridge_update   = $3BFF ; bridge open/close tile animation, block $80C0-$80C7
      scripted_move   = $3D0A ; scripted player move (home-entry), block $80E0-$80E7
-     boulder_update  = $41BC ; boulder: spawn-on-touch / fall / despawn (slot 7)
 
  ;;; ============ start of suprmous.x1 =============
 
@@ -275,7 +250,7 @@ start:
     jp   nz,__i01
     ld   sp,stack_location
     ld   a,(watchdog)
-    call clear_screen
+   call clear_screen
     xor  a
     ld   b,$08
     ld   hl,dip_switch
@@ -924,6 +899,7 @@ start:
     nop
     nop
     nop
+ copy_sprites:   ; DMA sprite_mirror ($8000) -> sprite_ram each frame
     ld   hl,ram_start
     ld   de,$9840
     ld   bc,$0020
@@ -933,6 +909,7 @@ start:
     nop
     nop
     nop
+ score_add_apply: ; apply pending score_add to score
     ld   a,(score_add_trig)
     and  a
     ret  z
@@ -1088,7 +1065,7 @@ start:
     ld   (de),a
     ret
 
-
+ read_inputs:    ; read joystick / coin inputs
     ld   iy,dsw_raw
     ld   a,(hw_in_1)
     ld   (iy+$01),a
@@ -1665,6 +1642,7 @@ start:
     db   $81, $84, $84, $84, $80, $84, $84, $84
     db   $80, $86, $86, $86, $80, $86, $86, $86
 
+ bomb_update: ; drop / arm+detonate / explode dispatch
     ld   a,(endlevel_active)
     and  a
     jp   nz,$1038
@@ -1843,6 +1821,8 @@ start:
     jp   $1038
     nop
     nop
+
+ bomb_collide:   ; explosion AABB vs player + each cat/snake
     ld   a,(bomb_lethal)
     and  a
     ret  z
@@ -3009,10 +2989,12 @@ start:
     ld   a,(endlevel_active)
     and  a
     jp   nz,$23C9
+
+ ingame_update:  ; main loop. per-frame game pipeline (cats,snakes,player,bombs,...)
     call platform_update
     call bridge_update
     call scripted_move
-    call cat_mgr
+    call cat_manager
     call snake_mgr
     call player_update
     call enemy_eaten_sm
@@ -3025,11 +3007,12 @@ start:
 
     call player_update
     ret
-    call cat_mgr
+    call cat_manager
     call snake_mgr
     call level_end_seq
     ret
 
+ level_end_seq:  ; run check_level_done, else end timer -> req_level_done
     ld   a,(req_death)
     and  a
     ret  nz
@@ -3069,6 +3052,7 @@ start:
     ld   a,$01
     ld   (req_level_done),a
     ret
+ check_level_done:   ; all 9 food_returned set? -> start end-of-level seq
     ld   hl,food_returned
     ld   a,$00
     ld   b,$09
@@ -3173,7 +3157,7 @@ start:
     add  hl,de
     ret
 
-
+ player_update:  ; player state machine
     ld   a,($8400)
     and  a
     jp   nz,$2554
@@ -3320,7 +3304,7 @@ mthing
     jp   z,player_fell_water
     ret
 
- player_fell_water: ; can you fall in water?
+ player_fell_water: ; can you fall in water? NO!
     ld   a,$01
     ld   ($842A),a ; hmm?
     ret
@@ -3820,6 +3804,8 @@ mthing
     nop
     ld   (bc),a
     nop
+
+ cat_manager:    ; cats A/B/C
     ld   hl,cat1_ai_init
     ld   a,(hl)
     and  a
@@ -4101,7 +4087,7 @@ mthing
     nop
     nop
      byte 01,00
-
+ cat_ai: ; per-enemy state engine (cats)
     push hl
     ex   de,hl
     ld   hl,$0018
@@ -4205,6 +4191,7 @@ mthing
     add  a,$20
     djnz $2CE1
     jp   $2DB4
+ enemy_rand_dir: ; ld a,r random-direction source
     ld   a,r
     and  $03
     cp   $01
@@ -4223,6 +4210,7 @@ mthing
     ret  nz
     ld   (hl),$08
     ret
+ enemy_chase:    ; steer toward player sprite ($8000/$8003)
     ld   b,d
     ld   c,e
     ld   d,h
@@ -4334,6 +4322,7 @@ mthing
     call get_tile_pos
     ld   bc,$FFE2
     add  hl,bc
+ cat_water_die:  ; cat on $FE tile -> state 4, splash tile $1C, sound $95
     ld   a,TILE_GAP
     cp   (hl)
     jp   nz,$2DF2
@@ -4996,6 +4985,7 @@ mthing
     nop
     nop
     nop
+ snake_mgr:      ; snakes A/B
     nop
     nop
     nop
@@ -6054,6 +6044,7 @@ mthing
     call $32F7
     call $37B3
     ret
+ ;; some data?
     nop
     nop
     nop
@@ -6084,6 +6075,8 @@ mthing
     nop
     nop
     nop
+
+ player_vs_enemy:    ; AABB player sprite vs each enemy -> player death
     ld   a,(int_enable)
     and  $80
     ret  nz
@@ -6127,6 +6120,7 @@ mthing
     ld   hl,$841F
     ld   (hl),$02
     ret
+
     ld   a,($8501)
     and  a
     ret  z
@@ -6271,6 +6265,8 @@ mthing
     ld   hl,cat3_busy
     ld   (hl),$01
     ret
+
+ boulder_squash: ; while boulder active: AABB-test it vs each enemy, squash the ones it overlaps
     ld   a,(boulder)
     and  a
     ret  z
@@ -6280,6 +6276,7 @@ mthing
     call $3B36
     call $3B4D
     ret
+
     ld   a,($8501)
     and  a
     ret  z
@@ -6319,6 +6316,7 @@ mthing
     ex   de,hl
     ld   (hl),$04
     ret
+
     ld   a,($8601)
     and  a
     ret  z
@@ -6422,14 +6420,11 @@ mthing
     ld   (hl),a
     ret
 
-    ret  m
-    inc  (hl)
-    cp   $24
-    rst  $30
-    inc  sp
-    or   $24
-    call m,$F624
-    inc  h
+ open_bridge_tiles:
+    db $F8, $34, $FE, $24, $F7, $33
+ closed_bridge_tiles:
+    db $F6, $24, $FC, $24, $F6, $24
+
     inc  bc
     ld   hl,($3291)
     sub  c
@@ -6485,7 +6480,7 @@ mthing
     and  a
     ret  z
     inc  ix
-    ld   de,$3BD7
+    ld   de,open_bridge_tiles
     call $3CA9
     ld   hl,$80C2
     ld   (hl),$01
@@ -6511,7 +6506,7 @@ mthing
     and  a
     ret  z
     inc  ix
-    ld   de,$3BDD
+    ld   de,closed_bridge_tiles
     call $3CA9
     ld   hl,$80C2
     ld   (hl),$02
@@ -7296,6 +7291,7 @@ mthing
     ld   a,$85
     ld   ($97A5),a
     ret
+ boulder_update:  ; boulder: spawn-on-touch / fall / despawn (slot 7)
     call $48EF
     ld   a,(boulder_req)
     and  a

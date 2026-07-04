@@ -14,11 +14,11 @@ This repo is a **reverse-engineering / documentation project** for the arcade ga
 ## 1. What this game is
 
 - **Funny Mouse** is a bootleg/variant of **Super Mouse** running on **"The Pit"**
-  hardware (Zaccaria/Taito-era Z80 board). See `explore_funny.org` for the MAME ROM/driver
+  hardware (Zaccaria/Taito-era Z80 board). See `funnymou.org` for the MAME ROM/driver
   notes and `thepit/` for the MAME driver source (`thepit.cpp`, `thepit.h`,
   `thepit_v.cpp`) — these are the authoritative hardware reference.
 - **Gameplay = a maze game with a carry-and-return mechanic.** The player is a **mouse**
-  that must **pick up the pieces of "food" scattered in the maze and carry them back to its
+  that must **pick up the pieces of food scattered in the maze and carry them back to its
   home base**, all while being chased by enemies — **cats** and **snakes**. Merely collecting
   a food piece is not enough; it must be *returned home*. The level is complete once **all
   food has been returned**.
@@ -26,9 +26,8 @@ This repo is a **reverse-engineering / documentation project** for the arcade ga
   detonates it and the explosion kills anything it touches (see §5 — traced to `$100F`).
   **Boulders** sit at the tops of the edge ladders: when the player touches one it falls and
   squashes anything it hits. The maze also has **bridges** (crossing one opens it, dropping
-  chasing enemies into the water) and **sliding platforms** (stepping on one carries the
-  player across a gap; enemies that follow fall and die). Completing the level advances to the
-  next.
+  any enemies into the water) and **sliding platforms** (stepping on one carries the player 
+  across a gap; enemies that follow fall and die). Completing the level advances to the next.
 
 ### Files
 | Path | What it is |
@@ -77,7 +76,7 @@ See §7 for the code/data region map.
 
 ## 3. Hardware / memory map
 
-Main CPU: **Z80**. Source: `explore_funny.org` + `thepit/thepit_v.cpp`.
+Main CPU: **Z80**. Source: `funnymou.org` + `thepit/thepit_v.cpp`.
 
 | Range | Contents |
 |-------|----------|
@@ -348,6 +347,15 @@ position set (table `$3BE3`, indexed by `$8101 & 3`) and `$3CA9`→`$1360` blits
 tile blocks (source tables `$3BD7`/`$3BDD`) into VRAM. So the player crossing a bridge tile
 (`$FC`) make **all** the bridges open — an enemy over the opened span is over "water" and dies.
 
+There is **no per-bridge state**: crossing any `$FC` tile sets the single flag `$80C0`, and one
+animation pass rewrites **every** bridge span in the maze at once. `$3BE3` is 4 entries of `$07`
+bytes (one per maze), each a **count byte (always `$03` = 3 bridges) + three 2-byte LE VRAM
+cells**; the blit is a `djnz` loop (`$3CA9`, `b`=count) over all 3. Per-maze cells (`(cur_map)&3`):
+maze 0 = `$912A`/`$9132`/`$92AA`, maze 1 = `$912E`/`$92AA`/`$92B2`, maze 2 = `$91A6`/`$92AE`/`$9132`,
+maze 3 = `$9226`/`$92AE`/`$92BA`. Open block `$3BD7` = `F8 34 FE 24 F7 33` (2×3, contains `$FE`);
+closed block `$3BDD` = `F6 24 FC 24 F6 24` (contains `$FC`). Phase is driven by `$80C2` (0=open →
+1=hold-open → 2=close).
+
 **Sliding platform — `$407D`** (block `$80A0-$80A8`, draws into **sprite slot 2** via `$4092`).
 On activation it snaps to the player (`$80A5`=X from `$8406`, `$80A8`=Y from `$8407`+`$F0`;
 "slides horizontally" below is on the *physical* ROT90 screen — game-Y `$80A8++` = physical X),
@@ -444,7 +452,18 @@ counter at record `+$13`** once per frame; the instant it reaches **`$80`** (128
 dispatch sends it to the dying handler `$30DD`.)*
 
 ### The chase algorithm (state 3)
-Per enemy, once it is grid-aligned at a maze cell:
+Per enemy, once it is grid-aligned at a maze cell.
+
+**Junction detection is geometric, not tilemap-based.** The re-steer step only runs when the
+enemy has just finished stepping onto a fresh grid cell — gated by a per-enemy move-timing
+counter at record **`+$17`** (`$2CBB`: while nonzero it decrements and keeps the current
+direction; only at `0` does it re-evaluate). At that moment it tests whether its own **X byte
+(record `+$08`)** equals one of the junction **columns** `$14/$34/$54/$74/$94/$B4/$D4`
+(= `$14 + $20·n`, spanning the `$14..$D4` position range; scan at `$2CD0`) **and** its **Y byte
+(record `+$09`)** equals one of the junction **rows** `$22/$42/$62/…` (scan at `$2CE1`). A hit on
+both axes means the enemy sits exactly on the maze's decision lattice → it's at a junction. **No
+maze tile is read for this decision** — `cp (hl)` compares against the record's own position
+bytes, not VRAM. (The `$14…`/`$22…` values are position coordinates, *not* "control tiles".)
 
 1. **Greedy pursuit toward the player.** Chase helper **`$2D0E`** (cats; duplicated at
    `$3421` for snakes) reads the **player's sprite position** and steers toward it:
@@ -462,14 +481,17 @@ Per enemy, once it is grid-aligned at a maze cell:
    *hardware* sprite X/Y bytes; under ROT90 they hold game-Y/game-X respectively — see §5. The
    enemy compares its own matching sprite byte, so the chase is self-consistent either way.)
 
-2. **Semi-random imperfection (per-junction chase-vs-drift).** The re-steer only happens at a
-   maze **junction/control tile**, and even there it is gated by the enemy's own **step counter
-   (record `+$00`)**: the junction handler does `ld a,(bc); and mask; cp excluded; call nz,$2D0E`
-   — so it re-aims at the player *unless* the counter hits the excluded value, in which case it
-   skips the re-aim and keeps walking straight. Each junction type has its own mask/excluded
-   value: `$10`-tile `(cnt&3)==0` (`$2D5B`), `$30`-tile `(cnt&3)==2` (`$2D72`), `$50`-tile
-   `(cnt&7)==5` (`$2D89`), `$70`-tile `(cnt&7)==7` (`$2DA3`). This isn't a mode change — it's a
-   per-junction dice roll that makes the beeline imperfect. The other RNG source is the Z80
+2. **Semi-random imperfection (per-enemy chase-vs-drift).** At a junction (detected as above)
+   the re-steer is gated by a per-enemy **step counter (record `+$1C`**, bumped at `$2D4E`):
+   `ld a,(bc); and mask; cp excluded; call nz,$2D0E` — it re-aims at the player *unless* the
+   counter hits the excluded value, in which case it skips the re-aim and keeps walking straight.
+   **The mask/excluded pair is chosen by *enemy identity*, not junction type**: `$2D53` does
+   `ld a,l; and $F0` on the **low byte of the enemy's own record address** (`$851x`→`$10`,
+   `$855x`→`$50`, `$857x`→`$70`; snakes `$861x`→`$10`, `$863x`→`$30`) and dispatches to that
+   enemy's gate — `$10` → `(cnt&3)==0` (`$2D5B`), `$30` → `(cnt&3)==2` (`$2D72`), `$50` →
+   `(cnt&7)==5` (`$2D89`), `$70` → `(cnt&7)==7` (`$2DA3`). So each cat/snake has its own
+   chase-vs-drift personality baked into where its record lives. This isn't a mode change — it's a
+   per-enemy dice roll that makes the beeline imperfect. The other RNG source is the Z80
    **R (refresh) register**: `ld a,r; and $03` at `$2CEC` (also `$2E24`, `$2E74`;
    snake twins `$33DB`, `$3509`), used to pick a turn when blocked.
 
@@ -477,8 +499,8 @@ Per enemy, once it is grid-aligned at a maze cell:
    enemy's own X/Y into a VRAM tile address (`$9000`+). Each per-direction mover
    (`$2EC4`=$01, `$2F10`=$02, `$2F5C`=$04, `$2FAA`=$08) reads the tile ahead and compares
    it to wall/gate codes (cats: **`$F4`**, `$EF`; snakes: `$E1-$E4`); if blocked it re-rolls a
-   direction. The maze also embeds junction "control tiles" (`$14,$34,$54,…` step `$20`, and
-   `$22,$42,…`) that mark decision points and allowed turns.
+   direction. (Junctions themselves are *not* marked by maze tiles — they are detected from the
+   enemy's own X/Y hitting the decision lattice; see "Junction detection is geometric" above.)
 
 4. **Fall-and-die on open water (bridge/platform).** *Before* moving, once grid-aligned, the
    engine reads the enemy's **current cell** (`$30B3`→addr, `+$FFE2`) and compares it to `$FE`
@@ -718,8 +740,11 @@ at the table's first byte rather than an equate.)
 ## 10. Open questions / next steps
 
 - **Enemy record scratch fields** +$01/+$02/+$05/+$06/+$0A/+$0B/+$13/+$14 — not yet pinned.
-- **Maze "control tile" encoding**: confirm exactly how junction tiles (`$14/$34/…`,
-  `$22/$42/…`) encode allowed directions, and the full wall/path/item tile legend
+- ~~**Maze "control tile" encoding**~~ **RESOLVED**: junctions are **not** tile-encoded — they
+  are detected geometrically from the enemy's own X/Y hitting the decision lattice (X ∈
+  `$14+$20·n`, Y ∈ `$22+$20·n`; see §6). The `$14/$34/…`, `$22/$42/…` values are position
+  coordinates compared against record `+$08`/`+$09`, not tilemap bytes. Still open: the full
+  wall/path/item **tile** legend
   (`$37`=water (funnymou `TILE_WATER`; player drowns) & enemy return-home scan target,
   `$39/$3A`=`TILE_BOULDER` (boulder rest cell; touch → boulder falls), `$F4`/`$EF`=cat walls, `$E1-$E4`=snake walls,
   `$FE`=open water/gap (enemy death; player enter-hole), `$F5`=exit/hole, `$FC`=bridge,
@@ -734,8 +759,8 @@ at the table's first byte rather than an equate.)
 - ~~Difference between enemy states 3 and 4~~ **RESOLVED**: only **3** is active chase (`$2CB6`);
   **4** is the dying/return-home start (`$30DD`). State 1→3 promotes when the emerge counter
   (record `+$13`) reaches `$80`; there is no persistent walk-vs-chase mode (chase-vs-drift is a
-  per-junction dice roll on the step counter `+$00` — see §6). Remaining: states 5/6/7 animation
-  details.
+  per-enemy dice roll on the step counter `+$1C`, gate selected by record-address low byte —
+  see §6). Remaining: states 5/6/7 animation details.
 - Sound command values (writes to `$B800`) → map to audio-CPU behaviors (`fm.6`).
 - The attract-demo script (`attract_demo_script` `$249B`-`$24FC`, now `db` data) decoding: it's
   `$0F`-prefixed FF-terminated byte pairs consumed from `$2507` (`ld de,attract_demo_script`) —
