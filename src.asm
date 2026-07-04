@@ -214,21 +214,6 @@
      boulder_y       = $85C6 ; falling vertical pos -> sprite +3 (+=2/frame; ROT90 => physical DOWN)
      bomb_lethal     = $8683 ; explosion active/lethal flag (checked by bomb_collide)
 
- ;;; ============ engine routines ============
-
-     snake_water_die = $34B5 ; snake on $FE tile -> state 4, splash tile $2C, sound $95
-
-     food_pickup     = $29C8 ; player over food tile ($DC-$EF) -> mark carried (0->2)
-     food_maze_redraw = $3E29 ; repaint maze food from food_state (drops carried 2->0)
-     food_set_state  = $3EB2 ; find food at vram cell (hl), write reg c -> food_state
-     food_return_add = $3EF2 ; append carried-home piece to food_returned, +500 pts
-     food_log_redraw = $3F36 ; repaint all food_returned entries to VRAM
-     food_maze_erase = $3F62 ; blank carried (state 2) food cells (tile $25/$87)
-     food_return_home = $4167 ; home-entry: log carried piece + food_state 2->1
-
-     bridge_update   = $3BFF ; bridge open/close tile animation, block $80C0-$80C7
-     scripted_move   = $3D0A ; scripted player move (home-entry), block $80E0-$80E7
-
  ;;; ============ start of suprmous.x1 =============
 
 start:
@@ -2524,7 +2509,7 @@ start:
     call $209D
     call draw_cur_level_map
     call food_maze_redraw
-    call $3F34
+    call food_log_redraw_all
     call $417B
     call $4227
     ld   a,$A0
@@ -3667,6 +3652,8 @@ mthing
     ld   a,$02
     ld   (carrying_3),a
     ret
+
+ food_pickup:    ; player over food tile ($DC-$EF) -> mark carried (0->2)
     ld   a,(carrying_1)
     and  a
     ret  nz
@@ -4919,9 +4906,7 @@ mthing
     ld   (hl),b
     ret
 
-
-    nop
-    nop
+    db  $00, $00
  enemy_lvl_param_tbl: ; level-indexed 16-bit enemy AI param -> record +$15/+$16 (via load_level_ptr, at respawn); trends down w/ level
     db   $00, $08   ; level 0: $0800
     db   $14, $04   ; level 1: $0414
@@ -4933,9 +4918,8 @@ mthing
     db   $14, $02   ; level 7: $0214
     db   $14, $02   ; level 8: $0214
     db   $14, $02   ; level 9: $0214
-    nop
-    nop
-    nop
+
+    db  $00, $00, $00
 
  snake_mgr:      ; snakes A/B
     nop
@@ -5310,6 +5294,7 @@ mthing
     call $37CA
     ld   bc,$FFE2
     add  hl,bc
+ snake_water_die: ; snake on $FE tile -> state 4, splash tile $2C, sound $95 (twin of cat_water_die)
     ld   a,TILE_GAP
     cp   (hl)
     jp   nz,$34D7
@@ -6353,28 +6338,12 @@ mthing
  closed_bridge_tiles:
     db $F6, $24, $FC, $24, $F6, $24
 
-    inc  bc
-    ld   hl,($3291)
-    sub  c
-    xor  d
-    sub  d
-    inc  bc
-    ld   l,$91
-    xor  d
-    sub  d
-    or   d
-    sub  d
-    inc  bc
-    and  (hl)
-    sub  c
-    xor  (hl)
-    sub  d
-    ld   ($0391),a
-    ld   h,$92
-    xor  (hl)
-    sub  d
-    cp   d
-    sub  d
+ bridge_cells_tbl: ; per-maze bridge spans: 4x [count=$03, 3x 2-byte LE VRAM cell]; used by bridge_select_cells (($8101)&3)
+    db   $03, $2A, $91, $32, $91, $AA, $92  ; maze 0: 3 bridges @ $912A $9132 $92AA
+    db   $03, $2E, $91, $AA, $92, $B2, $92  ; maze 1: 3 bridges @ $912E $92AA $92B2
+    db   $03, $A6, $91, $AE, $92, $32, $91  ; maze 2: 3 bridges @ $91A6 $92AE $9132
+    db   $03, $26, $92, $AE, $92, $BA, $92  ; maze 3: 3 bridges @ $9226 $92AE $92BA
+ bridge_update:  ; bridge open/close tile animation, block $80C0-$80C7
     ld   hl,$80C0
     ld   a,(hl)
     and  a
@@ -6463,7 +6432,7 @@ mthing
     ret
  bridge_select_cells: ; pick per-maze bridge cell set (table $3BE3)
     call debug_draw_check
-    ld   ix,$3BE3
+    ld   ix,bridge_cells_tbl
     ld   a,(cur_map)
     and  $03
     ld   de,$0007
@@ -6540,6 +6509,7 @@ mthing
     sub  c
     nop
     sub  b
+ scripted_move:  ; scripted player move (home-entry), block $80E0-$80E7
     ld   hl,$80E0
     ld   a,(hl)
     and  a
@@ -6691,7 +6661,7 @@ mthing
     pop  hl
     ret
 
-
+ food_maze_redraw:   ; repaint maze food from food_state (drops carried 2->0)
     ld   hl,food_state
     ld   ix,food_pos_tbl
     ld   iy,food_gfx_ptr_tbl
@@ -6759,7 +6729,7 @@ mthing
     call fill_rect
     jp   $3E7B
 
-
+ food_set_state: ; find food at vram cell (hl), write reg c -> food_state
     exx
     ld   hl,food_state
     ld   ix,food_pos_tbl
@@ -6795,6 +6765,7 @@ mthing
     exx
     ret
 
+ food_return_add:    ; append carried-home piece to food_returned, +500 pts
     ld   hl,food_returned
     ld   bc,$0000
     ld   a,(hl)
@@ -6835,8 +6806,9 @@ mthing
     dec  b
     nop
 
-
+ food_log_redraw_all:            ; maybe? sets a to 9 then draws
     ld   a,$09
+ food_log_redraw:    ; repaint all food_returned entries to VRAM
     ld   hl,food_returned
     ld   bc,$0000
     ex   af,af' ; '
@@ -6867,7 +6839,7 @@ mthing
     pop  hl
     ret
 
-
+ food_maze_erase:    ; blank carried (state 2) food cells (tile $25/$87)
     ld   hl,food_state
     ld   ix,food_pos_tbl
     ld   de,$0012
@@ -7041,6 +7013,7 @@ mthing
     add  a,$02
     ld   (carry_y),a
     jp   $4092
+ food_return_home:   ; home-entry: log carried piece + food_state 2->1
     ld   hl,$809E
     ld   e,(hl)
     inc  hl

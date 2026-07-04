@@ -214,21 +214,6 @@
                     boulder_y       = $85C6 ; falling vertical pos -> sprite +3 (+=2/frame; ROT90 => physical DOWN)
                     bomb_lethal     = $8683 ; explosion active/lethal flag (checked by bomb_collide)
 
-                ;;; ============ engine routines ============
-
-                    snake_water_die = $34B5 ; snake on $FE tile -> state 4, splash tile $2C, sound $95
-
-                    food_pickup     = $29C8 ; player over food tile ($DC-$EF) -> mark carried (0->2)
-                    food_maze_redraw = $3E29 ; repaint maze food from food_state (drops carried 2->0)
-                    food_set_state  = $3EB2 ; find food at vram cell (hl), write reg c -> food_state
-                    food_return_add = $3EF2 ; append carried-home piece to food_returned, +500 pts
-                    food_log_redraw = $3F36 ; repaint all food_returned entries to VRAM
-                    food_maze_erase = $3F62 ; blank carried (state 2) food cells (tile $25/$87)
-                    food_return_home = $4167 ; home-entry: log carried piece + food_state 2->1
-
-                    bridge_update   = $3BFF ; bridge open/close tile animation, block $80C0-$80C7
-                    scripted_move   = $3D0A ; scripted player move (home-entry), block $80E0-$80E7
-
                 ;;; ============ start of suprmous.x1 =============
 
 0000          	start:
@@ -2524,7 +2509,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2048  CD9D20  	    call $209D
 204B  CD0B13  	    call draw_cur_level_map
 204E  CD293E  	    call food_maze_redraw
-2051  CD343F  	    call $3F34
+2051  CD343F  	    call food_log_redraw_all
 2054  CD7B41  	    call $417B
 2057  CD2742  	    call $4227
 205A  3EA0    	    ld   a,$A0
@@ -3667,6 +3652,8 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 29C2  3E02    	    ld   a,$02
 29C4  32A280  	    ld   (carrying_3),a
 29C7  C9      	    ret
+
+                food_pickup:    ; player over food tile ($DC-$EF) -> mark carried (0->2)
 29C8  3AA080  	    ld   a,(carrying_1)
 29CB  A7      	    and  a
 29CC  C0      	    ret  nz
@@ -4919,9 +4906,7 @@ _
 31EB  70      	    ld   (hl),b
 31EC  C9      	    ret
 
-
-31ED  00      	    nop
-31EE  00      	    nop
+31ED  00      	    db  $00, $00
                 enemy_lvl_param_tbl: ; level-indexed 16-bit enemy AI param -> record +$15/+$16 (via load_level_ptr, at respawn); trends down w/ level
 31EF               db   $00, $08   ; level 0: $0800
 31F1               db   $14, $04   ; level 1: $0414
@@ -4933,9 +4918,8 @@ _
 31FD               db   $14, $02   ; level 7: $0214
 31FF               db   $14, $02   ; level 8: $0214
 3201               db   $14, $02   ; level 9: $0214
-3203  00      	    nop
-3204  00      	    nop
-3205  00      	    nop
+
+31ED  00      	    db  $00, $00, $00
 
                 snake_mgr:      ; snakes A/B
 3206  00      	    nop
@@ -5310,6 +5294,7 @@ _
 34AE  CDCA37  	    call $37CA
 34B1  01E2FF  	    ld   bc,$FFE2
 34B4  09      	    add  hl,bc
+                snake_water_die: ; snake on $FE tile -> state 4, splash tile $2C, sound $95 (twin of cat_water_die)
 34B5  3EFE    	    ld   a,TILE_GAP
 34B7  BE      	    cp   (hl)
 34B8  C2D734  	    jp   nz,$34D7
@@ -6353,28 +6338,12 @@ _
                 closed_bridge_tiles:
 3BDD  F624    	    db $F6, $24, $FC, $24, $F6, $24
 
-3BE3  03      	    inc  bc
-3BE4  2A9132  	    ld   hl,($3291)
-3BE7  91      	    sub  c
-3BE8  AA      	    xor  d
-3BE9  92      	    sub  d
-3BEA  03      	    inc  bc
-3BEB  2E91    	    ld   l,$91
-3BED  AA      	    xor  d
-3BEE  92      	    sub  d
-3BEF  B2      	    or   d
-3BF0  92      	    sub  d
-3BF1  03      	    inc  bc
-3BF2  A6      	    and  (hl)
-3BF3  91      	    sub  c
-3BF4  AE      	    xor  (hl)
-3BF5  92      	    sub  d
-3BF6  329103  	    ld   ($0391),a
-3BF9  2692    	    ld   h,$92
-3BFB  AE      	    xor  (hl)
-3BFC  92      	    sub  d
-3BFD  BA      	    cp   d
-3BFE  92      	    sub  d
+                bridge_cells_tbl: ; per-maze bridge spans: 4x [count=$03, 3x 2-byte LE VRAM cell]; used by bridge_select_cells (($8101)&3)
+3BE3               db   $03, $2A, $91, $32, $91, $AA, $92  ; maze 0: 3 bridges @ $912A $9132 $92AA
+3BEA               db   $03, $2E, $91, $AA, $92, $B2, $92  ; maze 1: 3 bridges @ $912E $92AA $92B2
+3BF1               db   $03, $A6, $91, $AE, $92, $32, $91  ; maze 2: 3 bridges @ $91A6 $92AE $9132
+3BF8               db   $03, $26, $92, $AE, $92, $BA, $92  ; maze 3: 3 bridges @ $9226 $92AE $92BA
+                bridge_update:  ; bridge open/close tile animation, block $80C0-$80C7
 3BFF  21C080  	    ld   hl,$80C0
 3C02  7E      	    ld   a,(hl)
 3C03  A7      	    and  a
@@ -6463,7 +6432,7 @@ _
 3C91  C9      	    ret
                 bridge_select_cells: ; pick per-maze bridge cell set (table $3BE3)
 3C92  CDEF48  	    call debug_draw_check
-3C95  DD21E33B	    ld   ix,$3BE3
+3C95  DD21E33B	    ld   ix,bridge_cells_tbl
 3C99  3A0181  	    ld   a,(cur_map)
 3C9C  E603    	    and  $03
 3C9E  110700  	    ld   de,$0007
@@ -6540,6 +6509,7 @@ _
 3D07  91      	    sub  c
 3D08  00      	    nop
 3D09  90      	    sub  b
+                scripted_move:  ; scripted player move (home-entry), block $80E0-$80E7
 3D0A  21E080  	    ld   hl,$80E0
 3D0D  7E      	    ld   a,(hl)
 3D0E  A7      	    and  a
@@ -6691,7 +6661,7 @@ _
 3E27  E1      	    pop  hl
 3E28  C9      	    ret
 
-
+                food_maze_redraw:   ; repaint maze food from food_state (drops carried 2->0)
 3E29  212081  	    ld   hl,food_state
 3E2C  DD21C63F	    ld   ix,food_pos_tbl
 3E30  FD210E40	    ld   iy,food_gfx_ptr_tbl
@@ -6759,7 +6729,7 @@ _
 3EAC  CD8413  	    call fill_rect
 3EAF  C37B3E  	    jp   $3E7B
 
-
+                food_set_state: ; find food at vram cell (hl), write reg c -> food_state
 3EB2  D9      	    exx
 3EB3  212081  	    ld   hl,food_state
 3EB6  DD21C63F	    ld   ix,food_pos_tbl
@@ -6795,6 +6765,7 @@ _
 3EF0  D9      	    exx
 3EF1  C9      	    ret
 
+                food_return_add:    ; append carried-home piece to food_returned, +500 pts
 3EF2  214081  	    ld   hl,food_returned
 3EF5  010000  	    ld   bc,$0000
 3EF8  7E      	    ld   a,(hl)
@@ -6835,8 +6806,9 @@ _
 3F32  05      	    dec  b
 3F33  00      	    nop
 
-
+                food_log_redraw_all:            ; maybe? sets a to 9 then draws
 3F34  3E09    	    ld   a,$09
+                food_log_redraw:    ; repaint all food_returned entries to VRAM
 3F36  214081  	    ld   hl,food_returned
 3F39  010000  	    ld   bc,$0000
 3F3C  08      	    ex   af,af' ; '
@@ -6867,7 +6839,7 @@ _
 3F60  E1      	    pop  hl
 3F61  C9      	    ret
 
-
+                food_maze_erase:    ; blank carried (state 2) food cells (tile $25/$87)
 3F62  212081  	    ld   hl,food_state
 3F65  DD21C63F	    ld   ix,food_pos_tbl
 3F69  111200  	    ld   de,$0012
@@ -7041,6 +7013,7 @@ _
 415F  C602    	    add  a,$02
 4161  32A880  	    ld   (carry_y),a
 4164  C39240  	    jp   $4092
+                food_return_home:   ; home-entry: log carried piece + food_state 2->1
 4167  219E80  	    ld   hl,$809E
 416A  5E      	    ld   e,(hl)
 416B  23      	    inc  hl

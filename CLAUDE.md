@@ -385,7 +385,7 @@ tile blocks (source tables `$3BD7`/`$3BDD`) into VRAM. So the player crossing a 
 (`$FC`) make **all** the bridges open — an enemy over the opened span is over "water" and dies.
 
 There is **no per-bridge state**: crossing any `$FC` tile sets the single flag `$80C0`, and one
-animation pass rewrites **every** bridge span in the maze at once. `$3BE3` is 4 entries of `$07`
+animation pass rewrites **every** bridge span in the maze at once. `bridge_cells_tbl` (`$3BE3`) is 4 entries of `$07`
 bytes (one per maze), each a **count byte (always `$03` = 3 bridges) + three 2-byte LE VRAM
 cells**; the blit is a `djnz` loop (`$3CA9`, `b`=count) over all 3. Per-maze cells (`(cur_map)&3`):
 maze 0 = `$912A`/`$9132`/`$92AA`, maze 1 = `$912E`/`$92AA`/`$92B2`, maze 2 = `$91A6`/`$92AE`/`$9132`,
@@ -815,7 +815,8 @@ return_snakeA       $3A50 ; snake A death->return-home handler (snake1_state)
 return_snakeB       $3A5D ; snake B death->return-home handler (snake2_state)
 kill_enemies_bonus  $3A8C ; level-end: award points for + clear surviving enemies
 score_add_request   $3BBD ; request a score add (score_add_trig=1) with pending BCD
-bridge_select_cells $3C92 ; pick per-maze bridge cell set (table $3BE3)
+bridge_cells_tbl    $3BE3 ; per-maze bridge spans: 4x [count $03 + 3x 2-byte LE cell]   [data]
+bridge_select_cells $3C92 ; pick per-maze bridge cell set (bridge_cells_tbl)
 bridge_blit         $3CA9 ; blit open/closed bridge tile blocks to VRAM
 gamble_update       $4247 ; slot-machine bonus state machine (gamble_state $8480)
 gamble_award_credit $432E ; jackpot payout: credits+=1 (max 9) + draw str_special_bonus
