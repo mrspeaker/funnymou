@@ -567,16 +567,35 @@ bytes, not VRAM. (The `$14…`/`$22…` values are position coordinates, *not* "
    below). The alternation is *not* a persistent X-vs-Y preference; it flips every re-steer.
 
 2. **Semi-random imperfection (per-enemy chase-vs-drift).** At a junction (detected as above)
-   the re-steer is gated by a per-enemy **step counter (record `+$1C`**, bumped at `$2D4E`):
-   `ld a,(bc); and mask; cp excluded; call nz,$2D0E` — it re-aims at the player *unless* the
-   counter hits the excluded value, in which case it skips the re-aim and keeps walking straight.
+   the re-steer is gated by a per-enemy **step counter (record `+$1C`**, bumped at `$2D4E`,
+   entry **`drift_gate` `$2D49`**): `ld a,(bc); and mask; cp excluded; call nz,$2D0E` — it re-aims
+   at the player *unless* the counter hits the excluded value, in which case it skips the re-aim and
+   keeps walking straight.
    **The mask/excluded pair is chosen by *enemy identity*, not junction type**: `$2D53` does
    `ld a,l; and $F0` on the **low byte of the enemy's own record address** (`$851x`→`$10`,
    `$855x`→`$50`, `$857x`→`$70`; snakes `$861x`→`$10`, `$863x`→`$30`) and dispatches to that
    enemy's gate — `$10` → `(cnt&3)==0` (`$2D5B`), `$30` → `(cnt&3)==2` (`$2D72`), `$50` →
    `(cnt&7)==5` (`$2D89`), `$70` → `(cnt&7)==7` (`$2DA3`). So each cat/snake has its own
    chase-vs-drift personality baked into where its record lives. This isn't a mode change — it's a
-   per-enemy dice roll that makes the beeline imperfect. The other RNG source is the Z80
+   per-enemy dice roll that makes the beeline imperfect.
+
+   **The excluded value does double duty: drift *rate* AND a first-drift *grace period*.** The
+   counter `+$1C` inits to `$00` in every template and is only ever `inc`'d (once per junction), so
+   it climbs monotonically from each (re)spawn. Therefore:
+   - **Cat A (`$8510`, `$10`-gate):** mask `$03`, excluded `$00` → drifts **1-in-4** junctions;
+     first possible drift at junction **4** (`cnt` is `inc`'d *before* the test, so `cnt=4` is the
+     first `cnt&3==0`). Most drift-prone → visibly "runs straight past" often.
+   - **Cat B (`$8550`, `$50`-gate):** mask `$07`, excluded `$05` → **1-in-8**; first drift at
+     junction **5**.
+   - **Cat C (`$8570`, `$70`-gate):** mask `$07`, excluded `$07` → **1-in-8**; first drift at
+     junction **7** — the highest phase, so it must survive 7 junctions since its last (re)spawn
+     before it can *ever* drift. Because cats respawn often (bomb/boulder/water reset the record and
+     zero `+$1C`), cat C rarely reaches `cnt=7` and so **appears to chase relentlessly** — this is
+     the observed "cat 3 always turns to follow, cats 1 & 2 sometimes go straight" behaviour. B and
+     C share the same steady-state rate (1-in-8); the excluded value (5 vs 7) is what separates
+     "occasionally drifts" from "practically never."
+
+   The other RNG source is the Z80
    **R (refresh) register**: `ld a,r; and $03` at `$2CEC` (also `$2E24`, `$2E74`;
    snake twins `$33DB`, `$3509`), used to pick a turn when blocked.
 
@@ -750,6 +769,7 @@ cat_mgr             $2A51 ; cats A/B/C
 cat_ai              $2C3E ; per-enemy state engine (cats)
 enemy_rand_dir      $2CEC ; ld a,r random direction
 enemy_chase         $2D0E ; steer toward player sprite ($8000/$8003)
+drift_gate          $2D49 ; junction re-steer gate: re-aim unless (cnt+$1C & mask)==excluded (per-cat)
 cat_water_die       $2DD0 ; cat on $FE tile -> state 4, tile $1C, sound $95
 food_pickup         $29C8 ; player over food tile ($DC-$EF) -> mark carried (food_state 0->2)
 snake_mgr           $3206 ; snakes A/B

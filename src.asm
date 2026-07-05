@@ -526,6 +526,7 @@ start:
     ret
     call $2468
     ret
+
  game_in_progress:
     call $0638
     ld   a,(req_death)
@@ -639,11 +640,12 @@ start:
     ld   a,(is_2player)
     and  a
     jp   nz,$041D
+ ;;; 1p mode
     ld   hl,lives
     ld   a,$00
     cp   (hl)
     jp   z,$03E9
-    dec  (hl)
+    dec  (hl)   ; lose a life, 1P mode
     ld   hl,lives
     ld   de,lives_copy
     ld   bc,$00FF
@@ -658,7 +660,6 @@ start:
     set  4,a
     ld   (screen_state),a
     ret
-
  ;;
     ld   (sound_enable),a
     ld   (flip_scr_x),a
@@ -683,11 +684,12 @@ start:
     set  3,a
     ld   (screen_state),a
     ret
+ ;;; 2p mode
     ld   hl,lives
     ld   a,$00
     cp   (hl)
     jp   z,$0427
-    dec  (hl)
+    dec  (hl)   ; lose a life?
     ld   a,(cur_player)
     and  a
     jp   z,$043C
@@ -872,6 +874,7 @@ start:
     nop
     nop
     nop
+
  copy_sprites:   ; DMA sprite_mirror ($8000) -> sprite_ram each frame
     ld   hl,ram_start
     ld   de,$9840
@@ -882,6 +885,7 @@ start:
     nop
     nop
     nop
+
  score_add_apply: ; apply pending score_add to score
     ld   a,(score_add_trig)
     and  a
@@ -1247,8 +1251,6 @@ start:
     dec  c
     jr   nz,$08BC
     jp   done_RAM_test
-
-
     ld   hl,$0905
     ld   a,d
     and  a
@@ -4113,7 +4115,7 @@ mthing
     ld   b,$07
     ld   a,$22
     cp   (hl)
-    jp   z,$2D49
+    jp   z,drift_gate     ; both axes on the lattice -> at a junction, run drift gate
     add  a,$20
     djnz $2CE1
     jp   $2DB4
@@ -4187,6 +4189,10 @@ mthing
     ret
     ld   (hl),$00         ; aligned on X -> no move this axis
     ret
+ drift_gate:     ; at a junction: bump per-cat counter (+$1C), then re-aim at the
+                 ;; player UNLESS (cnt & mask)==excluded -> keep straight ("drift").
+                 ;; mask/excluded picked by this cat's own record-addr nibble ($2D53);
+                 ;; excluded doubles as a grace-period phase (see CLAUDE.md §6 step 2).
     push hl
     ld   bc,$0013
     add  hl,bc

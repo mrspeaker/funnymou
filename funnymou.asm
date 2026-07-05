@@ -526,6 +526,7 @@ zeros               dc 97,0
 02C2  C9      	    ret
 02C3  CD6824  	    call $2468
 02C6  C9      	    ret
+
                 game_in_progress:
 02C7  CD3806  	    call $0638
 02CA  3A3380  	    ld   a,(req_death)
@@ -639,11 +640,12 @@ zeros               dc 97,0
 03B5  3A3C80  	    ld   a,(is_2player)
 03B8  A7      	    and  a
 03B9  C21D04  	    jp   nz,$041D
+                ;;; 1p mode
 03BC  210081  	    ld   hl,lives
 03BF  3E00    	    ld   a,$00
 03C1  BE      	    cp   (hl)
 03C2  CAE903  	    jp   z,$03E9
-03C5  35      	    dec  (hl)
+03C5  35      	    dec  (hl)   ; lose a life, 1P mode
 03C6  210081  	    ld   hl,lives
 03C9  110082  	    ld   de,lives_copy
 03CC  01FF00  	    ld   bc,$00FF
@@ -658,7 +660,6 @@ zeros               dc 97,0
 03E3  CBE7    	    set  4,a
 03E5  323980  	    ld   (screen_state),a
 03E8  C9      	    ret
-
                 ;;
 03E9  3203B0  	    ld   (sound_enable),a
 03EC  3206B0  	    ld   (flip_scr_x),a
@@ -683,11 +684,12 @@ zeros               dc 97,0
 0417  CBDF    	    set  3,a
 0419  323980  	    ld   (screen_state),a
 041C  C9      	    ret
+                ;;; 2p mode
 041D  210081  	    ld   hl,lives
 0420  3E00    	    ld   a,$00
 0422  BE      	    cp   (hl)
 0423  CA2704  	    jp   z,$0427
-0426  35      	    dec  (hl)
+0426  35      	    dec  (hl)   ; lose a life?
 0427  3A3180  	    ld   a,(cur_player)
 042A  A7      	    and  a
 042B  CA3C04  	    jp   z,$043C
@@ -872,6 +874,7 @@ zeros               dc   55,0
 0629  00      	    nop
 062A  00      	    nop
 062B  00      	    nop
+
                 copy_sprites:   ; DMA sprite_mirror ($8000) -> sprite_ram each frame
 062C  210080  	    ld   hl,ram_start
 062F  114098  	    ld   de,$9840
@@ -882,6 +885,7 @@ zeros               dc   55,0
 0638  00      	    nop
 0639  00      	    nop
 063A  00      	    nop
+
                 score_add_apply: ; apply pending score_add to score
 063B  3A4080  	    ld   a,(score_add_trig)
 063E  A7      	    and  a
@@ -1247,8 +1251,6 @@ zeros               dc   55,0
 08D7  0D      	    dec  c
 08D8  20E2    	    jr   nz,$08BC
 08DA  C30E00  	    jp   done_RAM_test
-
-
 08DD  210509  	    ld   hl,$0905
 08E0  7A      	    ld   a,d
 08E1  A7      	    and  a
@@ -4113,7 +4115,7 @@ _
 2CDD  0607    	    ld   b,$07
 2CDF  3E22    	    ld   a,$22
 2CE1  BE      	    cp   (hl)
-2CE2  CA492D  	    jp   z,$2D49
+2CE2  CA492D  	    jp   z,drift_gate     ; both axes on the lattice -> at a junction, run drift gate
 2CE5  C620    	    add  a,$20
 2CE7  10F8    	    djnz $2CE1
 2CE9  C3B42D  	    jp   $2DB4
@@ -4187,6 +4189,10 @@ _
 2D45  C9      	    ret
 2D46  3600    	    ld   (hl),$00         ; aligned on X -> no move this axis
 2D48  C9      	    ret
+                drift_gate:     ; at a junction: bump per-cat counter (+$1C), then re-aim at the
+                                ;; player UNLESS (cnt & mask)==excluded -> keep straight ("drift").
+                                ;; mask/excluded picked by this cat's own record-addr nibble ($2D53);
+                                ;; excluded doubles as a grace-period phase (see CLAUDE.md §6 step 2).
 2D49  E5      	    push hl
 2D4A  011300  	    ld   bc,$0013
 2D4D  09      	    add  hl,bc
