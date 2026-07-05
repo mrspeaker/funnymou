@@ -101,11 +101,6 @@ The chasing logic stays the same as you progress, but the pressure is dialled up
 ---
 
 ## Appendix — the decision logic in pseudo-code
-
-For the technically curious: this is what an active (chasing) enemy runs **once per
-frame**, reconstructed from the disassembly (state-3 handler `$2C3E`/`$333F` and its
-helpers). Constants and branch values are the real ones from the ROM.
-
 ```python
 # Enemy record fields it touches:
 #   x, y          +$08/+$09  grid position (game axes; screen is rotated 90°)
@@ -114,6 +109,7 @@ helpers). Constants and branch values are the real ones from the ROM.
 #   move_timer    +$10*      counts down; re-steer only allowed at 0  (*offset from shifted base)
 #   junc_counter  +$1C       +1 at each junction; feeds the per-cat drift gate
 #   player.x / player.y  = sprite bytes $8000 / $8003 (the mouse, right now)
+
 
 JUNCTION_COLS = {0x14, 0x34, 0x54, 0x74, 0x94, 0xB4, 0xD4}   # $14 + $20*n
 JUNCTION_ROWS = {0x22, 0x42, 0x62, 0x82, 0xA2, 0xC2, 0xE2}   # $22 + $20*n
@@ -173,20 +169,10 @@ def move_enemy(e):                        # mover dispatch $2DF8 + per-dir mover
     commit_to_sprite(e)                   # $309C: write y/tile/color/x to sprite mirror
 ```
 
-Three things worth calling out, because they're where the "feel" comes from:
 
-- **The alternation is the whole trick.** `enemy_chase` fixes only *one* axis per
-  junction, flipping `axis_toggle` each time (Y first after spawn). That's why enemies
-  climb toward you in a staircase, and why sharing a lane produces a beeline: on your row
-  the Y-checks return `dir = 0x00` ("no turn, carry on") while the X-checks point straight
-  at you.
+- **Alternating axis checks.** `enemy_chase` fixes only *one* axis per junction, flipping `axis_toggle` each time (Y first after spawn). 
 
-- **`dir = 0x00` means "don't turn," not "stop."** When the checked axis is already
-  aligned it just issues no new heading for that axis; the enemy keeps advancing and the
-  *other* axis does the closing.
+- **`dir = 0x00` means "don't turn," not "stop."** When the checked axis is already aligned it just issues no new heading for that axis; the enemy keeps advancing and the *other* axis does the closing.
 
-- **The junction test reads the enemy's own coordinates, not the map.** A "junction" is
-  purely `x ∈ cols AND y ∈ rows` — no maze tile is consulted for the turn decision. Walls
-  only enter the picture in step 4, when a chosen heading is physically blocked and the
-  enemy re-rolls via the Z80 R (refresh) register.
+- **The junction test reads the enemy's own coordinates, not the map.** A "junction" is purely `x ∈ cols AND y ∈ rows` — no maze tile is consulted for the turn decision. Walls only enter the picture in step 4, when a chosen heading is physically blocked and the enemy re-rolls via the Z80 R (refresh) register.
 
