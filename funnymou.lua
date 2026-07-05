@@ -1,3 +1,5 @@
+-- ./mame funnymou -debug -autoboot_script ~/path/to/funnymou/funnymou.lua
+
 --------------- General helpers ----------------
 
 function dump(o)
