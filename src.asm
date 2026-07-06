@@ -1018,6 +1018,7 @@ start:
     ld   hl,$06D7
     call $070A
     ret
+ ;;
     ld   b,$03
     ex   af,af' ; '
     ld   a,$06
@@ -1281,7 +1282,7 @@ start:
     jr   nz,$08E4
     ld   sp,stack_location
     push hl
-    call $0933
+    call clear_screen
     pop  hl
     ld   e,(hl)
     inc  hl
@@ -1963,6 +1964,7 @@ start:
     ld   d,$08
     call $12F1
     ret
+ ;;
     xor  a
     ld   hl,score_add_trig
     ld   (hl),$01
@@ -2693,6 +2695,7 @@ start:
     ret  z
     call $2179
     jp   $2170
+ ;;
     ld   a,(de)
     rrca
     rrca
@@ -3765,13 +3768,13 @@ mthing
     jp   nz,$2A70
     ld   (hl),$01
     ld   hl,cat1_ai_ptr
-    ld   bc,$2B5A
+    ld   bc,cat1_ai_tbl
     call load_level_ptr
     ld   hl,cat1_ptr2
-    ld   bc,$2B28
+    ld   bc,cat_ptr2_tbl
     call load_level_ptr
-    call $2B1F
-
+    call cat_ai_init_clear
+ ;;
     ld   hl,$8529
     ld   de,cat1_enable
     ld   bc,$FFEF
@@ -3784,12 +3787,12 @@ mthing
     jp   nz,$2A9D
     ld   (hl),$01
     ld   hl,cat2_ai_ptr
-    ld   bc,$2BB0
+    ld   bc,cat2_ai_tbl
     call load_level_ptr
     ld   hl,cat2_ptr2
-    ld   bc,$2B28
+    ld   bc,cat_ptr2_tbl
     call load_level_ptr
-    call $2B1F
+    call cat_ai_init_clear
     ld   hl,$8569
     ld   de,cat2_enable
     ld   bc,$FFEF ; - 16
@@ -3802,12 +3805,12 @@ mthing
     jp   nz,$2ACA
     ld   (hl),$01
     ld   hl,cat3_ai_ptr
-    ld   bc,$2C06
+    ld   bc,cat3_ai_tbl
     call load_level_ptr
     ld   hl,cat3_ptr2
-    ld   bc,$2B28
+    ld   bc,cat_ptr2_tbl
     call load_level_ptr
-    call $2B1F
+    call cat_ai_init_clear
     ld   hl,$8589
     ld   de,cat3_enable
     ld   bc,$FFEF ; -16
@@ -3862,6 +3865,8 @@ mthing
     inc  hl
     dec  (hl)
     ret
+ ;;
+ cat_ai_init_clear:  ; tail of per-cat AI init: zero cat record +$1F and +$07 (AI state). in: hl=record+$1E
     xor  a
     inc  hl
     ld   (hl),a
@@ -3869,23 +3874,18 @@ mthing
     add  hl,bc
     ld   (hl),a
     ret
-    inc  a
-    ld   a,b
-    inc  a
-    ld   h,h
-    inc  a
-    ld   e,d
-    inc  a
-    ld   b,(hl)
-    inc  a
-    inc  a
-    inc  a
-    ld   ($283C),a
-    inc  a
-    ld   e,$3C
-    inc  d
-    inc  a
-    nop
+ ;;
+ cat_ptr2_tbl: ; 10x level-indexed 16-bit param -> cat record +$1D/+$1E (via load_level_ptr); low byte $3C const, high byte trends down w/ level
+    db   $3C, $78   ; level 0: $783C
+    db   $3C, $64   ; level 1: $643C
+    db   $3C, $5A   ; level 2: $5A3C
+    db   $3C, $46   ; level 3: $463C
+    db   $3C, $3C   ; level 4: $3C3C
+    db   $3C, $32   ; level 5: $323C
+    db   $3C, $28   ; level 6: $283C
+    db   $3C, $1E   ; level 7: $1E3C
+    db   $3C, $14   ; level 8: $143C
+    db   $3C, $00   ; level 9: $003C
 
  setup_cat_1:
     inc  hl
@@ -3904,16 +3904,17 @@ mthing
     ld   (watchdog),a
     ret
 
-    jr   nc,$2B5E
-    jr   nc,$2B60
-    jr   nc,$2B62
-    inc  (hl)
-    ld   bc,$0030
-    jr   nc,$2B66
-    jr   nc,$2B68
-    jr   nc,$2B6A
-    djnz $2B6C
-    djnz $2B6E
+ cat1_ai_tbl:        ; 10x level-indexed 16-bit AI param -> cat A record +$18/+$19 (cat1_ai_ptr) via load_level_ptr
+    db   $30, $02   ; level 0: $0230
+    db   $30, $02   ; level 1: $0230
+    db   $30, $02   ; level 2: $0230
+    db   $34, $01   ; level 3: $0134
+    db   $30, $00   ; level 4: $0030
+    db   $30, $00   ; level 5: $0030
+    db   $30, $00   ; level 6: $0030
+    db   $30, $00   ; level 7: $0030
+    db   $10, $00   ; level 8: $0010
+    db   $10, $00   ; level 9: $0010
     ld   hl,cat1_state
     call cat_ai
     ret
@@ -3940,21 +3941,17 @@ mthing
     ld   a,$87
     ld   (watchdog),a
     ret
-    inc  d
-    ld   d,$14
-    inc  d
-    inc  d
-    rrca
-    inc  d
-    dec  c
-    nop
-    dec  bc
-    nop
-    add  hl,bc
-    jr   $2BC4
-    jr   z,$2BC5
-    jr   z,$2BC7
-    djnz $2BC8
+ cat2_ai_tbl:        ; 10x level-indexed 16-bit AI param -> cat B record +$18/+$19 (cat2_ai_ptr) via load_level_ptr
+    db   $14, $16   ; level 0: $1614
+    db   $14, $14   ; level 1: $1414
+    db   $14, $0F   ; level 2: $0F14
+    db   $14, $0D   ; level 3: $0D14
+    db   $00, $0B   ; level 4: $0B00
+    db   $00, $09   ; level 5: $0900
+    db   $18, $06   ; level 6: $0618
+    db   $28, $05   ; level 7: $0528
+    db   $28, $05   ; level 8: $0528
+    db   $10, $04   ; level 9: $0410
     ld   hl,cat2_state
     call cat_ai
     ret
@@ -4002,18 +3999,17 @@ mthing
     ld   a,$87
     ld   (watchdog),a
     ret
-    inc  h
-    ld   b,$24
-    ld   b,$14
-    ld   (bc),a
-    nop
-    ld   (bc),a
-    jr   nc,$2C10
-    jr   nc,$2C12
-    jr   nc,$2C14
-    jr   nc,$2C16
-    djnz $2C18
-    djnz $2C1A
+ cat3_ai_tbl:        ; 10x level-indexed 16-bit AI param -> cat C record +$18/+$19 (cat3_ai_ptr) via load_level_ptr
+    db   $24, $06   ; level 0: $0624
+    db   $24, $06   ; level 1: $0624
+    db   $14, $02   ; level 2: $0214
+    db   $00, $02   ; level 3: $0200
+    db   $30, $00   ; level 4: $0030
+    db   $30, $00   ; level 5: $0030
+    db   $30, $00   ; level 6: $0030
+    db   $30, $00   ; level 7: $0030
+    db   $10, $00   ; level 8: $0010
+    db   $10, $00   ; level 9: $0010
     ld   hl,cat3_state
     call cat_ai
     ret
@@ -4608,6 +4604,7 @@ mthing
     ret  nz
     ld   (hl),$FE
     ret
+ ;;
     ld   a,(hl)
     cp   $02
     jp   nz,$3011
@@ -4938,7 +4935,8 @@ mthing
     ld   (hl),b
     ret
 
-    db  $00, $00
+   db  $00, $00
+
  enemy_lvl_param_tbl: ; level-indexed 16-bit enemy AI param -> record +$15/+$16 (via load_level_ptr, at respawn); trends down w/ level
     db   $00, $08   ; level 0: $0800
     db   $14, $04   ; level 1: $0414
@@ -5145,7 +5143,7 @@ mthing
     and  $1F
     cp   $10
     jp   c,$3381
-    call $37B3
+    call enemy_sprite_commit_b
     ret
     ld   b,$2F
     call $3391
@@ -5154,7 +5152,7 @@ mthing
     ld   (hl),$00
     ld   a,$03
     ld   (bc),a
-    call $37B3
+    call enemy_sprite_commit_b
     ret
     ld   a,(de)
     ld   hl,$0005
@@ -5738,9 +5736,10 @@ mthing
     inc  hl
     dec  hl
     dec  de
-    call $37A1
-    call $37B3
+    call enemy_anim_frame
+    call enemy_sprite_commit_b
     ret
+ enemy_anim_frame:   ; fold anim frame (hl&$03) + flip bits ((de)&$CC) into enemy code byte
     ld   a,(hl)
     and  $03
     ld   b,a
@@ -5756,6 +5755,8 @@ mthing
     ex   de,hl
     dec  de
     ret
+ ;;
+ enemy_sprite_commit_b: ; duplicate of enemy_sprite_commit ($309C); used by snake_ai + death/return handlers
     ld   a,(de)
     ld   l,a
     ld   h,$80
@@ -5777,7 +5778,6 @@ mthing
     ld   a,(de)
     ld   (hl),a
     ret
-
 
     ld   a,(de)
     rrca
@@ -5871,7 +5871,7 @@ mthing
     ld   hl,$FFFC
     add  hl,de
     ex   de,hl
-    call $37B3
+    call enemy_sprite_commit_b
     ret
     ex   de,hl
     ld   hl,$FFFA
@@ -5899,7 +5899,7 @@ mthing
     ld   (de),a
     ex   de,hl
     dec  de
-    call $37B3
+    call enemy_sprite_commit_b
     ret
     ex   de,hl
     ld   hl,$FFFA
@@ -5927,7 +5927,7 @@ mthing
     ld   (de),a
     ex   de,hl
     dec  de
-    call $37B3
+    call enemy_sprite_commit_b
     ret
     ld   c,$00
     inc  hl
@@ -5961,43 +5961,31 @@ mthing
     ld   de,$FFFA
     add  hl,de
     ex   de,hl
-    ld   bc,$3910
+    ld   bc,snake_lvl_param_tbl
     ld   hl,$0015
     add  hl,de
     call snake_spawn_delay
-    call $37B3
+    call enemy_sprite_commit_b
     ret
- ;; some data?
+ ;; padding before snake_lvl_param_tbl
     nop
     nop
     nop
     nop
     nop
     nop
-    ld   (hl),b
-    ld   (bc),a
-    ld   (hl),b
-    ld   bc,$00F0
-    ret  p
-    nop
-    ret  p
-    nop
-    ret  p
-    nop
-    ret  p
-    nop
-    ret  p
-    nop
-    ret  p
-    nop
-    ret  p
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+ snake_lvl_param_tbl: ; 10x level-indexed 16-bit AI param -> snake record +$15/+$16 (via snake_spawn_delay from $38FC); trends down w/ level
+    db   $70, $02   ; level 0: $0270
+    db   $70, $01   ; level 1: $0170
+    db   $F0, $00   ; level 2: $00F0
+    db   $F0, $00   ; level 3: $00F0
+    db   $F0, $00   ; level 4: $00F0
+    db   $F0, $00   ; level 5: $00F0
+    db   $F0, $00   ; level 6: $00F0
+    db   $F0, $00   ; level 7: $00F0
+    db   $F0, $00   ; level 8: $00F0
+    db   $F0, $00   ; level 9: $00F0
+    db   $00, $00, $00, $00, $00, $00 ; padding (index clamps to level 9)
 
  player_vs_enemy:    ; AABB player sprite vs each enemy -> player death
     ld   a,(int_enable)
@@ -6130,7 +6118,7 @@ mthing
     ld   a,(de)
     cp   $E0
     jp   nc,$3A43
-    call $3B99
+    call get_tile_at_sprite
     cp   $37
     ret  nz
     ld   (hl),$05
@@ -6160,7 +6148,7 @@ mthing
     ld   a,(de)
     cp   $E0
     jp   nc,$3A78
-    call $3B99
+    call get_tile_at_sprite
     cp   $37
     ret  nz
     ld   (hl),$05
@@ -6312,6 +6300,8 @@ mthing
     ret  c
     exx
     jp   (hl)
+ ;;
+ get_tile_at_sprite: ; de=sprite+3 -> maze tile in a (return handlers use it to detect home tile $37)
     ld   a,(de)
     rrca
     rrca
@@ -7760,7 +7750,7 @@ mthing
     rlca
     ld   c,a
     ld   b,$00
-    ld   hl,$47E3
+    ld   hl,gamble_win_pic
     add  hl,bc
     ld   e,(hl)
     inc  hl
@@ -7831,10 +7821,10 @@ mthing
     dec  hl
     ld   (hl),$02
     ret
-    ld   hl,$488B
+    ld   hl,insert_coin_hdr
     call $47C9
     ret
-    ld   hl,$48A3
+    ld   hl,coin_play_hdr
     call $47C9
     ld   ix,coinage_tbl
     ld   a,($8025)
@@ -7847,10 +7837,10 @@ mthing
     ld   a,(ix+$01)
     ld   ($91D8),a
     ret
-    ld   hl,$48BB
+    ld   hl,coin_blank_hdr
     call $47C9
     ret
-    ld   hl,$48D3
+    ld   hl,copyright_hdr
     call $47C9
     ret
     ld   e,(hl)
@@ -7874,153 +7864,69 @@ mthing
     pop  de
     djnz $47D2
     ret
-    ld   h,$93
-    inc  h
-    push af
-    ld   b,$93
-    exx
-    push af
-    and  $92
-    rst  $10
-    push af
-    add  a,$92
-    push de
-    push af
-    and  (hl)
-    sub  d
-    out  ($F5),a
-    add  a,(hl)
-    sub  d
-    pop  de
-    push af
-    ld   h,(hl)
-    sub  d
-    rst  $08
-    push af
-    ld   b,(hl)
-    sub  d
-    call $26F5
-    sub  d
-    set  6,l
-    ld   b,$92
-    ret
-    push af
-    and  $91
-    rst  $00
-    push af
-    add  a,$91
-    push bc
-    push af
-    and  (hl)
-    sub  c
-    jp   $86F5
-    sub  c
-    pop  bc
-    push af
-    ld   h,(hl)
-    sub  c
-    cp   a
-    push af
-    ld   b,(hl)
-    sub  c
-    cp   l
-    push af
-    ld   h,$91
-    cp   e
-    push af
-    ld   b,$91
-    cp   c
-    push af
-    and  $90
-    or   a
-    push af
-    add  a,$90
-    or   l
-    push af
-    and  (hl)
-    sub  b
-    or   e
-    push af
-    daa
-    sub  e
-    inc  h
-    push af
-    rlca
-    sub  e
-    jp   c,$E7F5
-    sub  d
-    ret  c
-    push af
-    rst  $00
-    sub  d
-    sub  $F5
-    and  a
-    sub  d
-    call nc,$87F5
-    sub  d
-    jp   nc,$67F5
-    sub  d
-    ret  nc
-    push af
-    ld   b,a
-    sub  d
-    adc  a,$F5
-    daa
-    sub  d
-    call z,$07F5
-    sub  d
-    jp   z,$E7F5
-    sub  c
-    ret  z
-    push af
-    rst  $00
-    sub  c
-    add  a,$F5
-    and  a
-    sub  c
-    call nz,$87F5
-    sub  c
-    jp   nz,$67F5
-    sub  c
-    ret  nz
-    push af
-    ld   b,a
-    sub  c
-    cp   (hl)
-    push af
-    daa
-    sub  c
-    cp   h
-    push af
-    rlca
-    sub  c
-    cp   d
-    push af
-    rst  $20
-    sub  b
-    cp   b
-    push af
-    rst  $00
-    sub  b
-    or   (hl)
-    push af
-    and  a
-    sub  b
-    or   h
-    push af
-    ld   (hl),$93
-    inc  d
-    add  a,(hl)
+
+ gamble_win_pic: ; 42x [VRAM_dest_LE, tile, color] picture drawn one rec/frame by the $4724 record-drawer (index 0..$29 path at $4715)
+ ;   two adjacent VRAM columns ($x6 then $x7), rows 0-20, tiles $B3-$DA; companion to lucky_mouse_pic on the lucky/gamble win screen
+    db   $26, $93, $24, $F5   ; VRAM $9326 tile $24
+    db   $06, $93, $D9, $F5   ; VRAM $9306 tile $D9
+    db   $E6, $92, $D7, $F5   ; VRAM $92E6 tile $D7
+    db   $C6, $92, $D5, $F5   ; VRAM $92C6 tile $D5
+    db   $A6, $92, $D3, $F5   ; VRAM $92A6 tile $D3
+    db   $86, $92, $D1, $F5   ; VRAM $9286 tile $D1
+    db   $66, $92, $CF, $F5   ; VRAM $9266 tile $CF
+    db   $46, $92, $CD, $F5   ; VRAM $9246 tile $CD
+    db   $26, $92, $CB, $F5   ; VRAM $9226 tile $CB
+    db   $06, $92, $C9, $F5   ; VRAM $9206 tile $C9
+    db   $E6, $91, $C7, $F5   ; VRAM $91E6 tile $C7
+    db   $C6, $91, $C5, $F5   ; VRAM $91C6 tile $C5
+    db   $A6, $91, $C3, $F5   ; VRAM $91A6 tile $C3
+    db   $86, $91, $C1, $F5   ; VRAM $9186 tile $C1
+    db   $66, $91, $BF, $F5   ; VRAM $9166 tile $BF
+    db   $46, $91, $BD, $F5   ; VRAM $9146 tile $BD
+    db   $26, $91, $BB, $F5   ; VRAM $9126 tile $BB
+    db   $06, $91, $B9, $F5   ; VRAM $9106 tile $B9
+    db   $E6, $90, $B7, $F5   ; VRAM $90E6 tile $B7
+    db   $C6, $90, $B5, $F5   ; VRAM $90C6 tile $B5
+    db   $A6, $90, $B3, $F5   ; VRAM $90A6 tile $B3
+    db   $27, $93, $24, $F5   ; VRAM $9327 tile $24
+    db   $07, $93, $DA, $F5   ; VRAM $9307 tile $DA
+    db   $E7, $92, $D8, $F5   ; VRAM $92E7 tile $D8
+    db   $C7, $92, $D6, $F5   ; VRAM $92C7 tile $D6
+    db   $A7, $92, $D4, $F5   ; VRAM $92A7 tile $D4
+    db   $87, $92, $D2, $F5   ; VRAM $9287 tile $D2
+    db   $67, $92, $D0, $F5   ; VRAM $9267 tile $D0
+    db   $47, $92, $CE, $F5   ; VRAM $9247 tile $CE
+    db   $27, $92, $CC, $F5   ; VRAM $9227 tile $CC
+    db   $07, $92, $CA, $F5   ; VRAM $9207 tile $CA
+    db   $E7, $91, $C8, $F5   ; VRAM $91E7 tile $C8
+    db   $C7, $91, $C6, $F5   ; VRAM $91C7 tile $C6
+    db   $A7, $91, $C4, $F5   ; VRAM $91A7 tile $C4
+    db   $87, $91, $C2, $F5   ; VRAM $9187 tile $C2
+    db   $67, $91, $C0, $F5   ; VRAM $9167 tile $C0
+    db   $47, $91, $BE, $F5   ; VRAM $9147 tile $BE
+    db   $27, $91, $BC, $F5   ; VRAM $9127 tile $BC
+    db   $07, $91, $BA, $F5   ; VRAM $9107 tile $BA
+    db   $E7, $90, $B8, $F5   ; VRAM $90E7 tile $B8
+    db   $C7, $90, $B6, $F5   ; VRAM $90C7 tile $B6
+    db   $A7, $90, $B4, $F5   ; VRAM $90A7 tile $B4
+ insert_coin_hdr:    ; draw-descriptor for coin_copyright_table text: [VRAM_dest_LE $9336, count $14, color $86]; drawn by $47C9
+    db   $36, $93, $14, $86   ; -> VRAM $9336, 20 chars, color $86
  coin_copyright_table: ; INSERT COIN / COIN PLAY / (c)1982 CHUO CO.,LTD (text+VRAM addr+color)
     db   $24, $24, $24, $24, $12, $17, $1C, $0E              ; |    INSE|
     db   $1B, $1D, $24, $24, $0C, $18, $12, $17              ; |RT  COIN|
-    db   $24, $24, $24, $24, $38, $93, $14, $82              ; |    ..K.|
+    db   $24, $24, $24, $24                                  ; |    | end of INSERT COIN text
+ coin_play_hdr:      ; draw-descriptor: [VRAM_dest_LE $9338, count $14, color $82]; text 'COIN PLAY' at $48A7
+    db   $38, $93, $14, $82                                  ; -> VRAM $9338, 20 chars, color $82
     db   $24, $24, $24, $24, $24, $0C, $18, $12              ; |     COI|
     db   $17, $24, $24, $24, $24, $24, $19, $15              ; |N     PL|
-    db   $0A, $22, $24, $24, $3A, $93, $14, $80              ; |AY  ..K.|
+    db   $0A, $22, $24, $24                                  ; |AY  | end of COIN PLAY text
+ coin_blank_hdr:     ; draw-descriptor: [VRAM_dest_LE $933A, count $14, color $80]; 20 blanks at $48BF (clears the line)
+    db   $3A, $93, $14, $80                                  ; -> VRAM $933A, 20 chars, color $80
     db   $24, $24, $24, $24, $24, $24, $24, $24              ; |        |
     db   $24, $24, $24, $24, $24, $24, $24, $24              ; |        |
-    db   $24, $24, $24, $24, $7C, $93, $18, $86              ; |    ..O.|
+    db   $24, $24, $24, $24                                  ; |    | blank tail
+ copyright_hdr:      ; draw-descriptor: [VRAM_dest_LE $937C, count $18, color $86]; '(c)1982 CHUO CO.,LTD' at $48D7
+    db   $7C, $93, $18, $86                                  ; -> VRAM $937C, 24 chars, color $86
     db   $24, $24, $28, $24, $01, $09, $08, $02              ; |  (c) 1982|
     db   $24, $0C, $11, $1E, $18, $24, $0C, $18              ; | CHUO CO|
     db   $31, $24, $15, $1D, $0D, $2B, $24, $24              ; |., LTD.  |
