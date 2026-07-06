@@ -262,7 +262,7 @@
 0049  78      	    ld   a,b
 004A  E640    	    and  $40
 004C  322780  	    ld   ($8027),a
-004F  C38005  	    jp   $0580
+004F  C38005  	    jp   foreground_entry
 
 zeros               dc   20,0
 
@@ -437,7 +437,7 @@ zeros               dc 97,0
 01FE  3A3B80  	    ld   a,(cur_screen)
 0201  A7      	    and  a
 0202  C24202  	    jp   nz,next_screen_state
-0205  C38802  	    jp   _req_attract
+0205  C38802  	    jp   req_attract
                 show_credits_screen:
 0208  FE02    	    cp   $02
 020A  D21B02  	    jp   nc,$021B
@@ -479,20 +479,21 @@ zeros               dc 97,0
 024C  FE01    	    cp   SCR_SPLASH
 024E  CA7502  	    jp   z,_req_start_play
 0251  FE06    	    cp   SCR_GAME
-0253  CA9902  	    jp   z,_req_intermission
+0253  CA9902  	    jp   z,req_intermission
 0256  FE07    	    cp   SCR_GAMBLE
-0258  CA8802  	    jp   z,_req_attract
-025B  C38802  	    jp   _req_attract
+0258  CA8802  	    jp   z,req_attract
+025B  C38802  	    jp   req_attract  ; lol, why jp z followed by jp to same location?
 025E  3A3280  	    ld   a,(req_level_done)
 0261  A7      	    and  a
 0262  CAAA02  	    jp   z,_screen_dispatch
 0265  3A3B80  	    ld   a,(cur_screen)
 0268  FE06    	    cp   SCR_GAME
-026A  CA9902  	    jp   z,_req_intermission
+026A  CA9902  	    jp   z,req_intermission
 026D  FE07    	    cp   SCR_GAMBLE
-026F  CA8802  	    jp   z,_req_attract
-0272  C38802  	    jp   _req_attract
+026F  CA8802  	    jp   z,req_attract
+0272  C38802  	    jp   req_attract
                 _req_start_play: ; req_death on splash -> set 5 (build maze / START PLAY)
+                ;; set splash screen
 0275  3E00    	    ld   a,$00
 0277  323380  	    ld   (req_death),a
 027A  323280  	    ld   (req_level_done),a
@@ -500,7 +501,7 @@ zeros               dc 97,0
 0280  CBEF    	    set  5,a
 0282  323980  	    ld   (screen_state),a
 0285  C32902  	    jp   $0229
-                _req_attract:   ; set 7 (attract reset)
+                req_attract:        ; clear death/level-done reqs, raise screen_state bit7 -> attract reset (handler $20D9)
 0288  3E00    	    ld   a,$00
 028A  323380  	    ld   (req_death),a
 028D  323280  	    ld   (req_level_done),a
@@ -508,7 +509,7 @@ zeros               dc 97,0
 0293  CBFF    	    set  7,a
 0295  323980  	    ld   (screen_state),a
 0298  C9      	    ret
-                _req_intermission: ; set 6 (level-clear intermission)
+                req_intermission:   ; clear death/level-done reqs, raise screen_state bit6 -> level-clear intermission (handler $20B3)
 0299  3E00    	    ld   a,$00
 029B  323380  	    ld   (req_death),a
 029E  323280  	    ld   (req_level_done),a
@@ -524,14 +525,14 @@ zeros               dc 97,0
 02B4  CABF02  	    jp   z,$02BF ; jmp to main loop
 02B7  FE07    	    cp   SCR_GAMBLE
 02B9  CAC302  	    jp   z,$02C3 ; jmp to gamble loop
-02BC  C38802  	    jp   _req_attract
+02BC  C38802  	    jp   req_attract
 02BF  CD9123  	    call game_screen_main_loop
 02C2  C9      	    ret
 02C3  CD6824  	    call gamble_screen_loop
 02C6  C9      	    ret
 
                 game_in_progress:
-02C7  CD3806  	    call $0638
+02C7  CD3806  	    call score_apply_nop_slide
 02CA  3A3380  	    ld   a,(req_death)
 02CD  A7      	    and  a
 02CE  C29803  	    jp   nz,$0398
@@ -819,8 +820,9 @@ zeros               dc 97,0
 
 zeros               dc   55,0
 
-0580  CDC005  	    call $05C0
-0583  CDE205  	    call $05E2
+                foreground_entry:   ; draw status bar + border, enable NMI/coin-lockout, enter main_game_loop
+0580  CDC005  	    call draw_status_bar
+0583  CDE205  	    call draw_hud_border
 0586  3A00B8  	    ld   a,(watchdog)
 0589  00      	    nop
 058A  00      	    nop
@@ -831,24 +833,26 @@ zeros               dc   55,0
 0594  00      	    nop
 0595  00      	    nop
 0596  00      	    nop
-0597  C3D11F  	    jp   $1FD1
+0597  C3D11F  	    jp   main_game_loop
 
                     dc   38,0
 
+                draw_status_bar:    ; draw hud_score_hdr text (SCORE/HI/CREDIT) up columns + blank leading score digits
 05C0  218093  	    ld   hl,$9380
 05C3  11FA05  	    ld   de,hud_score_hdr
 05C6  061A    	    ld   b,$1A
-05C8  CD1D06  	    call $061D
+05C8  CD1D06  	    call draw_text_col_up
 05CB  215F91  	    ld   hl,$915F
 05CE  111406  	    ld   de,$0614
 05D1  0609    	    ld   b,$09
-05D3  CD1D06  	    call $061D
+05D3  CD1D06  	    call draw_text_col_up
 05D6  3E00    	    ld   a,$00
 05D8  32C192  	    ld   ($92C1),a
 05DB  326190  	    ld   ($9061),a
 05DE  328191  	    ld   ($9181),a
 05E1  C9      	    ret
 
+                draw_hud_border:    ; fill tile $82 down two VRAM columns ($9001/$901F via $9400 mirror) = status-bar frame
 05E2  210194  	    ld   hl,$9401
 05E5  112000  	    ld   de,$0020
 05E8  0620    	    ld   b,$20
@@ -869,6 +873,8 @@ zeros               dc   55,0
 060A               db   $0E, $24, $24, $1C, $0C, $18, $1B, $0E              ; |E  SCORE|
 0612               db   $2E, $02, $0C, $1B, $0E, $0D, $12, $1D              ; |-2CREDIT|
 061A               db   $2E, $00, $24                                       ; |-0 |
+
+                draw_text_col_up:   ; draw b chars from (de) up a VRAM column at (hl), stride -$20
 061D  1A      	    ld   a,(de)
 061E  77      	    ld   (hl),a
 061F  D5      	    push de
@@ -891,6 +897,7 @@ zeros               dc   55,0
 0635  EDB0    	    ldir
 0637  C9      	    ret
 
+                score_apply_nop_slide:
 0638  00      	    nop
 0639  00      	    nop
 063A  00      	    nop
@@ -2545,7 +2552,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2077  3A3980  	    ld   a,(screen_state)
 207A  CBAF    	    res  5,a
 207C  323980  	    ld   (screen_state),a
-207F  C3D11F  	    jp   $1FD1
+207F  C3D11F  	    jp   main_game_loop ; woah, calls itself?
 
 
                 draw_player_text:   ; draw 'PLAYER ' (str_player) up column at $9262 + player number (cur_player+1) at $9182
@@ -2589,14 +2596,14 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 20CE  3A3980  	    ld   a,(screen_state)
 20D1  CBB7    	    res  6,a
 20D3  323980  	    ld   (screen_state),a
-20D6  C3D11F  	    jp   $1FD1
+20D6  C3D11F  	    jp   main_game_loop
 20D9  CDEC20  	    call clear_playfield
 20DC  3E01    	    ld   a,$01
 20DE  323B80  	    ld   (cur_screen),a
 20E1  3A3980  	    ld   a,(screen_state)
 20E4  CBBF    	    res  7,a
 20E6  323980  	    ld   (screen_state),a
-20E9  C3D11F  	    jp   $1FD1
+20E9  C3D11F  	    jp   main_game_loop
 
                 clear_playfield: ; fill VRAM $9002 region ($20x$1D) with blank tile $24
 20EC  210290  	    ld   hl,$9002
@@ -2725,7 +2732,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 21BF  3A3980  	    ld   a,(screen_state)
 21C2  CB87    	    res  0,a
 21C4  323980  	    ld   (screen_state),a
-21C7  C3D11F  	    jp   $1FD1
+21C7  C3D11F  	    jp   main_game_loop
 21CA  CDEC20  	    call clear_playfield
 21CD  216223  	    ld   hl,$2362
 21D0  CD2E21  	    call draw_column
@@ -2741,12 +2748,12 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 21EB  3A3980  	    ld   a,(screen_state)
 21EE  CB8F    	    res  1,a
 21F0  323980  	    ld   (screen_state),a
-21F3  C3D11F  	    jp   $1FD1
+21F3  C3D11F  	    jp   main_game_loop
 21F6  CDEC20  	    call clear_playfield
 21F9  3A3980  	    ld   a,(screen_state)
 21FC  CB97    	    res  2,a
 21FE  323980  	    ld   (screen_state),a
-2201  C3D11F  	    jp   $1FD1
+2201  C3D11F  	    jp   main_game_loop
 2204  CDEC20  	    call clear_playfield
 2207  217223  	    ld   hl,$2372
 220A  CD2E21  	    call draw_column
@@ -2794,7 +2801,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2266  3A3980  	    ld   a,(screen_state)
 2269  CB9F    	    res  3,a
 226B  323980  	    ld   (screen_state),a
-226E  C3D11F  	    jp   $1FD1
+226E  C3D11F  	    jp   main_game_loop
 2271  114680  	    ld   de,score_hi
 2274  CD3F21  	    call hiscore_compare
 2277  00      	    nop
@@ -2863,7 +2870,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 22FC  3A3980  	    ld   a,(screen_state)
 22FF  CBA7    	    res  4,a
 2301  323980  	    ld   (screen_state),a
-2304  C3D11F  	    jp   $1FD1
+2304  C3D11F  	    jp   main_game_loop
 
                 draw_player_lives: ; draw cur_player remaining lives (lives_copy) as tile $79 at $939F
 2307  3A3180  	    ld   a,(cur_player)
@@ -7527,7 +7534,7 @@ _
 454F               db   $02, $01, $03, $02, $03, $01, $02
 
                 very_lucky_mouse_screen:
-4556  216080        ld   hl,$8068
+4556  216080        ld   hl,$8060
 4559  7E      	    ld   a,(hl)
 455A  A7      	    and  a
 455B  C26D45  	    jp   nz,$456D
@@ -7624,7 +7631,7 @@ _
 45FE  3E61    	    ld   a,$61
 4600  32EF91  	    ld   ($91EF),a
 4603  C9      	    ret
-                lucky_mouse_pic: ; 'VERY LUCKY MOUSE' bonus picture: 36x [VRAM_dest_LE, tile, color]
+                lucky_mouse_pic: ; 'VERY LUCKY MOUSE' bonus picture: 36x [pos lo, pos hi, tile, color]
                 ;   6x6 grid of unique tiles $51-$74; drawn one record at a time by index (eye winks)
 4604               db   $CC, $91, $58, $84   ; VRAM $91CC tile $58 color $84
 4608               db   $2F, $92, $6D, $84
@@ -8043,8 +8050,8 @@ _
 4917  10F5    	    djnz $490E
 4919  C9      	    ret
                 licensee_text:  ; font tiles -> VRAM $9100 via draw at $48FA; ROT90 reads "CHUO CO.,LTD"
-491A               db   $24, $0D, $1D, $15, $24, $31, $18, $0C  ; _ D T L _ [.,] O C
-4922               db   $24, $18, $1E, $11, $0C, $24            ; _ O U H C _
+491A                db   $24, $0D, $1D, $15, $24, $31, $18, $0C  ; _ D T L _ [.,] O C
+4922                db   $24, $18, $1E, $11, $0C, $24            ; _ O U H C _
 
 4FFF          	    org $4fff
 4FFF  00      	    nop

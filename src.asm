@@ -262,7 +262,7 @@ start:
     ld   a,b
     and  $40
     ld   ($8027),a
-    jp   $0580
+    jp   foreground_entry
 
      dc   20,0
 
@@ -437,7 +437,7 @@ start:
     ld   a,(cur_screen)
     and  a
     jp   nz,next_screen_state
-    jp   _req_attract
+    jp   req_attract
  show_credits_screen:
     cp   $02
     jp   nc,$021B
@@ -479,20 +479,21 @@ start:
     cp   SCR_SPLASH
     jp   z,_req_start_play
     cp   SCR_GAME
-    jp   z,_req_intermission
+    jp   z,req_intermission
     cp   SCR_GAMBLE
-    jp   z,_req_attract
-    jp   _req_attract
+    jp   z,req_attract
+    jp   req_attract  ; lol, why jp z followed by jp to same location?
     ld   a,(req_level_done)
     and  a
     jp   z,_screen_dispatch
     ld   a,(cur_screen)
     cp   SCR_GAME
-    jp   z,_req_intermission
+    jp   z,req_intermission
     cp   SCR_GAMBLE
-    jp   z,_req_attract
-    jp   _req_attract
+    jp   z,req_attract
+    jp   req_attract
  _req_start_play: ; req_death on splash -> set 5 (build maze / START PLAY)
+ ;; set splash screen
     ld   a,$00
     ld   (req_death),a
     ld   (req_level_done),a
@@ -500,7 +501,7 @@ start:
     set  5,a
     ld   (screen_state),a
     jp   $0229
- _req_attract:   ; set 7 (attract reset)
+ req_attract:        ; clear death/level-done reqs, raise screen_state bit7 -> attract reset (handler $20D9)
     ld   a,$00
     ld   (req_death),a
     ld   (req_level_done),a
@@ -508,7 +509,7 @@ start:
     set  7,a
     ld   (screen_state),a
     ret
- _req_intermission: ; set 6 (level-clear intermission)
+ req_intermission:   ; clear death/level-done reqs, raise screen_state bit6 -> level-clear intermission (handler $20B3)
     ld   a,$00
     ld   (req_death),a
     ld   (req_level_done),a
@@ -523,21 +524,15 @@ start:
     cp   SCR_GAME
     jp   z,$02BF ; jmp to main loop
     cp   SCR_GAMBLE
-<<<<<<< HEAD
-    jp   z,$02C3
-    jp   _req_attract
-    call $2391
-=======
     jp   z,$02C3 ; jmp to gamble loop
-    jp   $0288
+    jp   req_attract
     call game_screen_main_loop
->>>>>>> 712b409 (more calls)
     ret
     call gamble_screen_loop
     ret
 
  game_in_progress:
-    call $0638
+    call score_apply_nop_slide
     ld   a,(req_death)
     and  a
     jp   nz,$0398
@@ -825,8 +820,9 @@ start:
 
      dc   55,0
 
-    call $05C0
-    call $05E2
+ foreground_entry:   ; draw status bar + border, enable NMI/coin-lockout, enter main_game_loop
+    call draw_status_bar
+    call draw_hud_border
     ld   a,(watchdog)
     nop
     nop
@@ -837,24 +833,26 @@ start:
     nop
     nop
     nop
-    jp   $1FD1
+    jp   main_game_loop
 
      dc   38,0
 
+ draw_status_bar:    ; draw hud_score_hdr text (SCORE/HI/CREDIT) up columns + blank leading score digits
     ld   hl,$9380
     ld   de,hud_score_hdr
     ld   b,$1A
-    call $061D
+    call draw_text_col_up
     ld   hl,$915F
     ld   de,$0614
     ld   b,$09
-    call $061D
+    call draw_text_col_up
     ld   a,$00
     ld   ($92C1),a
     ld   ($9061),a
     ld   ($9181),a
     ret
 
+ draw_hud_border:    ; fill tile $82 down two VRAM columns ($9001/$901F via $9400 mirror) = status-bar frame
     ld   hl,$9401
     ld   de,$0020
     ld   b,$20
@@ -875,6 +873,8 @@ start:
     db   $0E, $24, $24, $1C, $0C, $18, $1B, $0E              ; |E  SCORE|
     db   $2E, $02, $0C, $1B, $0E, $0D, $12, $1D              ; |-2CREDIT|
     db   $2E, $00, $24                                       ; |-0 |
+
+ draw_text_col_up:   ; draw b chars from (de) up a VRAM column at (hl), stride -$20
     ld   a,(de)
     ld   (hl),a
     push de
@@ -885,12 +885,7 @@ start:
     djnz $061D
     ret
 
-<<<<<<< HEAD
  copy_sprites_nop_slide:
-=======
-
- copy_sprites_nop_slide:    ; patched-out (3 nops) -> falls through into copy_sprites; per-frame sprite DMA
->>>>>>> 712b409 (more calls)
     nop
     nop
     nop
@@ -902,6 +897,7 @@ start:
     ldir
     ret
 
+ score_apply_nop_slide:
     nop
     nop
     nop
@@ -2556,7 +2552,7 @@ start:
     ld   a,(screen_state)
     res  5,a
     ld   (screen_state),a
-    jp   $1FD1
+    jp   main_game_loop ; woah, calls itself?
 
 
  draw_player_text:   ; draw 'PLAYER ' (str_player) up column at $9262 + player number (cur_player+1) at $9182
@@ -2600,14 +2596,14 @@ start:
     ld   a,(screen_state)
     res  6,a
     ld   (screen_state),a
-    jp   $1FD1
+    jp   main_game_loop
     call clear_playfield
     ld   a,$01
     ld   (cur_screen),a
     ld   a,(screen_state)
     res  7,a
     ld   (screen_state),a
-    jp   $1FD1
+    jp   main_game_loop
 
  clear_playfield: ; fill VRAM $9002 region ($20x$1D) with blank tile $24
     ld   hl,$9002
@@ -2736,7 +2732,7 @@ start:
     ld   a,(screen_state)
     res  0,a
     ld   (screen_state),a
-    jp   $1FD1
+    jp   main_game_loop
     call clear_playfield
     ld   hl,$2362
     call draw_column
@@ -2752,12 +2748,12 @@ start:
     ld   a,(screen_state)
     res  1,a
     ld   (screen_state),a
-    jp   $1FD1
+    jp   main_game_loop
     call clear_playfield
     ld   a,(screen_state)
     res  2,a
     ld   (screen_state),a
-    jp   $1FD1
+    jp   main_game_loop
     call clear_playfield
     ld   hl,$2372
     call draw_column
@@ -2805,7 +2801,7 @@ start:
     ld   a,(screen_state)
     res  3,a
     ld   (screen_state),a
-    jp   $1FD1
+    jp   main_game_loop
     ld   de,score_hi
     call hiscore_compare
     nop
@@ -2874,7 +2870,7 @@ start:
     ld   a,(screen_state)
     res  4,a
     ld   (screen_state),a
-    jp   $1FD1
+    jp   main_game_loop
 
  draw_player_lives: ; draw cur_player remaining lives (lives_copy) as tile $79 at $939F
     ld   a,(cur_player)
@@ -7538,7 +7534,7 @@ mthing
     db   $02, $01, $03, $02, $03, $01, $02
 
  very_lucky_mouse_screen:
-     ld   hl,$8068
+     ld   hl,$8060
     ld   a,(hl)
     and  a
     jp   nz,$456D
@@ -7635,7 +7631,7 @@ mthing
     ld   a,$61
     ld   ($91EF),a
     ret
- lucky_mouse_pic: ; 'VERY LUCKY MOUSE' bonus picture: 36x [VRAM_dest_LE, tile, color]
+ lucky_mouse_pic: ; 'VERY LUCKY MOUSE' bonus picture: 36x [pos lo, pos hi, tile, color]
  ;   6x6 grid of unique tiles $51-$74; drawn one record at a time by index (eye winks)
     db   $CC, $91, $58, $84   ; VRAM $91CC tile $58 color $84
     db   $2F, $92, $6D, $84
@@ -8054,8 +8050,8 @@ mthing
     djnz $490E
     ret
  licensee_text:  ; font tiles -> VRAM $9100 via draw at $48FA; ROT90 reads "CHUO CO.,LTD"
-    db   $24, $0D, $1D, $15, $24, $31, $18, $0C  ; _ D T L _ [.,] O C
-    db   $24, $18, $1E, $11, $0C, $24            ; _ O U H C _
+     db   $24, $0D, $1D, $15, $24, $31, $18, $0C  ; _ D T L _ [.,] O C
+     db   $24, $18, $1E, $11, $0C, $24            ; _ O U H C _
 
     org $4fff
     nop
