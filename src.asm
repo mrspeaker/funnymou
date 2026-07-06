@@ -1,9 +1,24 @@
      ram_start       = $8000
 
+     dsw_raw         = $8020 ; raw DIP copy
+     in_a800         = $8021 ; raw coin/start input (per frame)
      credits         = $8023
      is_playing      = $8030 ; mode 0=attract, 1=1P, 2=2P
+     cur_player      = $8031 ; 0=P1, 1=P2
+     req_level_done  = $8032 ; level-complete pending (ingame -> dispatcher)
+     req_death       = $8033 ; player-death pending (ingame -> dispatcher)
+     p1_done         = $8034 ; P1 finished / out of lives
+     p2_done         = $8035 ; P2 finished / out of lives
+     flip_state      = $8036 ; current screen-flip mirror
+     first_turn      = $8038 ; first-turn-of-game flag
      screen_state    = $8039 ; 10=ready, 40=go to gamble
      cur_screen      = $803B ; 1=splash;6=game etc
+     is_2player      = $803C ; 1 = 2P game
+     disp_timer      = $803D ; down-counter for timed screens
+     endlevel_active = $803E ; level-end / freeze gate (also gates enemy spawn/move)
+     endlevel_ctr    = $803F ; level-end sub-counter
+     score_add_trig  = $8040 ; score-add trigger
+     score_add       = $8041 ; amount to add (BCD3, $8041-$8043)
      score_lo        = $8044
      score_mid       = $8045
      score_hi        = $8046
@@ -21,7 +36,10 @@
 
      lives           = $8100
      cur_map         = $8101
+     food_state      = $8120 ; 9x1 per-piece: 0 uncollected, 2 carried, 1 returned
+     food_returned   = $8140 ; 9x2 fill-from-front log; all set => level clear
      lives_copy      = $8200 ; seems to mimic 8100?
+     p2_lives_copy   = $8300 ; player 2 life bank (parallels lives_copy for P1)
 
      player_bytes    = $8400 ;
      controls        = $8401 ; 1=L, 2=R, 4=D, 8=U, 10=fire
@@ -29,6 +47,16 @@
      player_y        = $8407 ; joystick U/D axis; -> sprite +3 (HW X: screen rotated 90)
      player_sp_x     = $8408 ; fe = -2 left, 02 = 2 right
      player_sp_y     = $8409 ; fe = -2 up, 02 = 2 down
+
+     gamble_state    = $8480 ; slot-bonus state (bit7=win display, bit6=countdown, bit5=reels spinning)
+     gamble_credit   = $8474 ; jackpot flag: 3x symbol-0 => grant free credit (gamble_award_credit)
+     gamble_reel1    = $8483 ; reel 1 current symbol (0-3)
+     gamble_reel2    = $8484 ; reel 2 current symbol
+     gamble_reel3    = $8485 ; reel 3 current symbol
+     gamble_pos1     = $8486 ; reel 1 strip position (into gamble_reel1_strip)
+     gamble_pos2     = $8487 ; reel 2 strip position
+     gamble_pos3     = $8488 ; reel 3 strip position
+     gamble_outcome  = $8489 ; win index 0-7 (0=jackpot); indexes gamble_prize_pos / gamble_score_tbl
 
      cat1_enable     = $8500 ; not sure why enable+active
      cat1_active     = $8501 ;
@@ -93,6 +121,11 @@
      cat3_busy       = $858B
      cat3_ptr2       = $858D ; from $2B28
 
+     boulder         = $85C0 ; boulder active flag (slot 7: a boulder is falling)
+     boulder_req     = $85C1 ; trigger request (set when player touches TILE_BOULDER $39/$3A)
+     boulder_x       = $85C5 ; frozen horizontal pos -> sprite +0 (constant during fall)
+     boulder_y       = $85C6 ; falling vertical pos -> sprite +3 (+=2/frame; ROT90 => physical DOWN)
+
      snake1_enable   = $8600
      snake1_active   = $8601
      snake2_enable   = $8602
@@ -124,6 +157,7 @@
 
      bombs           = $867f
      bomb_placed     = $8680
+     bomb_lethal     = $8683 ; explosion active/lethal flag (checked by bomb_collide)
      bomb_x          = $8684
      bomb_y          = $8685
      bomb_um1        = $8686 ; anim frames or something
@@ -135,12 +169,15 @@
 
      screen_ram      = $9000 ; - 0x93ff  videoram
      start_of_tiles  = $9040 ; top right tile
-     END_OF_TILES    = $93BF ; bottom left tile
+     end_of_tiles    = $93BF ; bottom left tile
      end_of_scr_ram  = $93ff
 
      color_ram       = $9400
      x_offset        = $9800
      sprite_ram      = $9840
+
+     hw_in_0         = $A000 ; 1 = L, 2 = R, 4 = down, 8 = up
+     hw_in_1         = $A800 ; 0x4 = P1, 0x8 = P2
 
      int_enable      = $b000 ; interrupt enable w, DIP read
      dip_switch      = $b000 ; interrupt enable w, DIP read
@@ -150,10 +187,8 @@
      flip_scr_y      = $b007
      watchdog        = $B800
 
-     hw_in_0         = $A000 ; 1 = L, 2 = R, 4 = down, 8 = up
-     hw_in_1         = $A800 ; 0x4 = P1, 0x8 = P2
-
      ;;; ============ constants ========
+
      SCR_COLS        = 28
      SCR_ROWS        = 28
 
@@ -178,41 +213,6 @@
      TILE_PLATFORM   = $F4
      TILE_EXIT_HOLE  = $F5 ; over exit/hole -> sets player over-hole flag $842D ($28EB)
      TILE_GAP        = $FE ; open water/gap: enemy death (cat/snake_water_die); player enter-hole ($294C); blocks walk
-
-
- ;;; ============ state / globals ============
-
-     dsw_raw         = $8020 ; raw DIP copy
-     in_a800         = $8021 ; raw coin/start input (per frame)
-     cur_player      = $8031 ; 0=P1, 1=P2
-     req_level_done  = $8032 ; level-complete pending (ingame -> dispatcher)
-     req_death       = $8033 ; player-death pending (ingame -> dispatcher)
-     p1_done         = $8034 ; P1 finished / out of lives
-     p2_done         = $8035 ; P2 finished / out of lives
-     flip_state      = $8036 ; current screen-flip mirror
-     first_turn      = $8038 ; first-turn-of-game flag
-     is_2player      = $803C ; 1 = 2P game
-     disp_timer      = $803D ; down-counter for timed screens
-     endlevel_active = $803E ; level-end / freeze gate (also gates enemy spawn/move)
-     endlevel_ctr    = $803F ; level-end sub-counter
-     score_add_trig  = $8040 ; score-add trigger
-     score_add       = $8041 ; amount to add (BCD3, $8041-$8043)
-     food_state      = $8120 ; 9x1 per-piece: 0 uncollected, 2 carried, 1 returned
-     food_returned   = $8140 ; 9x2 fill-from-front log; all set => level clear
-     gamble_state    = $8480 ; slot-bonus state (bit7=win display, bit6=countdown, bit5=reels spinning)
-     gamble_credit   = $8474 ; jackpot flag: 3x symbol-0 => grant free credit (gamble_award_credit)
-     gamble_reel1    = $8483 ; reel 1 current symbol (0-3)
-     gamble_reel2    = $8484 ; reel 2 current symbol
-     gamble_reel3    = $8485 ; reel 3 current symbol
-     gamble_pos1     = $8486 ; reel 1 strip position (into gamble_reel1_strip)
-     gamble_pos2     = $8487 ; reel 2 strip position
-     gamble_pos3     = $8488 ; reel 3 strip position
-     gamble_outcome  = $8489 ; win index 0-7 (0=jackpot); indexes gamble_prize_pos / gamble_score_tbl
-     boulder         = $85C0 ; boulder active flag (slot 7: a boulder is falling)
-     boulder_req     = $85C1 ; trigger request (set when player touches TILE_BOULDER $39/$3A)
-     boulder_x       = $85C5 ; frozen horizontal pos -> sprite +0 (constant during fall)
-     boulder_y       = $85C6 ; falling vertical pos -> sprite +3 (+=2/frame; ROT90 => physical DOWN)
-     bomb_lethal     = $8683 ; explosion active/lethal flag (checked by bomb_collide)
 
  ;;; ============ start of suprmous.x1 =============
 
@@ -349,11 +349,11 @@ start:
     jp   nz,$0150
     ld   a,$03
     ld   (lives_copy),a
-    ld   ($8300),a
+    ld   (p2_lives_copy),a
     jp   start_game
     ld   a,$05
     ld   (lives_copy),a
-    ld   ($8300),a
+    ld   (p2_lives_copy),a
     jp   start_game
 
  start_game_p1:
@@ -374,12 +374,12 @@ start:
     ld   a,$03
     ld   (lives_copy),a
     ld   a,$00
-    ld   ($8300),a
+    ld   (p2_lives_copy),a
     jp   start_game
     ld   a,$05
     ld   (lives_copy),a
     ld   a,$00
-    ld   ($8300),a
+    ld   (p2_lives_copy),a
 
  start_game:
     ld   a,$00
@@ -410,7 +410,7 @@ start:
     djnz $01C6
     nop
     ld   b,$01
-    call $07BC
+    call draw_credits
     ld   a,$01
     ld   (sound_enable),a
     ld   a,$E0
@@ -424,8 +424,6 @@ start:
     nop
     nop
     nop
-
-
  _no_start_buttons:
     ld   a,(screen_state)
     and  a
@@ -521,15 +519,21 @@ start:
  _screen_dispatch: ; no pending req -> dispatch by cur_screen
     ld   a,(cur_screen)
     cp   SCR_SPLASH
-    jp   z,$4694
+    jp   z,splash_screen_something
     cp   SCR_GAME
-    jp   z,$02BF
+    jp   z,$02BF ; jmp to main loop
     cp   SCR_GAMBLE
+<<<<<<< HEAD
     jp   z,$02C3
     jp   _req_attract
     call $2391
+=======
+    jp   z,$02C3 ; jmp to gamble loop
+    jp   $0288
+    call game_screen_main_loop
+>>>>>>> 712b409 (more calls)
     ret
-    call $2468
+    call gamble_screen_loop
     ret
 
  game_in_progress:
@@ -546,11 +550,11 @@ start:
     cp   SCR_READY
     jp   z,$036D
     cp   SCR_GAME
-    jp   z,$2391
+    jp   z,game_screen_main_loop
     cp   SCR_GAMBLE
-    jp   z,$2468
+    jp   z,gamble_screen_loop
     cp   SCR_LUCKY
-    jp   z,$4556
+    jp   z,very_lucky_mouse_screen
     ret
 
  _scr_game_over_2:
@@ -639,17 +643,17 @@ start:
  _scr_gamble_1:
     ld   a,(cur_player)
     and  a
-    jp   z,$04C1
-    jp   $048B
+    jp   z,player_continue
+    jp   player_swap
  _scr_game_1:
     ld   a,(is_2player)
     and  a
-    jp   nz,$041D
+    jp   nz,die_in_2p_mode
  ;;; 1p mode
     ld   hl,lives
     ld   a,$00
     cp   (hl)
-    jp   z,$03E9
+    jp   z,game_over
     dec  (hl)   ; lose a life, 1P mode
     ld   hl,lives
     ld   de,lives_copy
@@ -657,7 +661,7 @@ start:
     ldir
     ld   a,(lives)
     and  a
-    jp   z,$03E9
+    jp   z,game_over
     ld   a,$00
     ld   (req_death),a
     ld   (req_level_done),a
@@ -666,6 +670,7 @@ start:
     ld   (screen_state),a
     ret
  ;;
+ game_over:          ; 1P out of lives: silence/unflip, clear $8100-$83FF, req GAME OVER (screen_state bit3)
     ld   (sound_enable),a
     ld   (flip_scr_x),a
     ld   (flip_scr_y),a
@@ -689,7 +694,8 @@ start:
     set  3,a
     ld   (screen_state),a
     ret
- ;;; 2p mode
+
+ die_in_2p_mode: ; 2p mode
     ld   hl,lives
     ld   a,$00
     cp   (hl)
@@ -699,7 +705,7 @@ start:
     and  a
     jp   z,$043C
     ld   hl,lives
-    ld   de,$8300
+    ld   de,p2_lives_copy
     ld   bc,$00FF
     ldir
     jp   $0447
@@ -707,9 +713,10 @@ start:
     ld   de,lives_copy
     ld   bc,$00FF
     ldir
+ game_over_2p_check: ; 2P: current player out of lives? -> game over, else swap/continue
     ld   a,(lives)
     and  a
-    jp   nz,$0473
+    jp   nz,p2_swap_continue
     ld   a,(cur_player)
     and  a
     jp   z,$045D
@@ -725,16 +732,18 @@ start:
     set  3,a
     ld   (screen_state),a
     ret
+ p2_swap_continue:   ; current player still has lives: swap to other player or continue solo
     ld   a,(cur_player)
     and  a
     jp   z,$0484
     ld   a,(lives_copy)
     and  a
-    jp   nz,$04C1
-    jp   $048B
-    ld   a,($8300)
+    jp   nz,player_continue
+    jp   player_swap
+    ld   a,(p2_lives_copy)
     and  a
-    jp   z,$04C1
+    jp   z,player_continue
+ player_swap:        ; hand off to the other player (cocktail flip via DIP $8027) -> PLAYER READY
     ld   a,($8027)
     and  a
     jp   nz,$04A0
@@ -756,6 +765,7 @@ start:
     set  4,a
     ld   (screen_state),a
     ret
+ player_continue:    ; other player is out / no swap: keep player 1 going (unflip) -> PLAYER READY
     ld   a,$00
     ld   (req_death),a
     ld   (req_level_done),a
@@ -797,7 +807,7 @@ start:
     and  a
     jp   z,$052D
     ld   hl,lives
-    ld   de,$8300
+    ld   de,p2_lives_copy
     ld   bc,$00FF
     ldir
     jp   $0538
@@ -875,7 +885,12 @@ start:
     djnz $061D
     ret
 
+<<<<<<< HEAD
  copy_sprites_nop_slide:
+=======
+
+ copy_sprites_nop_slide:    ; patched-out (3 nops) -> falls through into copy_sprites; per-frame sprite DMA
+>>>>>>> 712b409 (more calls)
     nop
     nop
     nop
@@ -1065,7 +1080,7 @@ start:
     rlca
     ld   e,a
     ld   d,$00
-    ld   ix,$07D5
+    ld   ix,coinage_tbl
     add  ix,de
     ld   a,(ix+$00)
     inc  (iy+$04)
@@ -1084,10 +1099,10 @@ start:
     and  $02
     jp   z,$07A2
     ld   (iy+$0a),a
-    jp   $07BC
+    jp   draw_credits
     ld   a,(iy+$0a)
     and  a
-    jp   z,$07BC
+    jp   z,draw_credits
     xor  a
     ld   (iy+$0a),a
     ld   a,(iy+$03)
@@ -1097,6 +1112,8 @@ start:
     add  a,$01
     daa
     ld   (iy+$03),a
+
+ draw_credits:       ; if b!=0 (credits changed) redraw CREDIT-n HUD: units->$907F, tens slot $905F forced blank ($24)
     ld   a,b
     and  a
     ret  z
@@ -1113,19 +1130,21 @@ start:
     ld   a,$24
     ld   ($905F),a
     ret
-    ld   (bc),a
-    ld   bc,$0101
-    ld   bc,$0102
-    inc  bc
-    ld   bc,$0104
-    dec  b
-    ld   bc,$0106
-    rlca
+
+ coinage_tbl:        ; 8x [coins_needed, credits_awarded]; ix=coinage_tbl+2*idx (idx from iy+$05)
+    db   $02, $01              ; 0: 2 coins -> 1 credit
+    db   $01, $01              ; 1: 1 coin  -> 1 credit
+    db   $01, $02              ; 2: 1 coin  -> 2 credits
+    db   $01, $03              ; 3: 1 coin  -> 3 credits
+    db   $01, $04              ; 4: 1 coin  -> 4 credits
+    db   $01, $05              ; 5: 1 coin  -> 5 credits
+    db   $01, $06              ; 6: 1 coin  -> 6 credits
+    db   $01, $07              ; 7: 1 coin  -> 7 credits
     ld   (iy+$03),$09
     xor  a
     ld   (coin_lockout),a
     inc  b
-    jp   $07BC
+    jp   draw_credits
 
  init_game_RAM_test:      ; RAM test
     ld   a,(watchdog)
@@ -2510,17 +2529,17 @@ start:
     jp   nz,$203A
     ld   hl,lives_copy
     jp   $203D
-    ld   hl,$8300
+    ld   hl,p2_lives_copy
     ld   de,lives
     ld   bc,$00FF
     ldir
-    call $2082
-    call $209D
+    call draw_player_text
+    call draw_player_color
     call draw_cur_level_map
     call food_maze_redraw
     call food_log_redraw_all
-    call $417B
-    call $4227
+    call draw_boulders
+    call boulder_clear
     ld   a,$A0
     ld   (watchdog),a
     ld   hl,score_add_trig
@@ -2540,6 +2559,7 @@ start:
     jp   $1FD1
 
 
+ draw_player_text:   ; draw 'PLAYER ' (str_player) up column at $9262 + player number (cur_player+1) at $9182
     ld   hl,$9262
     ld   de,str_player
     ld   b,$08
@@ -2557,6 +2577,7 @@ start:
     ret
 
 
+ draw_player_color:  ; fill 8-cell PLAYER-text color RAM column at $9662 with color $87
     ld   hl,$9662
     ld   de,$FFE0
     ld   b,$08
@@ -2567,8 +2588,8 @@ start:
  str_player: ; 'PLAYER  ' (player-ready)
     db   $19, $15, $0A, $22, $0E, $1B, $24, $24              ; |PLAYER  |
     call clear_playfield
-    call $2082
-    call $209D
+    call draw_player_text
+    call draw_player_color
     call draw_intermission
     ld   a,$07
     ld   (cur_screen),a
@@ -2900,6 +2921,8 @@ start:
     db   $1F, $0E, $1B, $FF, $8F, $92, $19, $15              ; |VER|..PL|
     db   $0A, $22, $0E, $1B, $24, $FF, $94, $92              ; |AYER |..|
     db   $15, $0E, $1F, $0E, $15, $24, $FF                   ; |LEVEL ||
+
+ game_screen_main_loop:
     ld   a,($841F)
     cp   $02
     jp   z,$23C5
@@ -3005,7 +3028,7 @@ start:
     ld   (watchdog),a
     ret
 
- ;;; called several times
+ gamble_screen_loop:
     call gamble_update
     ret
 
@@ -7040,6 +7063,7 @@ mthing
     jp   $4084
 
 
+ draw_boulders:   ; clear boulder-consumed flags ($8180/$8181) + redraw both edge boulders (tiles $39/$3A, color $85)
     ld   a,$00
     ld   ($8180),a
     ld   a,($8180)
@@ -7109,12 +7133,13 @@ mthing
     jp   $4232
     ld   a,(boulder_y)
     cp   $E0
-    jp   nc,$4227
+    jp   nc,boulder_clear
     add  a,$02
     ld   (boulder_y),a
     jp   $4232
 
 
+ boulder_clear:   ; zero the 16-byte boulder block ($85C0) + park boulder sprite in slot 7 ($801C, tile $37)
     ld   hl,boulder
     ld   b,$10
     ld   a,$00
@@ -7134,7 +7159,6 @@ mthing
     ld   a,(boulder_y)
     ld   (hl),a
     ret
-
 
  gamble_update: ; bonus/score display state machine ($8480)
     call debug_draw_check
@@ -7160,9 +7184,9 @@ mthing
     ld   a,b
     and  $20
     jp   z,$442B
-    ld   a,(hw_in_0)
-    and  $10
-    jp   z,$4443
+    ld   a,(hw_in_0)       ; gamble: read player input
+    and  $10              ; isolate shot button (button1)
+    jp   z,$4443          ; not pressed -> keep reels spinning
     ld   a,(is_playing)
     and  a
     jp   z,$4443
@@ -7288,7 +7312,7 @@ mthing
     daa
     ld   (credits),a
     ld   b,$01
-    call $07BC
+    call draw_credits
     ld   hl,$92EC
     ld   de,$FFE0
     ld   b,$0F
@@ -7512,8 +7536,9 @@ mthing
  gamble_reel3_strip: ; reel 3 symbol strip (15 steps)
     db   $02, $00, $01, $03, $03, $02, $01, $03
     db   $02, $01, $03, $02, $03, $01, $02
- gamble_tbl_pad: ; trailing bytes ($21,$60,$80)
-    db   $21, $60, $80
+
+ very_lucky_mouse_screen:
+     ld   hl,$8068
     ld   a,(hl)
     and  a
     jp   nz,$456D
@@ -7648,7 +7673,8 @@ mthing
     db   $0D, $92, $65, $84
     db   $4D, $92, $71, $84
     db   $EE, $91, $60, $84
- ;;; ...
+
+ splash_screen_something:
     ld   hl,$8068
     ld   a,(hl)
     and  a
@@ -7814,7 +7840,7 @@ mthing
     ret
     ld   hl,$48A3
     call $47C9
-    ld   ix,$07D5
+    ld   ix,coinage_tbl
     ld   a,($8025)
     rlca
     ld   e,a
