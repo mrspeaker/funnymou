@@ -320,7 +320,7 @@ start:
      nop
      nop
     call read_inputs
-    call $0629
+    call copy_sprites_nop_slide
     ld   a,(is_playing)
     and  a
     jp   nz,_no_start_buttons
@@ -438,8 +438,8 @@ start:
     jp   nz,show_credits_screen
     ld   a,(cur_screen)
     and  a
-    jp   nz,$0242
-    jp   $0288
+    jp   nz,next_screen_state
+    jp   _req_attract
  show_credits_screen:
     cp   $02
     jp   nc,$021B
@@ -473,26 +473,28 @@ start:
     djnz $023D
     ret
 
+ next_screen_state: ; pending req_death/req_level_done + cur_screen -> set screen_state request bit
     ld   a,(req_death)
     and  a
     jp   z,$025E
     ld   a,(cur_screen)
     cp   SCR_SPLASH
-    jp   z,$0275
+    jp   z,_req_start_play
     cp   SCR_GAME
-    jp   z,$0299
+    jp   z,_req_intermission
     cp   SCR_GAMBLE
-    jp   z,$0288
-    jp   $0288
+    jp   z,_req_attract
+    jp   _req_attract
     ld   a,(req_level_done)
     and  a
-    jp   z,$02AA
+    jp   z,_screen_dispatch
     ld   a,(cur_screen)
     cp   SCR_GAME
-    jp   z,$0299
+    jp   z,_req_intermission
     cp   SCR_GAMBLE
-    jp   z,$0288
-    jp   $0288
+    jp   z,_req_attract
+    jp   _req_attract
+ _req_start_play: ; req_death on splash -> set 5 (build maze / START PLAY)
     ld   a,$00
     ld   (req_death),a
     ld   (req_level_done),a
@@ -500,6 +502,7 @@ start:
     set  5,a
     ld   (screen_state),a
     jp   $0229
+ _req_attract:   ; set 7 (attract reset)
     ld   a,$00
     ld   (req_death),a
     ld   (req_level_done),a
@@ -507,6 +510,7 @@ start:
     set  7,a
     ld   (screen_state),a
     ret
+ _req_intermission: ; set 6 (level-clear intermission)
     ld   a,$00
     ld   (req_death),a
     ld   (req_level_done),a
@@ -514,6 +518,7 @@ start:
     set  6,a
     ld   (screen_state),a
     ret
+ _screen_dispatch: ; no pending req -> dispatch by cur_screen
     ld   a,(cur_screen)
     cp   SCR_SPLASH
     jp   z,$4694
@@ -521,7 +526,7 @@ start:
     jp   z,$02BF
     cp   SCR_GAMBLE
     jp   z,$02C3
-    jp   $0288
+    jp   _req_attract
     call $2391
     ret
     call $2468
@@ -870,7 +875,7 @@ start:
     djnz $061D
     ret
 
-
+ copy_sprites_nop_slide:
     nop
     nop
     nop
@@ -7647,7 +7652,7 @@ mthing
     ld   hl,$8068
     ld   a,(hl)
     and  a
-    jp   nz,$4705
+    jp   nz,splash_pic_anim
     ld   (hl),$01
     inc  hl
     ld   (hl),$00
@@ -7712,6 +7717,7 @@ mthing
  gamble_frame_tiles: ; border tiles for the 'VERY LUCKY MOUSE' gamble screen (color $84)
  ;   [0..4]=5-tile bottom row  [5]=corner @$9349  [6]=vertical-edge tile (22-col)
     db   $40, $40, $40, $40, $43, $77, $41   ; $40 x4 + $43 corner, $77 corner, $41 v-edge
+ splash_pic_anim: ; already-inited branch of $4694: step splash mouse-pic reveal ($806B timer/$806C rec idx) + eye-wink
     inc  hl
     ld   a,(hl)
     and  a

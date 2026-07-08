@@ -48,15 +48,16 @@ for n in 1 2 3 4 5; do
     fi
 done
 
-if [ "$err" -eq "0" ]; then
-    echo "go."
-    echo "mouse:     go!"
-else
+if [ "$err" -ne "0" ]; then
     echo "-"
     echo
     echo "no go. ($err ROM(s) mismatched)"
+    echo
+    exit 1
 fi
 
+echo "go."
+echo "mouse:     go!"
 echo
 
 # Copy the roms to the JS project

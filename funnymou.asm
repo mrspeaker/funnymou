@@ -320,7 +320,7 @@ zeros               dc 97,0
 0101  00            nop
 0102  00            nop
 0103  CD4307  	    call read_inputs
-0106  CD2906  	    call $0629
+0106  CD2906  	    call copy_sprites_nop_slide
 0109  3A3080  	    ld   a,(is_playing)
 010C  A7      	    and  a
 010D  C2EB01  	    jp   nz,_no_start_buttons
@@ -438,8 +438,8 @@ zeros               dc 97,0
 01FB  C20802  	    jp   nz,show_credits_screen
 01FE  3A3B80  	    ld   a,(cur_screen)
 0201  A7      	    and  a
-0202  C24202  	    jp   nz,$0242
-0205  C38802  	    jp   $0288
+0202  C24202  	    jp   nz,next_screen_state
+0205  C38802  	    jp   _req_attract
                 show_credits_screen:
 0208  FE02    	    cp   $02
 020A  D21B02  	    jp   nc,$021B
@@ -473,26 +473,28 @@ zeros               dc 97,0
 023F  10FC    	    djnz $023D
 0241  C9      	    ret
 
+                next_screen_state: ; pending req_death/req_level_done + cur_screen -> set screen_state request bit
 0242  3A3380  	    ld   a,(req_death)
 0245  A7      	    and  a
 0246  CA5E02  	    jp   z,$025E
 0249  3A3B80  	    ld   a,(cur_screen)
 024C  FE01    	    cp   SCR_SPLASH
-024E  CA7502  	    jp   z,$0275
+024E  CA7502  	    jp   z,_req_start_play
 0251  FE06    	    cp   SCR_GAME
-0253  CA9902  	    jp   z,$0299
+0253  CA9902  	    jp   z,_req_intermission
 0256  FE07    	    cp   SCR_GAMBLE
-0258  CA8802  	    jp   z,$0288
-025B  C38802  	    jp   $0288
+0258  CA8802  	    jp   z,_req_attract
+025B  C38802  	    jp   _req_attract
 025E  3A3280  	    ld   a,(req_level_done)
 0261  A7      	    and  a
-0262  CAAA02  	    jp   z,$02AA
+0262  CAAA02  	    jp   z,_screen_dispatch
 0265  3A3B80  	    ld   a,(cur_screen)
 0268  FE06    	    cp   SCR_GAME
-026A  CA9902  	    jp   z,$0299
+026A  CA9902  	    jp   z,_req_intermission
 026D  FE07    	    cp   SCR_GAMBLE
-026F  CA8802  	    jp   z,$0288
-0272  C38802  	    jp   $0288
+026F  CA8802  	    jp   z,_req_attract
+0272  C38802  	    jp   _req_attract
+                _req_start_play: ; req_death on splash -> set 5 (build maze / START PLAY)
 0275  3E00    	    ld   a,$00
 0277  323380  	    ld   (req_death),a
 027A  323280  	    ld   (req_level_done),a
@@ -500,6 +502,7 @@ zeros               dc 97,0
 0280  CBEF    	    set  5,a
 0282  323980  	    ld   (screen_state),a
 0285  C32902  	    jp   $0229
+                _req_attract:   ; set 7 (attract reset)
 0288  3E00    	    ld   a,$00
 028A  323380  	    ld   (req_death),a
 028D  323280  	    ld   (req_level_done),a
@@ -507,6 +510,7 @@ zeros               dc 97,0
 0293  CBFF    	    set  7,a
 0295  323980  	    ld   (screen_state),a
 0298  C9      	    ret
+                _req_intermission: ; set 6 (level-clear intermission)
 0299  3E00    	    ld   a,$00
 029B  323380  	    ld   (req_death),a
 029E  323280  	    ld   (req_level_done),a
@@ -514,6 +518,7 @@ zeros               dc 97,0
 02A4  CBF7    	    set  6,a
 02A6  323980  	    ld   (screen_state),a
 02A9  C9      	    ret
+                _screen_dispatch: ; no pending req -> dispatch by cur_screen
 02AA  3A3B80  	    ld   a,(cur_screen)
 02AD  FE01    	    cp   SCR_SPLASH
 02AF  CA9446  	    jp   z,$4694
@@ -521,7 +526,7 @@ zeros               dc 97,0
 02B4  CABF02  	    jp   z,$02BF
 02B7  FE07    	    cp   SCR_GAMBLE
 02B9  CAC302  	    jp   z,$02C3
-02BC  C38802  	    jp   $0288
+02BC  C38802  	    jp   _req_attract
 02BF  CD9123  	    call $2391
 02C2  C9      	    ret
 02C3  CD6824  	    call $2468
@@ -870,7 +875,7 @@ zeros               dc   55,0
 0626  10F5    	    djnz $061D
 0628  C9      	    ret
 
-
+                copy_sprites_nop_slide:
 0629  00      	    nop
 062A  00      	    nop
 062B  00      	    nop
@@ -7647,7 +7652,7 @@ _
 4694  216880  	    ld   hl,$8068
 4697  7E      	    ld   a,(hl)
 4698  A7      	    and  a
-4699  C20547  	    jp   nz,$4705
+4699  C20547  	    jp   nz,splash_pic_anim
 469C  3601    	    ld   (hl),$01
 469E  23      	    inc  hl
 469F  3600    	    ld   (hl),$00
@@ -7712,6 +7717,7 @@ _
                 gamble_frame_tiles: ; border tiles for the 'VERY LUCKY MOUSE' gamble screen (color $84)
                 ;   [0..4]=5-tile bottom row  [5]=corner @$9349  [6]=vertical-edge tile (22-col)
 46FE               db   $40, $40, $40, $40, $43, $77, $41   ; $40 x4 + $43 corner, $77 corner, $41 v-edge
+                splash_pic_anim: ; already-inited branch of $4694: step splash mouse-pic reveal ($806B timer/$806C rec idx) + eye-wink
 4705  23      	    inc  hl
 4706  7E      	    ld   a,(hl)
 4707  A7      	    and  a
