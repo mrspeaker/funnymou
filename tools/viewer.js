@@ -63,7 +63,7 @@ const LEGEND = [
 ];
 
 const state = { level: 0, tiles: null, palette: null, prog: null, scale: 3,
-                showJunc: false, showFood: false, showActors: false };
+                showJunc: false, showFood: true, showActors: true };
 
 const el = (id) => document.getElementById(id);
 

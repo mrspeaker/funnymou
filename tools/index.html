@@ -1,68 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Funny Mouse — Level Viewer</title>
-<style>
-  :root { color-scheme: dark; }
-  body {
-    margin: 0; background: #14161c; color: #d8dbe2;
-    font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 24px;
-  }
-  h1 { font-size: 18px; margin: 0; font-weight: 600; letter-spacing: .5px; }
-  .sub { color: #7d8494; font-size: 12px; margin-top: -10px; }
-  .stage { background: #000; border: 1px solid #2a2f3a; border-radius: 6px; padding: 8px;
-           box-shadow: 0 8px 30px rgba(0,0,0,.5); }
-  canvas { display: block; image-rendering: pixelated; }
-  .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
-  button {
-    background: #232833; color: #d8dbe2; border: 1px solid #39404e; border-radius: 5px;
-    padding: 7px 14px; cursor: pointer; font: inherit;
-  }
-  button:hover { background: #2c3340; }
-  button:disabled { opacity: .4; cursor: default; }
-  button.primary { background: #3a5bd0; border-color: #3a5bd0; }
-  button.primary:hover { background: #4468e0; }
-  .level-name { min-width: 210px; text-align: center; font-size: 15px; }
-  .level-name b { color: #ffd34d; }
-  label.toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
-  .legend { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; max-width: 700px;
-            color: #9aa1b0; font-size: 12px; }
-  .legend span { white-space: nowrap; }
-  .swatch { display: inline-block; width: 10px; height: 10px; vertical-align: middle;
-            border: 1px solid #000; margin-right: 4px; border-radius: 2px; }
-  #error { color: #ff7676; max-width: 620px; text-align: center; display: none;
-           background: #2a1a1a; border: 1px solid #5a2a2a; border-radius: 6px; padding: 14px; }
-  code { background: #232833; padding: 1px 5px; border-radius: 3px; color: #ffd34d; }
-</style>
-</head>
-<body>
-  <h1>Funny Mouse — Level Viewer</h1>
-  <div class="sub">maze tilemaps rendered from ROM graphics (<code>tools/rom</code>)</div>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Funny Mouse — Level Viewer</title>
+        <style>
+            :root {
+                color-scheme: dark;
+            }
+            body {
+                margin: 0;
+                background: #14161c;
+                color: #d8dbe2;
+                font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas,
+                    monospace;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+                padding: 24px;
+            }
+            h1 {
+                font-size: 18px;
+                margin: 0;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+            }
+            .sub {
+                color: #7d8494;
+                font-size: 12px;
+                margin-top: -10px;
+            }
+            .stage {
+                background: #000;
+                border: 1px solid #2a2f3a;
+                border-radius: 6px;
+                padding: 8px;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            }
+            canvas {
+                display: block;
+                image-rendering: pixelated;
+            }
+            .controls {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            button {
+                background: #232833;
+                color: #d8dbe2;
+                border: 1px solid #39404e;
+                border-radius: 5px;
+                padding: 7px 14px;
+                cursor: pointer;
+                font: inherit;
+            }
+            button:hover {
+                background: #2c3340;
+            }
+            button:disabled {
+                opacity: 0.4;
+                cursor: default;
+            }
+            button.primary {
+                background: #3a5bd0;
+                border-color: #3a5bd0;
+            }
+            button.primary:hover {
+                background: #4468e0;
+            }
+            .level-name {
+                min-width: 210px;
+                text-align: center;
+                font-size: 15px;
+            }
+            .level-name b {
+                color: #ffd34d;
+            }
+            label.toggle {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                cursor: pointer;
+                user-select: none;
+            }
+            .legend {
+                display: flex;
+                gap: 14px;
+                flex-wrap: wrap;
+                justify-content: center;
+                max-width: 700px;
+                color: #9aa1b0;
+                font-size: 12px;
+            }
+            .legend span {
+                white-space: nowrap;
+            }
+            .swatch {
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                vertical-align: middle;
+                border: 1px solid #000;
+                margin-right: 4px;
+                border-radius: 2px;
+            }
+            #error {
+                color: #ff7676;
+                max-width: 620px;
+                text-align: center;
+                display: none;
+                background: #2a1a1a;
+                border: 1px solid #5a2a2a;
+                border-radius: 6px;
+                padding: 14px;
+            }
+            code {
+                background: #232833;
+                padding: 1px 5px;
+                border-radius: 3px;
+                color: #ffd34d;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="error"></div>
 
-  <div id="error"></div>
+        <div class="stage"><canvas id="screen"></canvas></div>
 
-  <div class="stage"><canvas id="screen"></canvas></div>
+        <div class="controls">
+            <button id="prev">◀ Prev</button>
+            <div class="level-name">
+                Level <b id="lvlnum">1</b>
+                <span id="lvladdr" style="color: #7d8494"></span>
+            </div>
+            <button id="next" class="primary">Next ▶</button>
+        </div>
 
-  <div class="controls">
-    <button id="prev">◀ Prev</button>
-    <div class="level-name">Level <b id="lvlnum">1</b> <span id="lvladdr" style="color:#7d8494"></span></div>
-    <button id="next" class="primary">Next ▶</button>
-  </div>
+        <div class="controls">
+            <label class="toggle"
+                ><input type="checkbox" id="junctions" /> show AI junction
+                lattice</label
+            >
+            <label class="toggle"
+                ><input type="checkbox" id="food" checked /> show food spawns</label
+            >
+            <label class="toggle"
+                ><input type="checkbox" id="actors" checked /> show actors
+                (mouse/cats/snake)</label
+            >
+            <label class="toggle"
+                >scale
+                <input
+                    type="range"
+                    id="scale"
+                    min="1"
+                    max="5"
+                    value="3"
+                    style="vertical-align: middle"
+                />
+            </label>
+        </div>
 
-  <div class="controls">
-    <label class="toggle"><input type="checkbox" id="junctions"> show AI junction lattice</label>
-    <label class="toggle"><input type="checkbox" id="food"> show food spawns</label>
-    <label class="toggle"><input type="checkbox" id="actors"> show actors (mouse/cats/snake)</label>
-    <label class="toggle">scale
-      <input type="range" id="scale" min="1" max="5" value="3" style="vertical-align:middle">
-    </label>
-  </div>
+        <div class="legend" id="legend"></div>
 
-  <div class="legend" id="legend"></div>
-
-  <script src="viewer.js"></script>
-</body>
+        <script src="viewer.js"></script>
+    </body>
 </html>
