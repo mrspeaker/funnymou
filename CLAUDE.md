@@ -2,8 +2,8 @@
 
 This repo is a **reverse-engineering / documentation project** for the arcade game
 **Funny Mouse** (`funnymou` in MAME). The goal is to annotate the disassembly
-(`funnymou.asm`) with meaningful labels and comments, with a current focus on the
-**enemy (cat) AI**. This file is turned into `src.asm` that can then be assembled.
+(`funnymou.asm`) with meaningful labels and comments. This file is turned into 
+`src.asm` that can then be assembled into the original binary.
 
 > This file is the living knowledge base. When you learn something new about the dump,
 > record it here (and, where useful, add the label to `funnymou.asm` — see
@@ -33,10 +33,10 @@ This repo is a **reverse-engineering / documentation project** for the arcade ga
 | Path | What it is |
 |------|-----------|
 | `funnymou.asm` | **The buildable master (~11.7k lines).** Assembles to a **hash-correct** ROM via `build.sh`. This is the file to annotate. See [Build & edit rules](#build--edit-rules) below. |
-| `build.sh` | `cut -c 16- funnymou.asm > src.asm; zmac -c -n src.asm; split -b4k` → shasum-compares each chunk to `dump/suprmous.x1..x5`. |
-| `funnymou.org` | MAME ROM defs + `thepit_main_map` + preliminary memory map. |
-| `dump/` | Raw ROM/PROM images (`sm.6`, `suprmous.x*`, `*.clr`). |
-| `thepit/` | MAME driver source for the hardware (`thepit.cpp`/`.h`, `thepit_v.cpp`). Authoritative HW ref. Confirms `funnymou` runs **ROT90** (`thepit.cpp:1474`). |
+| `build.sh` | builds and shasum-compares each chunk to `dump/suprmous.x1..x5`. |
+| `funnymou.org` | MAME ROM defs and notes + `thepit_main_map` + preliminary memory map. |
+| `dump/` | Raw ROM images (`sm.6`, `suprmous.x*`, `*.clr`). |
+| `thepit/` | MAME driver source for the hardware (`thepit.cpp`/`.h`, `thepit_v.cpp`). Authoritative HW ref. |
 | `tools/` | Browser **level viewer** (`index.html`+`viewer.js`) — decodes the 4 maze banks, chars & 16×16 sprites, and PROM palette straight from `tools/rom/` (full ROM set) exactly as MAME does. ROT90 cabinet view; toggles for the AI junction lattice (§6), food spawns (§5), and actor sprites (mouse/cats/snake at spawn). |
 
 ### Build & edit rules
@@ -47,7 +47,7 @@ This repo is a **reverse-engineering / documentation project** for the arcade ga
   match that.
 - Comments, `name = $addr` equates, and label renames emit **no bytes** → the ROM stays
   byte-identical *as long as it still assembles*. **Verify every change with `./build.sh`**
-  (all 5 shasum pairs must match).
+  (get the "mouse    go!" message).
 
 ---
 
@@ -79,7 +79,7 @@ as an instruction in sequence. Therefore:
 (`$8406`, joystick L/R) is written to the hardware **Y** sprite byte (`$8000`, sprite +0),
 and game-space **Y** (`$8407`) to the hardware **X** byte (`$8003`, sprite +3).
 
-Main CPU: **Z80**. Source: `funnymou.org` + `thepit/thepit_v.cpp`.
+Main CPU: **Z80**.
 
 | Range | Contents |
 |-------|----------|
@@ -181,9 +181,6 @@ word reversed). These are the message/HUD tables:
 | `$488F`/`$48A7` | `INSERT  COIN` / `COIN     PLAY` | coin prompts (`$4892`) |
 | `$48D7` | `© 1982 CHUO CO., LTD` | title copyright (`$48EF` diag path draws to `$9100`) |
 | `$491A` | `licensee_text` → `CHUO CO.,LTD` | licensee credit (see label) |
-
-`licensee_text` at **`$491A`** (`db $24,$0D,$1D,$15,$24,$31,$18,$0C,$24,$18,$1E,$11,$0C,$24`)
-renders as **"CHUO CO.,LTD"** — MAME: *Taito Corporation (Chuo Co. Ltd license)* (`thepit.cpp:1474`).
 
 ---
 
