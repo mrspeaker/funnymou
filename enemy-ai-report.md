@@ -12,11 +12,9 @@ Cats and snakes look different, but **they share the same brain** - the exact sa
 
 ## Spawning
 
-Each enemy **emerges** at a fixed spot on the maze, blinking into view over roughly **two seconds**.
+Each enemy emerges at a fixed spot on the maze, blinking into view over roughly **two seconds**.
 
 While an enemy is still emerging it is **harmless and untouchable** - it can't catch you, and none of your traps can hurt it yet. The instant its entrance finishes, it switches on and begins to chase. There's no "wandering" or "patrol" phase.
-
-Each cat and each snake has its own home spot, so they fan out and enter from different corners of the maze rather than all appearing in one place.
 
 
 ## Enemy chasing

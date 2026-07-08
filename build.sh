@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# relies on zmac (http://48k.ca/zmac.html) for compilation
+
+# Notes (from Bongo project): making compileable listing from mame `dasm`
+# 1. In Mame: `dasm mousdump.asm,0,5fff,0`  ; note last 0 to omit something?
+# 2. zmac -j -c -n src.asm ; "j" is try to compile with rel jumps fixed
+# .. but zmac syntax a bit diff: rename any `rrd (hl)` to `rrd` (same for `rld`)
+# 3. copy zout/src.lst back to be new source, then build.sh...
+
 set -e
 
 # clear previous output
@@ -11,8 +19,7 @@ cut -c 16- funnymou.asm > src.asm
 
 # compile to un-annotated bytes
 echo -n "compile:   "
-#zmac -j -c -n --oo cim,lst bongo.asm
-zmac -c -n src.asm
+zmac -c -n --oo cim,lst src.asm
 echo "go."
 
 split -b4k -d -a 1 zout/src.cim zout/f
@@ -26,36 +33,31 @@ mv zout/f4 zout/suprmous.x5
 # Test which bits are diff:
 # cmp  -l -x dump/bg1.bin zout/bg1
 
+# CRC verify each split ROM against the real dump
+echo -n "verify:    "
+err=0
+for n in 1 2 3 4 5; do
+    a=`shasum zout/suprmous.x$n | awk '{ print $1 }'`
+    b=`shasum dump/suprmous.x$n | awk '{ print $1 }'`
+    if test "$a" != "$b"
+    then
+        echo
+        echo "CRC error: zout/suprmous.x$n - dump/suprmous.x$n:"
+        cmp -l zout/suprmous.x$n dump/suprmous.x$n | head -n 5
+        err=$((err+1))
+    fi
+done
 
-f1a=`shasum zout/suprmous.x1 | sed 's/.*=.//g'`
-f1b=`shasum dump/suprmous.x1 | sed 's/.*=.//g'`
-echo $f1a
-echo $f1b
+if [ "$err" -eq "0" ]; then
+    echo "go."
+    echo "mouse:     go!"
+else
+    echo "-"
+    echo
+    echo "no go. ($err ROM(s) mismatched)"
+fi
 
-f2a=`shasum zout/suprmous.x2 | sed 's/.*=.//g'`
-f2b=`shasum dump/suprmous.x2 | sed 's/.*=.//g'`
-echo $f2a
-echo $f2b
+echo
 
-f3a=`shasum zout/suprmous.x3 | sed 's/.*=.//g'`
-f3b=`shasum dump/suprmous.x3 | sed 's/.*=.//g'`
-echo $f3a
-echo $f3b
-
-f4a=`shasum zout/suprmous.x4 | sed 's/.*=.//g'`
-f4b=`shasum dump/suprmous.x4 | sed 's/.*=.//g'`
-echo $f4a
-echo $f4b
-
-f5a=`shasum zout/suprmous.x5 | sed 's/.*=.//g'`
-f5b=`shasum dump/suprmous.x5 | sed 's/.*=.//g'`
-echo $f5a
-echo $f5b
-
-#if [ "$f1a" = "$f1b" ]; then
-#    echo "ROM 1 OK"
-#else
-#    echo "ROM 1 checksum error"
-#fi
-
+# Copy the roms to the JS project
 cp zout/suprmous* tools/rom
