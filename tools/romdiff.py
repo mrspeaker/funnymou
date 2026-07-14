@@ -6,8 +6,9 @@ operands that point into ROM ($0000-$4FFF) so relocated-but-identical code
 compares equal, then sequence-aligns the two token streams.
 """
 import difflib, sys
+from pathlib import Path
 
-BASE = '/Users/mrspeaker/dev/asm/funnymou/dump'
+BASE = Path(__file__).resolve().parent.parent / 'dump'
 fm = b''.join(open(f'{BASE}/suprmous.x{i}', 'rb').read() for i in range(1, 6))
 sm = b''.join(open(f'{BASE}/sm/sm.{i}', 'rb').read() for i in range(1, 6))
 
