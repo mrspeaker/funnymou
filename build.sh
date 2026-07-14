@@ -2,11 +2,17 @@
 
 # relies on zmac (http://48k.ca/zmac.html) for compilation
 
-# Notes (from Bongo project): making compileable listing from mame `dasm`
-# 1. In Mame: `dasm mousdump.asm,0,5fff,0`  ; note last 0 to omit something?
-# 2. zmac -j -c -n src.asm ; "j" is try to compile with rel jumps fixed
-# .. but zmac syntax a bit diff: rename any `rrd (hl)` to `rrd` (same for `rld`)
-# 3. copy zout/src.lst back to be new source, then build.sh...
+# Notes: making compileable listing from mame `dasm`
+# 1. In Mame: `dasm fmdump.asm,0,5fff,0`  ; last 0 is for opcodes on/off
+# 2. Chop off start of lines to only leave instructions
+#    cut -c 6- fmdump.asm > src.asm
+# 3. zmac -j -c -n src.asm ; try to compile with rel jumps fixed
+# .. If needed: rename any `rrd (hl)` to `rrd` (same for `rld`)
+# 4. copy zout/fmdump.lst back to be new source, then build.sh...
+
+# Test which bits are diff:
+# cmp  -l -x dump/bg1.bin zout/bg1
+#
 
 set -e
 
