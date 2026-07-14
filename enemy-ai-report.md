@@ -58,6 +58,58 @@ Cat 3 practically never drifts and feels relentless. Its counter has to get to 7
 Cat 2 sits in between - same drift *rate* as cat 3, but it's allowed to start drifting sooner, so you'll occasionally catch it wandering where cat 3 won't.
 
 
+## Every enemy's stats at a glance
+
+All five enemies share one brain, but each is seeded from its own template in ROM with a
+different spawn spot, entry delay, and drift habit. Here is the whole roster side by side:
+
+| Enemy | Template | Record | Spawn (X, Y) | Corner | Sprite slot | Entry delay (Lvl 1 → Lvl 10) | Base speed | Emerge time | Drift rate | First drift | Opening turn |
+|-------|----------|--------|--------------|--------|-------------|------------------------------|-----------|-------------|-----------|-------------|--------------|
+| **Cat 1** | `$2B75` | `$8510` | `$B4, $42` (180, 66) | top-right | 1 | **168f ≈ 2.8s** → 16f ≈ 0.3s | 1 px/frame | ~128f ≈ 2.1s | **1-in-4** | junction **4** | vertical |
+| **Cat 2** | `$2BCB` | `$8550` | `$34, $42` (52, 66) | top-left | 3 | **1340f ≈ 22.3s** → 256f ≈ 4.3s | 1 px/frame | ~128f ≈ 2.1s | 1-in-8 | junction **5** | vertical |
+| **Cat 3** | `$2C21` | `$8570` | `$34, $C2` (52, 194) | bottom-left | 4 | **396f ≈ 6.6s** → 16f ≈ 0.3s | 1 px/frame | ~128f ≈ 2.1s | 1-in-8 | junction **7** | vertical |
+| **Snake 1** | `$3292` | `$8610` | `$B4, $C2` (180, 194) | bottom-right | 5 | **304f ≈ 5.1s** → 0f (instant) | 1 px/frame | ~128f ≈ 2.1s | 1-in-4 | junction **4** | vertical |
+| **Snake 2** | `$32D7` | `$8630` | `$B4, $C2` (180, 194) | bottom-right | 6 | **912f ≈ 15.2s** → 80f ≈ 1.3s | 1 px/frame | ~128f ≈ 2.1s | **1-in-4** | junction **2** | vertical |
+
+*(Frames assume 60 fps. Positions are game-logic coordinates; the screen is rotated 90°, so
+these map to physical corners as noted.)*
+
+**Reading the table:**
+
+- **Spawn / corner.** The three cats claim three different corners; both snakes emerge from the
+  same bottom-right spot but staggered in time (snake 2 always trails snake 1). So enemies fan
+  out across the maze instead of all appearing together.
+
+- **Entry delay** is a per-level countdown baked into each enemy's own delay table (cat 1 `$2B5A`,
+  cat 2 `$2BB0`, cat 3 `$2C06`, snake 1 `$3315`, snake 2 `$332B`). It shrinks every level, which is
+  the main way the game ramps up: on level 1 you get a long grace period (cat 2 doesn't show for
+  ~22 seconds); by level 10 the enemies are on you almost immediately (snake 1 is instant).
+  On level 1 the order of arrival is roughly **cat 1 (2.8s) → snake 1 (5.1s) → cat 3 (6.6s) →
+  snake 2 (15.2s) → cat 2 (22.3s)**.
+
+  > Encoding note: the *cats'* countdown is stored as **seconds : frames** (the low byte wraps at
+  > 60), while the *snakes'* countdown is a plain 16-bit **frame** count. Both tick down once per
+  > frame; the numbers above are the resulting real times.
+
+- **Base speed is identical for everyone** — one pixel per frame, applied every frame, using the
+  same ±1 velocity in every template. There is *no* per-enemy or per-level speed knob in the
+  shipped data; enemies feel faster on later levels only because they arrive sooner and you have
+  less room, not because they actually move quicker.
+
+- **Emerge time** (the harmless blink-in) is also uniform: an internal counter climbs to 128
+  (~2.1 s) before the enemy switches on and starts chasing.
+
+- **Drift rate / first drift.** This is each enemy's personality — how often it blows through an
+  intersection instead of re-aiming, and how many junctions it must survive since (re)spawn before
+  it's *allowed* to drift at all. Cat 1 is the loosest (drifts often, early); cat 3 is the most
+  relentless (1-in-8 and can't drift until its 7th junction, which it rarely reaches because deaths
+  reset the counter). Snake 2 is notably twitchy — same 1-in-4 rate as cat 1 but allowed to drift
+  as early as its **2nd** junction.
+
+- **Opening turn** is vertical for all five: every template spawns the axis-toggle at 0, so the
+  first steer after appearing always corrects the vertical axis first (see "The same-lane rule").
+
+
 ## Getting around the maze
 
 Enemies look at the corridor ahead.  They stay on the proper paths and climb the ladders like the mouse does.
