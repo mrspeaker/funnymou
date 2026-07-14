@@ -716,6 +716,60 @@ baked-in **address column (cols 1–15) went stale** (e.g. shows `$13B8` where t
   in `food_gfx_data` misdecoded as `jp (hl)`.)
 
 
+## 8. Differences vs Super Mouse (`dump/sm/`, disasm `supermou.asm`)
+
+Funny Mouse's parent. ROMs `dump/sm/sm.1..5` ↔ `dump/suprmous.x1..x5` (main CPU); analysed
+2026-07 with a relocation-aware instruction-stream diff (16-bit ROM-address operands masked, so
+code that merely *moved* still compares equal). **`sm.6` (sound), `sm.7/8/9` (gfx) and both
+color PROMs are byte-identical** — all differences are in the main-CPU program.
+
+**The two games are ~95% the same code.** In particular the entire enemy-AI engine —
+managers, chase/`drift_gate` personalities, movers, wall checks, water-death, all 4 maze
+tilemaps, templates, demo script — is **byte-identical** (mod relocation). The real changes:
+
+**Relocated blocks (same features, different addresses — hence the naive byte-diff explodes):**
+Super Mouse keeps the gamble game and attract/coin screens in *mid*-ROM; Funny Mouse moved
+them to the end, shifting everything between by −34 to +2573 bytes.
+- fm `gamble_update $4247` ↔ sm `$0FED` (sm block `$0FED-$17C0`). Same `$8480` state var, same
+  reel cells `$9268/$91E8/$9168`. sm's win screen says **"VERY LUCKY MACHO"** (`$16F6`) with its
+  own picture; fm redrew it as the winking **"VERY LUCKY MOUSE"** (`lucky_mouse_pic`).
+  fm `very_lucky_mouse_screen $4556` ↔ sm `$1683`.
+- fm `splash_screen_something $4694` ↔ sm `$1ABD` (sm block `$1ABD-$1D17`): INSERT COIN / COIN
+  PLAY screens. Copyright swapped: sm **" TAITO CORPORATION 1982"** (`$1D01`) → fm
+  **"© 1982 CHUO CO., LTD"** (`$48D7`).
+
+**Funny Mouse additions / gameplay changes (fm addr / sm addr):**
+- **License/debug stamp**: fm inserts `call debug_draw_check ($48EF)` (draws the CHUO licensee
+  text at `$9100` when `hw_in_1 & $40`) at 3 entry points — `gamble_update $4247`,
+  `bridge_select_cells $3C92`, `boulder_update $41BC`. No sm counterpart.
+- **`$803E` end-level spawn gate**: fm adds `ld a,($803E); and a; ret nz` (5 bytes) before each
+  of the 5 enemy spawn blocks (`$2B42/$2B98/$2BEE` cats, `$3273/$32B8` snakes). Super Mouse
+  enemies can still spawn during the end-of-level fanfare; Funny Mouse's can't.
+- **Scores rebalanced upward** (BCD mid-byte = ×100):
+  | award | fm | sm |
+  |---|---|---|
+  | food pickup (`$2A4E`) | 200 | 100 |
+  | food returned home (`$3F31`) | 500 | 200 |
+  | cat killed — bomb `$128B` / water+return `$3A4A` | 400 | 100 |
+  | snake killed — bomb `$12EB` / water+return `$3A7F`, `$3A8A` | 800 | 200 |
+  | level-end survivor bonus step (`$2444`/`$2455`) | +8, `daa` | +2, no `daa` |
+
+  The enemy-death **score-popup sprites** track this: fm shows `$2A`/`$2B` ("400"/"800",
+  written at `$3140/$3174` cats, `$387E/$38B2` snakes) where sm shows `$28`/`$29` ("100"/"200").
+- **Extra lives** (inside `score_add_apply`, fm `$0668-$06BA` / sm `$0668-$069B`; `$8102` =
+  lives-awarded count, threshold DIP latched in `$8028`): sm awards **one** extra life at
+  5,000 or 10,000 (DIP). fm awards **two** — first at 10,000/20,000, second at 50,000/100,000 —
+  by incrementing `$8102` instead of sm's set-to-1.
+- **Boulder-vs-cat-B bugfix**: fm `boulder_hit_catB $3AF8` reads `$8505` (cat B *spawned*,
+  matching the catA/catC gates); sm reads `$8504` (the *enable* byte) — an off-by-one in the
+  parent that fm corrected.
+
+**Not real changes** (flagged by a raw diff but relocation-only): self-test message pointer
+table (fm `$0905`), demo-script pointer in `player_init_template` (+$24, fm `$2490`),
+`food_gfx_ptr_tbl $400E` (all 72 bytes are pointers into the shifted `food_gfx_data`), and
+every masked `call`/`jp`/`ld rr,nn` ROM-address operand. sm's content ends `$4C33` (vs fm
+`$4928`); both pad with zeros.
+
 ## 9. Labeling workflow
 
 There are **two labelling mechanisms**; pick by what the address *is*:
