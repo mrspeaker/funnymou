@@ -68,8 +68,8 @@ different spawn spot, entry delay, and drift habit. Here is the whole roster sid
 | **Cat 1** | `$2B75` | `$8510` | `$B4, $42` (180, 66) | top-right | 1 | **168f ≈ 2.8s** → 16f ≈ 0.3s | 1 px/f (**+⅓ after rage timer**) | ~128f ≈ 2.1s | **1-in-4** | junction **4** |
 | **Cat 2** | `$2BCB` | `$8550` | `$34, $42` (52, 66) | top-left | 3 | **1340f ≈ 22.3s** → 256f ≈ 4.3s | 1 px/f (**+⅓ after rage timer**) | ~128f ≈ 2.1s | 1-in-8 | junction **5** |
 | **Cat 3** | `$2C21` | `$8570` | `$34, $C2` (52, 194) | bottom-left | 4 | **396f ≈ 6.6s** → 16f ≈ 0.3s | 1 px/f (**+⅓ after rage timer**) | ~128f ≈ 2.1s | 1-in-8 | junction **7** |
-| **Snake 1** | `$3292` | `$8610` | `$B4, $C2` (180, 194) | bottom-right | 5 | **304f ≈ 5.1s** → 0f (instant) | 0.8 px/f (**½ or ¼ near food**) | ~128f ≈ 2.1s | 1-in-4 | junction **4** |
-| **Snake 2** | `$32D7` | `$8630` | `$B4, $C2` (180, 194) | bottom-right | 6 | **912f ≈ 15.2s** → 80f ≈ 1.3s | 0.8 px/f (**½ or ¼ near food**) | ~128f ≈ 2.1s | **1-in-4** | junction **2** |
+| **Snake 1** | `$3292` | `$8610` | `$B4, $C2` (180, 194) | bottom-right | 5 | **304f ≈ 5.1s** → 0f (instant) | 0.8 px/f (constant) | ~128f ≈ 2.1s | 1-in-4 | junction **4** |
+| **Snake 2** | `$32D7` | `$8630` | `$B4, $C2` (180, 194) | bottom-right | 6 | **912f ≈ 15.2s** → 80f ≈ 1.3s | 0.8 px/f (constant) | ~128f ≈ 2.1s | **1-in-4** | junction **2** |
 
 *(Frames assume 60 fps. Positions are game-logic coordinates; the screen is rotated 90°, so these map to physical corners as noted.)*
 
@@ -94,9 +94,10 @@ different spawn spot, entry delay, and drift habit. Here is the whole roster sid
   differently. **Cats** step 1 pixel *every* frame — and after the in-level **rage timer**
   expires (see the next section) they pulse to 2 px on one frame in three, i.e. **⅓ faster,
   permanently for that life**. **Snakes** run the same ±1 velocity through a frame-*skipping*
-  engine (`$3730`): normally they sit out 2 of every 10 frames (**≈0.8 px/frame**), and they
-  drop to **half or quarter speed while passing certain food pieces** — see "Snakes guard the
-  food" below. Snakes never speed up over time.
+  engine (`$3730`): they sit out 2 of every 10 frames, giving a constant **≈0.8 px/frame** on
+  every level. (The engine also contains dormant half- and quarter-speed "food guard" gears
+  that never trigger in the shipped mazes — see "Snake speed" below.) Snakes never speed up
+  over time.
 
 - **Emerge time** (the harmless blink-in) is also uniform: an internal counter climbs to 128
   (~2.1 s) before the enemy switches on and starts chasing.
@@ -151,56 +152,41 @@ Strategy-wise this is the game's anti-camping mechanic: at 1 px/frame the cats e
 your walking speed and can never close a gap on a straight run — after the rage timer they can.
 
 
-## Snakes guard the food
+## Snake speed — and the food-guard behaviour that never made it
 
-Snakes have their own speed system, and it has nothing to do with timers or levels: **snakes
-slow down near food**.
+Snakes never move every frame: their movement engine (`$3730`) skips 2 beats of every 10, so a
+snake runs at a constant **0.8 px/frame** — it crosses a maze cell in 10 frames where a cat
+takes 8 (6 once raged) and the mouse takes 8. That's the entire story of snake speed *in play*:
+slower than everything else, on every level, all the time.
 
-A snake never moves every frame. Its movement engine (`$3730`) skips beats, and *which* beats
-depends on what the snake is currently slithering past. Every step, the snake's movers probe
-two maze cells (the cell it's over and the cell ahead, the same cells it uses to follow the
-corridor) and look specifically for **food graphics**:
+But the engine contains more than the game ever uses. There are two extra gears — **half speed**
+(move every other frame, ~15 frames/cell) and **quarter speed** (1 frame in 4, ~28 frames/cell) —
+selected by two flags that the snake's movers recompute every step by probing nearby maze cells
+for **food graphics** (`$37E5`/`$380C`: tiles `$E1-$E4` → quarter, `$E0` → half). Snakes were
+designed to *slow down and linger around food* — a guard behaviour: cats hunt the mouse, snakes
+babysit the food.
 
-| What the probe sees | Flag set | Pace | Time to cross one maze cell |
-|---------------------|----------|------|------------------------------|
-| no food nearby | — | moves 8 of every 10 frames (**0.8 px/f**) | 10 frames |
-| a food type-0 *corner* tile (`$E0`) | `+$15` | every other frame (**½ speed**) | ~15 frames |
-| any other type-0 tile (`$E1-$E3`), or the `$E4` corner of type 1 | `+$13` | 1 frame in 4 (**¼ speed**) | ~28 frames |
+**It never triggers.** The probes look at feet-level cells (the platform row, or the ladder
+column being climbed), but food is drawn at body height — the two rows *above* each platform.
+Checking all four mazes: no food cell ever falls on a feet row or a ladder column, so the
+detectors read "no food" on every step of every level, and the ½/¼ gears never engage. The
+same mismatch neuters the other food quirk in this code: snakes' path threshold (`$DF`) would
+let them slither over food that cats (`$EF`) treat as a dead end — but since no one's path
+probe ever lands on a food cell, cats, snakes and mouse all pass through food identically.
+(Super Mouse ships the byte-identical engine, so the dormant behaviour is inherited from the
+parent — machinery for a feature that the shipped maze layouts never activate.)
 
-For comparison: a cat crosses a cell in 8 frames (6 once raged), and the mouse in 8.
-
-The tiles that trigger the crawl belong to specific food pieces: each maze's nine pieces cycle
-through five graphics, and the "slow" tiles (`$E0-$E4`) belong to **food type 0** (all four of
-its tiles) plus one corner of **type 1**. Every maze has **two type-0 pieces** — the strong
-slow zones — and one or two type-1 pieces with the weaker corner trigger. The flags refresh at
-every step, so the slowdown is a *local zone*: the snake crawls while its probes overlap the
-piece and resumes 0.8 px/f a cell later.
-
-The consequences are very visible in play:
-
-- **Snakes linger around food** — exactly the pieces you need — crawling past them at quarter
-  speed like guards on patrol. That's the design intent hiding in the code: cats hunt *you*,
-  snakes defend *the food*.
-- **Collecting food removes its slow zone** (the tiles are blanked from the maze). So as you
-  clear a level, the snakes' territory shrinks and they effectively get faster — the level
-  quietly tightens the screws the closer you are to finishing. Die while carrying a piece and
-  it's redrawn, slow zone included.
-- A related quirk of the corridor-following code: the two enemy types use different "is there
-  path here?" thresholds (`$DF` for snakes, `$EF` for cats), and drawn food tiles fall exactly
-  between them — so food reads as *walkable path* to a snake but as *no path* to a cat. Snakes
-  slither straight over the pieces they guard; cats treat those cells as dead ends.
-
-One more snake-only detail: the level-indexed parameter table `$31EF` looks like it should tune
-snake speed per level (it's loaded into the speed flag on respawn), but the movers overwrite
-that flag within one step — it's **vestigial**. Snake pace is the same on level 1 and level 50;
-only their arrival times change.
+One more dead end for completeness: the level-indexed parameter table `$31EF` looks like it
+should tune snake speed per level (it's loaded into the half-speed flag on respawn), but the
+movers overwrite that flag within one step — also **vestigial**. Snake pace is the same on
+level 1 and level 50; only their arrival times change.
 
 
 ## Getting around the maze
 
 Enemies look at the corridor ahead.  They stay on the proper paths and climb the ladders like the mouse does.
 
-**Cats and snakes follow the same corridors** — under the hood the two types run separate copies of the navigation logic against the same wall lattice. The one place they genuinely differ is **food**: a drawn food piece counts as path to a snake but as a wall to a cat (see "Snakes guard the food"), so a snake will slither over the piece it's guarding while a cat has to route around it.
+**Cats and snakes navigate identically in practice.** Under the hood the two types run separate copies of the navigation logic with *different* "is there path here?" thresholds — and drawn food tiles fall exactly between the two thresholds — but this never actually matters, because of *where* the checks look. Movement code probes at **feet level** (the platform row you're standing on, or the ladder column you're climbing), while food is drawn at **body height** (the two rows above the platform). In all four mazes, no food cell ever lands on a feet-row or ladder-column cell, so no one's pathing — cat, snake, or mouse — ever sees a food tile. That's why everyone walks straight through food. (Picking food up works because it's the one check aimed at body height: the game tests the mouse's *own* body cell for food tiles, not the floor.)
 
 ---
 
@@ -235,10 +221,8 @@ The chasing logic stays the same as you progress, but the pressure is dialled up
 - **The cats' rage timer shrinks.** The fuse before the cats speed up drops from 120 seconds on
   level 1 to 20 seconds by level 9, and from level 10 onward it's ~1 second — the cats
   effectively start every life already ⅓ faster than you.
-- **Snakes don't ramp with level at all** — their pace is food-driven (see "Snakes guard the
-  food") and identical on every level; only their arrival times shrink. But *within* a level
-  they effectively speed up as you collect food, because each collected piece deletes one of
-  their slow zones.
+- **Snakes don't ramp at all** — a constant 0.8 px/frame on every level; only their arrival
+  times shrink.
 
 ---
 

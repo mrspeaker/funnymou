@@ -5675,7 +5675,7 @@ mthing
     ld   hl,$0005
     add  hl,de
     ld   (hl),$00
- snake_speed_tiers:  ; food flags -> move 1-in-4 (+$13, food $E1-$E4) / 1-in-2 (+$15, $E0) / 6-in-8 (skip beats 3+5)
+ snake_speed_tiers:  ; food flags -> move 1-in-4 (+$13) / 1-in-2 (+$15) / 6-in-8 (skip beats 3+5). Flags never set in shipped mazes -> snakes always 6-in-8 ~= 0.8 px/f
     ex   de,hl
     dec  de
     ld   a,(de)
@@ -5818,7 +5818,7 @@ mthing
     ret
 
 
- snake_food_probeA:  ; tile at (bc+hl) in $E1-$E4? -> (de) flag +$13 (1 = quarter speed)
+ snake_food_probeA:  ; tile at (bc+hl) in $E1-$E4? -> (de) flag +$13 (1 = quarter speed). DORMANT: probes hit feet-row/ladder cells, food is drawn at body height -> never trips in shipped mazes
     add  hl,bc
     ld   a,$E1
     cp   (hl)
@@ -5844,7 +5844,7 @@ mthing
     ld   a,$01
     ld   (de),a
     ret
- snake_food_probeB:  ; tile at (bc+hl) == $E0? -> (de) flag +$15 (1 = half speed)
+ snake_food_probeB:  ; tile at (bc+hl) == $E0? -> (de) flag +$15 (1 = half speed). DORMANT (see snake_food_probeA)
     add  hl,bc
     ld   a,$E0
     cp   (hl)

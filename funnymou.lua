@@ -205,13 +205,13 @@ tap_cat2 = mem:install_write_tap(0x8504, 0x8504, "writes", function(offset, data
 end)
 -- ]]
 
---[[ Disable cat 3
+-- [[ Disable cat 3
 tap_cat3 = mem:install_write_tap(0x8506, 0x8506, "writes", function(offset, data)
    if data == 1 and peek(0x8030) == 1 then
       return 0
    end
 end)
---]]
+-- ]]
 
 tap_snake1 = mem:install_write_tap(0x8600, 0x8600, "writes", function(offset, data)
    if data == 1 and peek(0x8030) == 1 then
@@ -220,8 +220,10 @@ tap_snake1 = mem:install_write_tap(0x8600, 0x8600, "writes", function(offset, da
 end)
 
 
+--[[ Disable snaek 2
 tap_snake2 = mem:install_write_tap(0x8602, 0x8602, "writes", function(offset, data)
    if data == 1 and peek(0x8030) == 1 then
       return 0
    end
 end)
+--]]

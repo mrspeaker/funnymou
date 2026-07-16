@@ -5675,7 +5675,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 372A  210500  	    ld   hl,$0005
 372D  19      	    add  hl,de
 372E  3600    	    ld   (hl),$00
-                snake_speed_tiers:  ; food flags -> move 1-in-4 (+$13, food $E1-$E4) / 1-in-2 (+$15, $E0) / 6-in-8 (skip beats 3+5)
+                snake_speed_tiers:  ; food flags -> move 1-in-4 (+$13) / 1-in-2 (+$15) / 6-in-8 (skip beats 3+5). Flags never set in shipped mazes -> snakes always 6-in-8 ~= 0.8 px/f
 3730  EB      	    ex   de,hl
 3731  1B      	    dec  de
 3732  1A      	    ld   a,(de)
@@ -5818,7 +5818,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 37E4  C9      	    ret
 
 
-                snake_food_probeA:  ; tile at (bc+hl) in $E1-$E4? -> (de) flag +$13 (1 = quarter speed)
+                snake_food_probeA:  ; tile at (bc+hl) in $E1-$E4? -> (de) flag +$13 (1 = quarter speed). DORMANT: probes hit feet-row/ladder cells, food is drawn at body height -> never trips in shipped mazes
 37E5  09      	    add  hl,bc
 37E6  3EE1    	    ld   a,$E1
 37E8  BE      	    cp   (hl)
@@ -5844,7 +5844,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 3808  3E01    	    ld   a,$01
 380A  12      	    ld   (de),a
 380B  C9      	    ret
-                snake_food_probeB:  ; tile at (bc+hl) == $E0? -> (de) flag +$15 (1 = half speed)
+                snake_food_probeB:  ; tile at (bc+hl) == $E0? -> (de) flag +$15 (1 = half speed). DORMANT (see snake_food_probeA)
 380C  09      	    add  hl,bc
 380D  3EE0    	    ld   a,$E0
 380F  BE      	    cp   (hl)

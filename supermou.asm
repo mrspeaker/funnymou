@@ -1,3 +1,8 @@
+                 ;;; Super Mouse original
+                 ;;; ... Funny Mouse is extremely close
+                 ram_start       = $8000
+
+0000          	start:
 0000  00      	 nop
 0001  00      	 nop
 0002  00      	 nop
