@@ -275,20 +275,25 @@ Bases: **`$8510`, `$8550`, `$8570`** (cats A/B/C, page-$85 manager `$2A51`) and
 | +$00 | step/move counter |
 | +$03 | sprite-slot link (low byte of `$80xx` mirror addr: `$05`/`$0D`/`$11`/`$15`/`$19`) |
 | +$04 | base **sprite code** (+flip) → sprite +1 (6-bit); cats `$1C`, snakes `$2C` at spawn |
-| +$07 | **AI state**: 1=appear/emerge (→3 when emerge-ctr `+$13`≥`$80`), 3=active chase (only active state), 4=dying/return start, 5/6/7=return-home→respawn |
+| +$07 | **AI state**: 1=appear/emerge (→3 when emerge-ctr **`+$1A`**≥`$80`; the transition also clears the busy lock `+$1B`), 3=active chase (only active state), 4=dying/return start, 5/6/7=return-home→respawn |
 | +$08 | **X** (game-logic, joystick axis) → sprite +0 (HW-Y; ROT90). funnymou `cat1_x`=`$8518` |
 | +$09 | **Y** (game-logic) → sprite +3 (HW-X; ROT90). funnymou `cat1_y`=`$8519` |
 | +$0A | **chase direction bitmask** (`catN_dir`): `$01`=X− `$02`=X+ `$04`=Y+ `$08`=Y−; `$00`=aligned. Written by `enemy_chase`, read by mover dispatch `$2DF8` |
 | +$0D..+$11 | velocity/direction deltas (`$FF`/`$01` = ±1) |
-| +$12 | **chase axis toggle** (`catN_axis`): `0`⇒steer Y next (vs `$8003`), `1`⇒steer X next (vs `$8000`). Init `0` → Y checked first (see §6) |
-| +$17 | move-timing / re-steer gate counter (decrements; re-evaluates dir at 0) |
-| +$18/$19 | 16-bit AI waypoint-table pointer (level-indexed; via `$31CF`) |
+| +$12 | cats: **chase axis toggle** (`catN_axis`): `0`⇒steer Y next (vs `$8003`), `1`⇒steer X next (vs `$8000`). Init `0` → Y checked first. Snakes: a **0-8 beat counter** (`$3403`, wraps at 9): beats 1/3/4/6 steer X, the other five steer Y — so a snake's *first* steer is horizontal and it favours vertical 5:4 (see §6) |
+| +$13 | snakes: **food-proximity flag A** — rewritten every aligned step by the movers (`$37E5` probe): 1 if a probe cell holds food tile `$E1-$E4` → move 1-in-4 frames (¼ speed). Cats: unused scratch |
+| +$15 | snakes: **food-proximity flag B** — rewritten every aligned step (`$380C` probe): 1 if a probe cell holds food tile `$E0` → move 1-in-2 frames (½ speed). The `enemy_lvl_param_tbl $31EF` respawn load into `+$15/+$16` is overwritten within a step — effectively vestigial. Cats: movers overwrite `+$15` with a `check_tile_wall` result (also unread) |
+| +$16 | cats: 3-phase speed-pulse counter used by `$3017` when the `+$1F` speed-up flag is set |
+| +$17 | move-timing / re-steer gate counter (decrements; re-evaluates dir at 0). Snakes reload it at each junction with `$10` or `$30` (16/48 frames, by bit 4 of the junction counter `+$1C`; snake B phase-shifted +24) — so snakes commit to a heading in long beats |
+| +$18/$19 | **spawn-delay countdown** (level-indexed 16-bit *value*, not a pointer — loaded via `$31CF` from `$2B5A`/`$2BB0`/`$2C06` cats, `spawn_delay_sa/sb` snakes): `+$18` counts frames (reload `$3C` cats / `$FF` snakes at 0), `+$19` = outer count; enemy may spawn once both are 0 (`enemy_spawn_gate $2AF1` / snake twin `$3256`) |
 | +$1A | appear/spawn timer |
 | +$1B | busy/not-collidable lock (1 while appearing or dying) |
 | +$1C | step counter (per-enemy "drift" gate; see §6) |
-| +$1D/$1E | 16-bit secondary pointer (level-indexed) |
+| +$1D/$1E | **cats: speed-up countdown** (level-indexed value from `cat_speedup_tbl $2B28`, not a pointer): `+$1D` counts frames (reload `$3C` at 0), `+$1E` = seconds; on expiry sets `+$1F` (see §6 "time-based speed-up"). Snakes: never loaded — `+$1D` is instead their step-phase counter for the frame-skip speed tiers |
+| +$1F | **cats: speed-up flag** — 0 until the `+$1D/+$1E` countdown expires, then 1; while set, `$3017` pulses the velocity bytes (`+$0C`/`+$0F`) between ±1 and ±2 on a 3-frame cycle (≈+33% speed). Cleared only by `cat_ai_init_clear $2B1F` at play-start |
 
-*(Offsets +$01/+$02/+$05/+$06/+$0B/+$13/+$14 are enemy scratch fields not yet pinned down.)*
+*(Offsets +$01/+$02/+$05/+$0B are enemy scratch fields not yet pinned down; `+$06` is a blocked/stuck
+counter, `+$14` is the snakes' ¼-speed phase counter (and general anim scratch).)*
 
 ### Enemy control blocks
 Small 16-byte blocks `$8500-$850F` (page 85, cats) and `$8600-$860F` (page 86, snakes) hold,
@@ -306,8 +311,8 @@ per enemy, a `[enable, spawned]` byte pair used as the "present"/spawn guard:
 | `$2C21` | `$1D` | `$8570` | Cat C |
 | `$3292` | `$20` | `$8610` | Snake A |
 | `$32D7` | `$20` | `$8630` | Snake B |
-| `$2B5A`/`$2BB0`/`$2C06` | — | rec+$18 | per-enemy AI waypoint tables (via `$31CF`) |
-| `$2B28` | — | rec+$1D | shared secondary table (via `$31CF`) |
+| `$2B5A`/`$2BB0`/`$2C06` | — | rec+$18 | per-cat level-indexed **spawn-delay** values (via `$31CF`) |
+| `$2B28` | — | rec+$1D | shared level-indexed **speed-up delay** values, cats only (via `$31CF`) |
 
 ### Bomb (`$8680`) and boulder (`$85C0`)
 Both draw into slot 7 (mutually exclusive). **The `$8680` object is the player's BOMB** —
@@ -599,15 +604,43 @@ bytes, not VRAM. (The `$14…`/`$22…` values are position coordinates, *not* "
 3. **Wall / maze checks.** Helper **`$30B3`** (a per-actor clone of `$251B`) converts the
    enemy's own X/Y into a VRAM tile address (`$9000`+). Each per-direction mover reads the tile
    ahead and compares it to a threshold; if blocked it re-rolls a direction. Cats and snakes have
-   **separate copies** of the movers (cats `$2EC4`/`$2F10`/`$2F5C`/`$2FAA`; snakes the twins at
-   `$3541`/`$353B`/`$3535`/`$358C`…), and the copies use **slightly different thresholds** (cats
-   compare against `$EF`, snakes against `$DF`, plus `$E4`/`$EC` checks). **But this makes no
-   practical difference in the shipped mazes**: the 4 maze banks contain only tile codes
-   `$25`/`$35`/`$36`/`$37`/`$38`/`$F4`/`$F5`/`$F6`/`$F9`/`$FC`/`$FD`/`$FF` — **nothing in the
-   `$E0-$EF` band** where the two thresholds diverge — so cats and snakes navigate the *same*
-   walls identically. (Junctions themselves are *not* marked by maze tiles — they are detected
-   from the enemy's own X/Y hitting the decision lattice; see "Junction detection is geometric"
-   above.)
+   **separate copies** of the movers (cats `$2EC4`/`$2F10`/`$2F5C`/`$2FAA`; snakes at
+   `$359F`/`$35FA`/`$3655`/`$36B2`), and the copies use **different rail thresholds**: the mover
+   proceeds only if the probe cell's tile is *above* the threshold — cats need > `$EF`
+   (`jp nc,$2E1C` re-roll otherwise, all 4 movers), snakes need > `$DF`. The static maze banks
+   contain nothing in `$E0-$EF`, **but the 9 food pieces are drawn into VRAM as tiles `$DC-$EF`**
+   (`food_gfx_data $405D`) — so the thresholds *do* diverge in play, exactly across the food
+   band: food tiles read as "rail present" to snakes (except type-4 food `$DC-$DF`) but as "no
+   rail" to cats. This same food band drives the **snake slow-down** (see "SNAKE speed" below).
+   (Junctions themselves are *not* marked by maze tiles — they are detected from the enemy's own
+   X/Y hitting the decision lattice; see "Junction detection is geometric" above.)
+
+### SNAKE speed — frame-skipping + the food-guard slow-down (no rage timer)
+Snakes never move every frame. Their apply path (`$3730`, reached from `$3710` mid-cell /
+`$3722` from the movers) picks one of three **frame-skip tiers** from two flags:
+- `+$13`≠0 → move only when phase `+$14`&3==1 → **1-in-4 frames (¼ speed)**
+- else `+$15`≠0 → move when phase `+$1D`&1==1 → **1-in-2 (½ speed)**
+- else → skip phases 3 and 5 of `+$1D`&7 → **6-in-8**; with the phase reset each cell an 8-px
+  cell takes 10 frames ≈ **0.8 px/frame** (½ tier ≈ 15 frames/cell, ¼ tier ≈ 28).
+
+The flags are **food-proximity detectors, rewritten every aligned step by the movers**: each
+mover probes two cells (its own-cell offset `-$1E` and its direction's ahead cell — the same
+cells as the rail check) via `$37E5` (tile ∈ `$E1-$E4` → `+$13`=1) and `$380C` (tile == `$E0` →
+`+$15`=1). Tiles `$E0-$E4` exist in VRAM **only as drawn food**: food type 0 = tiles `$E0-$E3`,
+and `$E4` is the corner tile of type 1 (`food_gfx_data $405D`). So **snakes slow to ½/¼ speed
+while passing the type-0 food pieces** (2 per maze; plus the type-1 corner, 1-2 per maze) — a
+food-guarding behaviour. Picked-up food blanks the tiles, so the slow zones **disappear as the
+level is cleared** (and return if the player dies while carrying). Both tier phase counters are
+zeroed by the movers each cell (`$3722`), and the movers always move on the reset frame.
+`+$16` is not read by the snake movement path (the `$31EF` respawn load is vestigial for both
+types — cat movers likewise overwrite `+$15` with a `check_tile_wall` result nothing reads).
+
+Snake steering also differs from the cats' strict Y/X alternation: `+$12` is a **9-beat counter**
+(`$3403`: inc, wrap at 9) — beats 1/3/4/6 steer X, beats 2/5/7/8/0 steer Y, so the first steer
+after spawn is **horizontal** and vertical is favoured 5:4. At each junction the re-steer hold
+`+$17` is reloaded with `$10` or `$30` (16 or 48 frames — bit 4 of junction counter `+$1C`;
+snake B adds `$18` so it starts in the long-hold phase), so snakes commit to headings in long,
+floaty beats. Their drift gates match the doc'd pattern (A: skip re-aim when cnt&3==0; B: ==2).
 
 4. **Fall-and-die on open water (bridge/platform).** *Before* moving, once grid-aligned, the
    engine reads the enemy's **current cell** (`$30B3`→addr, `+$FFE2`) and compares it to `$FE`
@@ -628,10 +661,36 @@ bytes, not VRAM. (The `$14…`/`$22…` values are position coordinates, *not* "
 - **Level-scaled spawn timing** (snakes): `$32F7` reads the level counter `$8101`
   (clamped to 9) and indexes 16-bit delay tables **`$3315`** (snake A) and **`$332B`** (snake B).
   Higher level → shorter delay → snakes enter sooner; snake B always lags snake A (staggered entry).
-- **Per-enemy move-delay counter** (record +$00 / +$1A region) throttles steps → effective
-  per-enemy **speed** knob.
-- **Level-indexed AI pointer tables** (record +$18/+$1D, loaded via `$31CF` from
-  `$2B5A`/`$2BB0`/`$2C06`) give per-enemy waypoint/behavior data that changes with the level.
+  Cats have the same mechanism inside the manager: per-cat level-indexed spawn-delay values
+  `$2B5A`/`$2BB0`/`$2C06` → record `+$18/+$19`, counted down by `enemy_spawn_gate $2AF1`
+  (`+$18` frames, reload `$3C`; `+$19` outer count). *(These were previously mislabelled
+  "AI waypoint-table pointers" — they are plain 16-bit delay values, not pointers.)*
+
+### Time-based CAT speed-up (the in-level "rage timer") — cats only
+Play a level long enough and the **cats speed up by ~33%, permanently for that life**. Traced:
+
+- **Countdown.** `cat_ai $2C3E` has a prelude *before* the state dispatch (`$2C40-$2C4C`):
+  if the speed-up flag `+$1F` is clear it reuses the `enemy_spawn_gate $2AF1` code (bc=`$FFEA`)
+  as a countdown on **`+$1D` (frames, reload `$3C`=60) / `+$1E` (seconds)**. The pair is loaded
+  at cat AI-init from **`cat_speedup_tbl $2B28`** (shared by all 3 cats, level-indexed, clamped
+  to 9): `$78`=120 s on level 1, then 100/90/70/60/50/40/30/20 s, and `$00` (≈1 s) from level 10 on.
+- **Trigger.** When the countdown hits 0, `+$1F`=1 is set immediately in non-chase states, or —
+  in state 3 — on the next frame the cat is grid-aligned (`+$08 & 7 == 4 && +$09 & 7 == 2`),
+  so the transition is seamless mid-corridor.
+- **Effect.** With `+$1F` set, the movement-apply path (`$3053-$3057`) calls **`$3017`** every
+  step: a 3-phase counter at `+$16` toggles the velocity bytes `+$0C`/`+$0F` between ±1 and ±2
+  (`$2FF9` = 1→2/`$FF`→`$FE`, `$3008` = back), giving 2,1,1 px per 3 frames = **4/3 speed**.
+- **Persistence.** Nothing in the death/return/respawn handlers (`$30DD-$31CB`) touches
+  `+$1D/+$1E/+$1F`, and the cat re-template `ldir` is only `$1D`=29 bytes (`+$00..+$1C`) — so a
+  killed cat **respawns still sped-up**. The flag is only cleared by `cat_ai_init_clear $2B1F`,
+  which runs when the AI-init flags (`$8508/$850A/$850B`) are 0 — and play-start `$200A` clears
+  `$8500-$850F` every life/level start. So the timer **resets when the player dies or the level
+  changes**, never within a life. Each cat's countdown ticks only while its record is active
+  (from its first spawn), so the three cats speed up in spawn order, each ~2 min (level 1) after
+  entering.
+- **Snakes never get this.** `snake_ai $333F` has no countdown prelude, the snake templates
+  zero `+$1D/+$1E/+$1F`, and the snake mgr loads only spawn delays. Snake speed instead comes
+  from **frame-skipping tiers driven by food proximity** — see "SNAKE speed" below.
 
 ### Supporting subsystems (enemy-related but not movement AI)
 - **`$394B`** — enemy death/return-home driver (the `enemy_eaten_sm` label is a misnomer; there
@@ -926,6 +985,25 @@ str_special_bonus   $43C2 ; "SPECIAL BONUS  CREDIT PLUS 1"                      
 str_lucky_mouse     $45C9 ; "VERY LUCKY MOUSE" ($FE-term)                          [data]
 coin_copyright_table $488F ; INSERT COIN / COIN PLAY / (c)1982 CHUO CO.,LTD        [data]
 licensee_text       $491A ; "CHUO CO.,LTD" credit -> VRAM $9100 by draw at $48FA   [data]
+
+; --- snake-engine pass (2026-07): speed tiers, food probes, steer rhythm (see §6 "SNAKE speed") ---
+snake_spawn_gate    $3256 ; snake spawn countdown: +$18 frames (reload $FF) / +$19 outer -> enable
+snake_chase         $33FD ; steer toward player on the 9-beat +$12 pattern (beats 1/3/4/6 = X) -> dir +$0A
+snake_drift_gate    $344B ; junction: bump +$1C, re-aim unless drift beat (A: cnt&3==0, B: ==2), reload +$17 hold $10/$30
+snake_halt          $34EE ; no/blocked heading: zero velocities +$0C/+$0F, dec stuck ctr +$06
+snake_blocked       $3501 ; rail check failed -> pick a new direction (ld a,r random / toward player)
+snake_mover_xm      $359F ; X- mover: clamp $0C, rail cell+2 > $DF, food probes -> +$13/+$15, vX=-1
+snake_mover_xp      $35FA ; X+ mover: clamp $E4, rail cell-62, food probes, vX=+1
+snake_mover_yp      $3655 ; Y+ mover: clamp $EC, rail cell-29, food probes, vY=+1
+snake_mover_ym      $36B2 ; Y- mover: clamp $14, rail cell-31, food probes, vY=-1
+snake_move_midcell  $3710 ; between cell centers: keep food flags, run speed tiers
+snake_step_reset    $3722 ; mover exit: zero tier phase ctrs +$1D/+$14, then speed tiers
+snake_speed_tiers   $3730 ; food flags -> move 1-in-4 (+$13) / 1-in-2 (+$15) / 6-in-8 gate
+snake_move_skip     $3768 ; skip movement this frame (anim/commit only)
+snake_move_apply    $3774 ; add velocities to X/Y, advance walk anim, commit sprite
+get_tile_pos_b      $37CA ; snake twin of get_tile_pos: X/Y -> VRAM cell addr in hl
+snake_food_probeA   $37E5 ; tile at probe cell in $E1-$E4? -> +$13 flag (quarter speed)
+snake_food_probeB   $380C ; tile at probe cell == $E0? -> +$15 flag (half speed)
 ```
 
 (`spawn_delay_sa`/`sb` and `food_pos_tbl` are *data tables*, but they are pointer-load targets

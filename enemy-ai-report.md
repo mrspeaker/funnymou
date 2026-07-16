@@ -21,9 +21,9 @@ While an enemy is still emerging it is **harmless and untouchable** - it can't c
 
 **The enemy always heads toward wherever the mouse is right now.** It doesn't plan a clever route or remember where you've been - it just greedily moves in your direction, re-deciding as it goes. The maze is a grid of corridors, so an enemy can only actually change direction at an **intersection**. Every time it reaches one, it makes a fresh decision.
 
-At each intersection the enemy only corrects ONE direction at a time, and it alternates between them. First it asks "is the mouse above or below me?" and turns toward you vertically. At the next intersection it asks "Is the mouse left or right of me?" and turns toward you horizontally. Then vertical again, then horizontal, and so on.
+At each intersection the enemy only corrects ONE direction at a time. **Cats alternate strictly**: first "is the mouse above or below me?" (turn vertically), at the next intersection "left or right?" (turn horizontally), then vertical again, and so on. When a cat first appears, its first decision is always *vertical*.
 
-When it first appears, an enemy always makes a *vertical* decision first.
+**Snakes run a different rhythm.** Instead of a strict alternation they follow a repeating **9-beat pattern** — horizontal on beats 1, 3, 4 and 6, vertical on the other five — so a snake's *first* decision is **horizontal**, and over time it corrects vertically slightly more often than horizontally (5:4). On top of that, after each decision a snake **locks its heading for 16 or 48 frames** (the two hold lengths alternate in long blocks), which is why snakes feel committed and floaty where cats feel twitchy and reactive.
 
 
 ## The "same lane" rule
@@ -63,16 +63,15 @@ Cat 2 sits in between - same drift *rate* as cat 3, but it's allowed to start dr
 All five enemies share one brain, but each is seeded from its own template in ROM with a
 different spawn spot, entry delay, and drift habit. Here is the whole roster side by side:
 
-| Enemy | Template | Record | Spawn (X, Y) | Corner | Sprite slot | Entry delay (Lvl 1 → Lvl 10) | Base speed | Emerge time | Drift rate | First drift | Opening turn |
-|-------|----------|--------|--------------|--------|-------------|------------------------------|-----------|-------------|-----------|-------------|--------------|
-| **Cat 1** | `$2B75` | `$8510` | `$B4, $42` (180, 66) | top-right | 1 | **168f ≈ 2.8s** → 16f ≈ 0.3s | 1 px/frame | ~128f ≈ 2.1s | **1-in-4** | junction **4** | vertical |
-| **Cat 2** | `$2BCB` | `$8550` | `$34, $42` (52, 66) | top-left | 3 | **1340f ≈ 22.3s** → 256f ≈ 4.3s | 1 px/frame | ~128f ≈ 2.1s | 1-in-8 | junction **5** | vertical |
-| **Cat 3** | `$2C21` | `$8570` | `$34, $C2` (52, 194) | bottom-left | 4 | **396f ≈ 6.6s** → 16f ≈ 0.3s | 1 px/frame | ~128f ≈ 2.1s | 1-in-8 | junction **7** | vertical |
-| **Snake 1** | `$3292` | `$8610` | `$B4, $C2` (180, 194) | bottom-right | 5 | **304f ≈ 5.1s** → 0f (instant) | 1 px/frame | ~128f ≈ 2.1s | 1-in-4 | junction **4** | vertical |
-| **Snake 2** | `$32D7` | `$8630` | `$B4, $C2` (180, 194) | bottom-right | 6 | **912f ≈ 15.2s** → 80f ≈ 1.3s | 1 px/frame | ~128f ≈ 2.1s | **1-in-4** | junction **2** | vertical |
+| Enemy | Template | Record | Spawn (X, Y) | Corner | Sprite slot | Entry delay (Lvl 1 → Lvl 10) | Base speed | Emerge time | Drift rate | First drift |
+|-------|----------|--------|--------------|--------|-------------|------------------------------|-----------|-------------|-----------|-------------|
+| **Cat 1** | `$2B75` | `$8510` | `$B4, $42` (180, 66) | top-right | 1 | **168f ≈ 2.8s** → 16f ≈ 0.3s | 1 px/f (**+⅓ after rage timer**) | ~128f ≈ 2.1s | **1-in-4** | junction **4** |
+| **Cat 2** | `$2BCB` | `$8550` | `$34, $42` (52, 66) | top-left | 3 | **1340f ≈ 22.3s** → 256f ≈ 4.3s | 1 px/f (**+⅓ after rage timer**) | ~128f ≈ 2.1s | 1-in-8 | junction **5** |
+| **Cat 3** | `$2C21` | `$8570` | `$34, $C2` (52, 194) | bottom-left | 4 | **396f ≈ 6.6s** → 16f ≈ 0.3s | 1 px/f (**+⅓ after rage timer**) | ~128f ≈ 2.1s | 1-in-8 | junction **7** |
+| **Snake 1** | `$3292` | `$8610` | `$B4, $C2` (180, 194) | bottom-right | 5 | **304f ≈ 5.1s** → 0f (instant) | 0.8 px/f (**½ or ¼ near food**) | ~128f ≈ 2.1s | 1-in-4 | junction **4** |
+| **Snake 2** | `$32D7` | `$8630` | `$B4, $C2` (180, 194) | bottom-right | 6 | **912f ≈ 15.2s** → 80f ≈ 1.3s | 0.8 px/f (**½ or ¼ near food**) | ~128f ≈ 2.1s | **1-in-4** | junction **2** |
 
-*(Frames assume 60 fps. Positions are game-logic coordinates; the screen is rotated 90°, so
-these map to physical corners as noted.)*
+*(Frames assume 60 fps. Positions are game-logic coordinates; the screen is rotated 90°, so these map to physical corners as noted.)*
 
 **Reading the table:**
 
@@ -91,10 +90,13 @@ these map to physical corners as noted.)*
   > 60), while the *snakes'* countdown is a plain 16-bit **frame** count. Both tick down once per
   > frame; the numbers above are the resulting real times.
 
-- **Base speed is identical for everyone** — one pixel per frame, applied every frame, using the
-  same ±1 velocity in every template. There is *no* per-enemy or per-level speed knob in the
-  shipped data; enemies feel faster on later levels only because they arrive sooner and you have
-  less room, not because they actually move quicker.
+- **Base speed.** Every template ships the same ±1 velocity, but the two types apply it
+  differently. **Cats** step 1 pixel *every* frame — and after the in-level **rage timer**
+  expires (see the next section) they pulse to 2 px on one frame in three, i.e. **⅓ faster,
+  permanently for that life**. **Snakes** run the same ±1 velocity through a frame-*skipping*
+  engine (`$3730`): normally they sit out 2 of every 10 frames (**≈0.8 px/frame**), and they
+  drop to **half or quarter speed while passing certain food pieces** — see "Snakes guard the
+  food" below. Snakes never speed up over time.
 
 - **Emerge time** (the harmless blink-in) is also uniform: an internal counter climbs to 128
   (~2.1 s) before the enemy switches on and starts chasing.
@@ -106,15 +108,99 @@ these map to physical corners as noted.)*
   reset the counter). Snake 2 is notably twitchy — same 1-in-4 rate as cat 1 but allowed to drift
   as early as its **2nd** junction.
 
-- **Opening turn** is vertical for all five: every template spawns the axis-toggle at 0, so the
-  first steer after appearing always corrects the vertical axis first (see "The same-lane rule").
+- **Opening turn**: vertical for the three cats (every cat template spawns the axis-toggle at 0),
+  **horizontal for both snakes** (their 9-beat steer counter starts on a horizontal beat — see
+  "Enemy chasing").
+
+
+## The rage timer — cats speed up if you take too long
+
+Dawdle on a level and the **cats get 33% faster — permanently, for the rest of that life**.
+
+Each cat carries its own countdown (record `+$1D/+$1E`, loaded from the shared level-indexed
+table `cat_speedup_tbl $2B28`). It ticks once per frame in the `cat_ai $2C3E` prelude — in
+*every* state, so it keeps running while the cat is emerging, chasing, dying, or walking home.
+When it expires, a one-way flag (`+$1F`) is set and the movement code starts calling the
+velocity pulser `$3017`: a 3-phase counter toggles the cat's velocity between ±1 and ±2, so it
+covers 4 pixels every 3 frames instead of 3 — exactly **4/3 speed**.
+
+**How long you get** (per cat, from the moment that cat first enters the maze):
+
+| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10+ |
+|-------|---|---|---|---|---|---|---|---|---|-----|
+| Fuse  | **120s** | 100s | 90s | 70s | 60s | 50s | 40s | 30s | 20s | **~1s** |
+
+From level 10 on the fuse is effectively zero — the cats are simply always in fast mode.
+
+The fine print:
+
+- **Each cat has its own timer**, but they all use the same fuse length, so they rage in spawn
+  order: on level 1, cat 1 speeds up ~2 minutes after its 2.8s entrance, cat 3 ~2 minutes after
+  its 6.6s entrance, and so on.
+- **Killing a raged cat doesn't help.** The respawn template copy is only 29 bytes and stops
+  just short of the timer fields, so a bombed, squashed, or drowned cat **comes back still
+  fast**.
+- **Dying resets everything.** Losing a life clears the cats' init flags (`$200A` wipes
+  `$8500-$850F`), which reloads all three timers — a fresh 2 minutes on level 1.
+- **The switch is seamless**: mid-chase, the flag waits until the cat is exactly grid-aligned
+  before flipping, so you never see a stutter — the cat just quietly starts gaining on you.
+- **Snakes are exempt.** Their engine (`snake_ai $333F`) has no countdown at all; the byte the
+  cats use for the rage timer is repurposed in snakes as their frame-skip phase counter.
+
+Strategy-wise this is the game's anti-camping mechanic: at 1 px/frame the cats exactly match
+your walking speed and can never close a gap on a straight run — after the rage timer they can.
+
+
+## Snakes guard the food
+
+Snakes have their own speed system, and it has nothing to do with timers or levels: **snakes
+slow down near food**.
+
+A snake never moves every frame. Its movement engine (`$3730`) skips beats, and *which* beats
+depends on what the snake is currently slithering past. Every step, the snake's movers probe
+two maze cells (the cell it's over and the cell ahead, the same cells it uses to follow the
+corridor) and look specifically for **food graphics**:
+
+| What the probe sees | Flag set | Pace | Time to cross one maze cell |
+|---------------------|----------|------|------------------------------|
+| no food nearby | — | moves 8 of every 10 frames (**0.8 px/f**) | 10 frames |
+| a food type-0 *corner* tile (`$E0`) | `+$15` | every other frame (**½ speed**) | ~15 frames |
+| any other type-0 tile (`$E1-$E3`), or the `$E4` corner of type 1 | `+$13` | 1 frame in 4 (**¼ speed**) | ~28 frames |
+
+For comparison: a cat crosses a cell in 8 frames (6 once raged), and the mouse in 8.
+
+The tiles that trigger the crawl belong to specific food pieces: each maze's nine pieces cycle
+through five graphics, and the "slow" tiles (`$E0-$E4`) belong to **food type 0** (all four of
+its tiles) plus one corner of **type 1**. Every maze has **two type-0 pieces** — the strong
+slow zones — and one or two type-1 pieces with the weaker corner trigger. The flags refresh at
+every step, so the slowdown is a *local zone*: the snake crawls while its probes overlap the
+piece and resumes 0.8 px/f a cell later.
+
+The consequences are very visible in play:
+
+- **Snakes linger around food** — exactly the pieces you need — crawling past them at quarter
+  speed like guards on patrol. That's the design intent hiding in the code: cats hunt *you*,
+  snakes defend *the food*.
+- **Collecting food removes its slow zone** (the tiles are blanked from the maze). So as you
+  clear a level, the snakes' territory shrinks and they effectively get faster — the level
+  quietly tightens the screws the closer you are to finishing. Die while carrying a piece and
+  it's redrawn, slow zone included.
+- A related quirk of the corridor-following code: the two enemy types use different "is there
+  path here?" thresholds (`$DF` for snakes, `$EF` for cats), and drawn food tiles fall exactly
+  between them — so food reads as *walkable path* to a snake but as *no path* to a cat. Snakes
+  slither straight over the pieces they guard; cats treat those cells as dead ends.
+
+One more snake-only detail: the level-indexed parameter table `$31EF` looks like it should tune
+snake speed per level (it's loaded into the speed flag on respawn), but the movers overwrite
+that flag within one step — it's **vestigial**. Snake pace is the same on level 1 and level 50;
+only their arrival times change.
 
 
 ## Getting around the maze
 
 Enemies look at the corridor ahead.  They stay on the proper paths and climb the ladders like the mouse does.
 
-**Cats and snakes navigate the maze the same way.** Under the hood the two types run separate copies of the navigation logic, but in the actual mazes those copies behave identically, so you can treat every enemy's pathing the same.
+**Cats and snakes follow the same corridors** — under the hood the two types run separate copies of the navigation logic against the same wall lattice. The one place they genuinely differ is **food**: a drawn food piece counts as path to a snake but as a wall to a cat (see "Snakes guard the food"), so a snake will slither over the piece it's guarding while a cat has to route around it.
 
 ---
 
@@ -136,7 +222,7 @@ So every "kill" is really you **using the maze against them** - steering a chase
 
 ## After an enemy dies
 
-A defeated enemy isn't gone for good. It plays a short death sequence and disappears and then **comes back into play** at the original spawn point. Clearing enemies buys you breathing room and **awards points** (worth progressively more).
+A defeated enemy isn't gone for good. It plays a short death sequence and disappears and then **comes back into play** at the original spawn point. Clearing enemies buys you breathing room and **awards points** (worth progressively more). One thing death does *not* reset: a cat that had already hit its rage timer **respawns still sped-up** — only losing a life (or finishing the level) calms the cats back down.
 
 ---
 
@@ -146,11 +232,21 @@ The chasing logic stays the same as you progress, but the pressure is dialled up
 
 - **Enemies arrive sooner.** On higher levels the delay before enemies (especially the snakes) enter the maze shrinks, so you get less of a head start.
 - **Snakes enter staggered.** The second snake always trails the first, so the danger builds in waves rather than all at once.
-- **Speed and behaviour are tuned per enemy and per level**, so later mazes feel faster and more relentless even though the underlying "chase the mouse" rule never changes.
+- **The cats' rage timer shrinks.** The fuse before the cats speed up drops from 120 seconds on
+  level 1 to 20 seconds by level 9, and from level 10 onward it's ~1 second — the cats
+  effectively start every life already ⅓ faster than you.
+- **Snakes don't ramp with level at all** — their pace is food-driven (see "Snakes guard the
+  food") and identical on every level; only their arrival times shrink. But *within* a level
+  they effectively speed up as you collect food, because each collected piece deletes one of
+  their slow zones.
 
 ---
 
 ## Appendix — the decision logic in pseudo-code
+
+*(This is the **cat** version. Snakes differ as described above: `axis_toggle` is a 9-beat
+counter instead of a flip-flop, `move_timer` is reloaded with 16 or 48 at each junction, and
+`move_enemy` runs through the food-aware frame-skipping engine.)*
 ```python
 # Enemy record fields it touches:
 #   x, y          +$08/+$09  grid position (game axes; screen is rotated 90°)
@@ -160,7 +256,7 @@ The chasing logic stays the same as you progress, but the pressure is dialled up
 #   junc_counter  +$1C       +1 at each junction; feeds the per-cat drift gate
 #   player.x / player.y  = sprite bytes $8000 / $8003 (the mouse, right now)
 
-
+```python
 JUNCTION_COLS = {0x14, 0x34, 0x54, 0x74, 0x94, 0xB4, 0xD4}   # $14 + $20*n
 JUNCTION_ROWS = {0x22, 0x42, 0x62, 0x82, 0xA2, 0xC2, 0xE2}   # $22 + $20*n
 
@@ -219,6 +315,7 @@ def move_enemy(e):                        # mover dispatch $2DF8 + per-dir mover
     commit_to_sprite(e)                   # $309C: write y/tile/color/x to sprite mirror
 ```
 
+```
 
 - **Alternating axis checks.** `enemy_chase` fixes only *one* axis per junction, flipping `axis_toggle` each time (Y first after spawn). 
 

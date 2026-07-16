@@ -93,9 +93,9 @@
                     cat1_dir        = $851A ; +0A chase direction bitmask: $01=X- $02=X+ $04=Y+ $08=Y- (game axes); $00=aligned. Written by enemy_chase, read by mover dispatch $2DF8
                     cat1_scr0b      = $851B ; +0B unidentified (previously mislabeled "dir")
                     cat1_axis       = $8522 ; +12 chase axis toggle: 0=>steer Y next (vs $8003), 1=>steer X next (vs $8000). Init 0 so Y is checked first (see enemy_chase)
-                    cat1_ai_ptr     = $8528 ; +18 AI-waypoint ptr (from $2B5A via $31CF)
+                    cat1_spawn_dly  = $8528 ; +18/+19 spawn-delay countdown (value from $2B5A via $31CF; +18 frames reload $3C, +19 outer)
                     cat1_busy       = $852B ; +1B busy / no-collide lock
-                    cat1_ptr2       = $852D ; +1D secondary ptr (from $2B28 via $31CF)
+                    cat1_speedup_tmr = $852D ; +1D/+1E speed-up countdown (value from cat_speedup_tbl via $31CF; expiry sets +1F -> 4/3 speed)
 
                     cat2_bytes      = $8550 ; 29 bytes: to 856D
                     cat2_slot       = $8553
@@ -105,9 +105,9 @@
                     cat2_y          = $8559
                     cat2_dir        = $855A ; +0A chase direction bitmask (see cat1_dir)
                     cat2_axis       = $8562 ; +12 chase axis toggle (see cat1_axis)
-                    cat2_ai_ptr     = $8568 ; from $2BB0
+                    cat2_spawn_dly  = $8568 ; from $2BB0 (see cat1_spawn_dly)
                     cat2_busy       = $856B
-                    cat2_ptr2       = $856D ; from $2B28
+                    cat2_speedup_tmr = $856D ; from cat_speedup_tbl (see cat1_speedup_tmr)
 
                     cat3_bytes      = $8570 ; 29 bytes
                     cat3_x          = $8578
@@ -117,9 +117,9 @@
                     cat3_slot       = $8573
                     cat3_tile       = $8574
                     cat3_state      = $8577
-                    cat3_ai_ptr     = $8588 ; from $2C06
+                    cat3_spawn_dly  = $8588 ; from $2C06 (see cat1_spawn_dly)
                     cat3_busy       = $858B
-                    cat3_ptr2       = $858D ; from $2B28
+                    cat3_speedup_tmr = $858D ; from cat_speedup_tbl (see cat1_speedup_tmr)
 
                     boulder         = $85C0 ; boulder active flag (slot 7: a boulder is falling)
                     boulder_req     = $85C1 ; trigger request (set when player touches TILE_BOULDER $39/$3A)
@@ -3767,11 +3767,11 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2A55  A7      	    and  a
 2A56  C2702A  	    jp   nz,$2A70
 2A59  3601    	    ld   (hl),$01
-2A5B  212885  	    ld   hl,cat1_ai_ptr
-2A5E  015A2B  	    ld   bc,cat1_ai_tbl
+2A5B  212885  	    ld   hl,cat1_spawn_dly
+2A5E  015A2B  	    ld   bc,cat1_spawn_dly_tbl
 2A61  CDCF31  	    call load_level_ptr
-2A64  212D85  	    ld   hl,cat1_ptr2
-2A67  01282B  	    ld   bc,cat_ptr2_tbl
+2A64  212D85  	    ld   hl,cat1_speedup_tmr
+2A67  01282B  	    ld   bc,cat_speedup_tbl
 2A6A  CDCF31  	    call load_level_ptr
 2A6D  CD1F2B  	    call cat_ai_init_clear
                 ;;
@@ -3786,11 +3786,11 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2A82  A7      	    and  a
 2A83  C29D2A  	    jp   nz,$2A9D
 2A86  3601    	    ld   (hl),$01
-2A88  216885  	    ld   hl,cat2_ai_ptr
-2A8B  01B02B  	    ld   bc,cat2_ai_tbl
+2A88  216885  	    ld   hl,cat2_spawn_dly
+2A8B  01B02B  	    ld   bc,cat2_spawn_dly_tbl
 2A8E  CDCF31  	    call load_level_ptr
-2A91  216D85  	    ld   hl,cat2_ptr2
-2A94  01282B  	    ld   bc,cat_ptr2_tbl
+2A91  216D85  	    ld   hl,cat2_speedup_tmr
+2A94  01282B  	    ld   bc,cat_speedup_tbl
 2A97  CDCF31  	    call load_level_ptr
 2A9A  CD1F2B  	    call cat_ai_init_clear
 2A9D  216985  	    ld   hl,$8569
@@ -3804,11 +3804,11 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2AAF  A7      	    and  a
 2AB0  C2CA2A  	    jp   nz,$2ACA
 2AB3  3601    	    ld   (hl),$01
-2AB5  218885  	    ld   hl,cat3_ai_ptr
-2AB8  01062C  	    ld   bc,cat3_ai_tbl
+2AB5  218885  	    ld   hl,cat3_spawn_dly
+2AB8  01062C  	    ld   bc,cat3_spawn_dly_tbl
 2ABB  CDCF31  	    call load_level_ptr
-2ABE  218D85  	    ld   hl,cat3_ptr2
-2AC1  01282B  	    ld   bc,cat_ptr2_tbl
+2ABE  218D85  	    ld   hl,cat3_speedup_tmr
+2AC1  01282B  	    ld   bc,cat_speedup_tbl
 2AC4  CDCF31  	    call load_level_ptr
 2AC7  CD1F2B  	    call cat_ai_init_clear
 2ACA  218985  	    ld   hl,$8589
@@ -3875,7 +3875,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2B26  77      	    ld   (hl),a
 2B27  C9      	    ret
                 ;;
-                cat_ptr2_tbl: ; 10x level-indexed 16-bit param -> cat record +$1D/+$1E (via load_level_ptr); low byte $3C const, high byte trends down w/ level
+                cat_speedup_tbl: ; 10x level-indexed speed-up delay -> cat record +$1D/+$1E (via load_level_ptr); +$1D frames (reload $3C), +$1E seconds: 120s lvl 1 down to ~1s lvl 10+; expiry sets +$1F (4/3 speed via $3017)
 2B28               db   $3C, $78   ; level 0: $783C
 2B2A               db   $3C, $64   ; level 1: $643C
 2B2C               db   $3C, $5A   ; level 2: $5A3C
@@ -3904,7 +3904,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2B56  3200B8  	    ld   (watchdog),a
 2B59  C9      	    ret
     ;; data?
-                cat1_ai_tbl:        ; 10x level-indexed 16-bit AI param -> cat A record +$18/+$19 (cat1_ai_ptr) via load_level_ptr
+                cat1_spawn_dly_tbl: ; 10x level-indexed spawn delay -> cat A record +$18/+$19 (cat1_spawn_dly) via load_level_ptr; counted by enemy_spawn_gate
 2B5A               db   $30, $02   ; level 0: $0230
 2B5C               db   $30, $02   ; level 1: $0230
 2B5E               db   $30, $02   ; level 2: $0230
@@ -3941,7 +3941,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2BAA  3E87    	    ld   a,$87
 2BAC  3200B8  	    ld   (watchdog),a
 2BAF  C9      	    ret
-                cat2_ai_tbl:        ; 10x level-indexed 16-bit AI param -> cat B record +$18/+$19 (cat2_ai_ptr) via load_level_ptr
+                cat2_spawn_dly_tbl: ; 10x level-indexed spawn delay -> cat B record +$18/+$19 (cat2_spawn_dly) via load_level_ptr
 2BB0               db   $14, $16   ; level 0: $1614
 2BB2               db   $14, $14   ; level 1: $1414
 2BB4               db   $14, $0F   ; level 2: $0F14
@@ -3999,7 +3999,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 2C00  3E87    	    ld   a,$87
 2C02  3200B8  	    ld   (watchdog),a
 2C05  C9      	    ret
-                cat3_ai_tbl:        ; 10x level-indexed 16-bit AI param -> cat C record +$18/+$19 (cat3_ai_ptr) via load_level_ptr
+                cat3_spawn_dly_tbl: ; 10x level-indexed spawn delay -> cat C record +$18/+$19 (cat3_spawn_dly) via load_level_ptr
 2C06               db   $24, $06   ; level 0: $0624
 2C08               db   $24, $06   ; level 1: $0624
 2C0A               db   $14, $02   ; level 2: $0214
@@ -4967,7 +4967,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 321F  212986  	    ld   hl,$8629
 3222  1A      	    ld   a,(de)
 3223  A7      	    and  a
-3224  CC5632  	    call z,$3256
+3224  CC5632  	    call z,snake_spawn_gate
 3227  210986  	    ld   hl,snake2_ai_init
 322A  7E      	    ld   a,(hl)
 322B  A7      	    and  a
@@ -4980,7 +4980,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 323D  214986  	    ld   hl,$8649
 3240  1A      	    ld   a,(de)
 3241  A7      	    and  a
-3242  CC5632  	    call z,$3256
+3242  CC5632  	    call z,snake_spawn_gate
 3245  210086  	    ld   hl,snake1_enable
 3248  7E      	    ld   a,(hl)
 3249  A7      	    and  a
@@ -4991,6 +4991,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 3252  C4B232  	    call nz,setup_snake2
 3255  C9      	    ret
 
+                snake_spawn_gate:   ; snake spawn countdown: +$18 frames (reload $FF) / +$19 outer -> enable (twin of enemy_spawn_gate)
 3256  46      	    ld   b,(hl)
 3257  2B      	    dec  hl
 3258  7E      	    ld   a,(hl)
@@ -5197,7 +5198,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 33CC  0607    	    ld   b,$07
 33CE  3E22    	    ld   a,$22
 33D0  BE      	    cp   (hl)
-33D1  CA4B34  	    jp   z,$344B
+33D1  CA4B34  	    jp   z,snake_drift_gate
 33D4  C620    	    add  a,$20
 33D6  10F8    	    djnz $33D0
 33D8  C39934  	    jp   $3499
@@ -5219,6 +5220,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 33F9  C0      	    ret  nz
 33FA  3608    	    ld   (hl),$08
 33FC  C9      	    ret
+                snake_chase:        ; steer toward player on a 9-beat pattern (+$12: beats 1/3/4/6 = X vs $8000, else Y vs $8003) -> dir +$0A
 33FD  42      	    ld   b,d
 33FE  4B      	    ld   c,e
 33FF  54      	    ld   d,h
@@ -5263,6 +5265,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 3447  C9      	    ret
 3448  3600    	    ld   (hl),$00
 344A  C9      	    ret
+                snake_drift_gate:   ; junction: bump ctr +$1C, re-aim unless on drift beat (A: cnt&3==0, B: ==2), reload +$17 hold $10/$30 by bit4
 344B  E5      	    push hl
 344C  011300  	    ld   bc,$0013
 344F  09      	    add  hl,bc
@@ -5279,7 +5282,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 345E  F5      	    push af
 345F  E603    	    and  $03
 3461  FE00    	    cp   $00
-3463  C4FD33  	    call nz,$33FD
+3463  C4FD33  	    call nz,snake_chase
 3466  EB      	    ex   de,hl
 3467  210D00  	    ld   hl,$000D
 346A  19      	    add  hl,de
@@ -5299,7 +5302,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 3484  F5      	    push af
 3485  E603    	    and  $03
 3487  FE02    	    cp   $02
-3489  C4FD33  	    call nz,$33FD
+3489  C4FD33  	    call nz,snake_chase
 348C  EB      	    ex   de,hl
 348D  210D00  	    ld   hl,$000D
 3490  19      	    add  hl,de
@@ -5315,13 +5318,13 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 349D  23      	    inc  hl
 349E  E607    	    and  $07
 34A0  FE04    	    cp   $04
-34A2  C21037  	    jp   nz,$3710
+34A2  C21037  	    jp   nz,snake_move_midcell
 34A5  7E      	    ld   a,(hl)
 34A6  E607    	    and  $07
 34A8  FE02    	    cp   $02
-34AA  C21037  	    jp   nz,$3710
+34AA  C21037  	    jp   nz,snake_move_midcell
 34AD  EB      	    ex   de,hl
-34AE  CDCA37  	    call $37CA
+34AE  CDCA37  	    call get_tile_pos_b
 34B1  01E2FF  	    ld   bc,$FFE2
 34B4  09      	    add  hl,bc
                 snake_water_die: ; snake on $FE tile -> state 4, splash tile $2C, sound $95 (twin of cat_water_die)
@@ -5351,13 +5354,14 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 34DC  1B      	    dec  de
 34DD  7E      	    ld   a,(hl)
 34DE  0F      	    rrca
-34DF  DA9F35  	    jp   c,$359F
+34DF  DA9F35  	    jp   c,snake_mover_xm
 34E2  0F      	    rrca
-34E3  DAFA35  	    jp   c,$35FA
+34E3  DAFA35  	    jp   c,snake_mover_xp
 34E6  0F      	    rrca
-34E7  DA5536  	    jp   c,$3655
+34E7  DA5536  	    jp   c,snake_mover_yp
 34EA  0F      	    rrca
-34EB  DAB236  	    jp   c,$36B2
+34EB  DAB236  	    jp   c,snake_mover_ym
+                snake_halt:         ; no/blocked heading: zero velocities +$0C/+$0F, dec stuck ctr +$06, fall to apply
 34EE  EB      	    ex   de,hl
 34EF  21FCFF  	    ld   hl,$FFFC
 34F2  19      	    add  hl,de
@@ -5371,7 +5375,8 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 34FB  23      	    inc  hl
 34FC  23      	    inc  hl
 34FD  77      	    ld   (hl),a
-34FE  C37437  	    jp   $3774
+34FE  C37437  	    jp   snake_move_apply
+                snake_blocked:      ; heading blocked by rail check -> pick a new direction (ld a,r random / toward player)
 3501  13      	    inc  de
 3502  13      	    inc  de
 3503  1A      	    ld   a,(de)
@@ -5395,15 +5400,15 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 3526  FE01    	    cp   $01
 3528  CA3035  	    jp   z,$3530
 352B  3601    	    ld   (hl),$01
-352D  C3EE34  	    jp   $34EE
+352D  C3EE34  	    jp   snake_halt
 3530  3602    	    ld   (hl),$02
-3532  C3EE34  	    jp   $34EE
+3532  C3EE34  	    jp   snake_halt
 3535  EB      	    ex   de,hl
 3536  3604    	    ld   (hl),$04
-3538  C3EE34  	    jp   $34EE
+3538  C3EE34  	    jp   snake_halt
 353B  EB      	    ex   de,hl
 353C  3608    	    ld   (hl),$08
-353E  C3EE34  	    jp   $34EE
+353E  C3EE34  	    jp   snake_halt
 3541  21E3FF  	    ld   hl,$FFE3
 3544  09      	    add  hl,bc
 3545  BE      	    cp   (hl)
@@ -5431,15 +5436,15 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 3571  FE04    	    cp   $04
 3573  CA7B35  	    jp   z,$357B
 3576  3604    	    ld   (hl),$04
-3578  C3EE34  	    jp   $34EE
+3578  C3EE34  	    jp   snake_halt
 357B  3608    	    ld   (hl),$08
-357D  C3EE34  	    jp   $34EE
+357D  C3EE34  	    jp   snake_halt
 3580  EB      	    ex   de,hl
 3581  3602    	    ld   (hl),$02
-3583  C3EE34  	    jp   $34EE
+3583  C3EE34  	    jp   snake_halt
 3586  EB      	    ex   de,hl
 3587  3601    	    ld   (hl),$01
-3589  C3EE34  	    jp   $34EE
+3589  C3EE34  	    jp   snake_halt
 358C  210200  	    ld   hl,$0002
 358F  09      	    add  hl,bc
 3590  BE      	    cp   (hl)
@@ -5449,42 +5454,43 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 3598  BE      	    cp   (hl)
 3599  DA8035  	    jp   c,$3580
 359C  C36F35  	    jp   $356F
+                snake_mover_xm:     ; X- mover: clamp $0C, rail cell+2 > $DF, food probes -> +$13/+$15, vX=-1
 359F  23      	    inc  hl
 35A0  3600    	    ld   (hl),$00
 35A2  23      	    inc  hl
 35A3  1A      	    ld   a,(de)
 35A4  FE0C    	    cp   $0C
-35A6  CAEE34  	    jp   z,$34EE
+35A6  CAEE34  	    jp   z,snake_halt
 35A9  D2B235  	    jp   nc,$35B2
 35AC  3E0C    	    ld   a,$0C
 35AE  12      	    ld   (de),a
-35AF  C3EE34  	    jp   $34EE
+35AF  C3EE34  	    jp   snake_halt
 35B2  13      	    inc  de
-35B3  CDCA37  	    call $37CA
+35B3  CDCA37  	    call get_tile_pos_b
 35B6  44      	    ld   b,h
 35B7  4D      	    ld   c,l
 35B8  210200  	    ld   hl,$0002
 35BB  09      	    add  hl,bc
 35BC  3EDF    	    ld   a,$DF
 35BE  BE      	    cp   (hl)
-35BF  D20135  	    jp   nc,$3501
+35BF  D20135  	    jp   nc,snake_blocked
 35C2  210B00  	    ld   hl,$000B
 35C5  19      	    add  hl,de
 35C6  EB      	    ex   de,hl
 35C7  21E2FF  	    ld   hl,$FFE2
-35CA  CDE537  	    call $37E5
+35CA  CDE537  	    call snake_food_probeA
 35CD  A7      	    and  a
 35CE  C2D735  	    jp   nz,$35D7
 35D1  210200  	    ld   hl,$0002
-35D4  CDE537  	    call $37E5
+35D4  CDE537  	    call snake_food_probeA
 35D7  13      	    inc  de
 35D8  13      	    inc  de
 35D9  21E2FF  	    ld   hl,$FFE2
-35DC  CD0C38  	    call $380C
+35DC  CD0C38  	    call snake_food_probeB
 35DF  A7      	    and  a
 35E0  C2E935  	    jp   nz,$35E9
 35E3  210200  	    ld   hl,$0002
-35E6  CD0C38  	    call $380C
+35E6  CD0C38  	    call snake_food_probeB
 35E9  21F7FF  	    ld   hl,$FFF7
 35EC  19      	    add  hl,de
 35ED  54      	    ld   d,h
@@ -5496,43 +5502,44 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 35F4  13      	    inc  de
 35F5  13      	    inc  de
 35F6  12      	    ld   (de),a
-35F7  C32237  	    jp   $3722
+35F7  C32237  	    jp   snake_step_reset
+                snake_mover_xp:     ; X+ mover: clamp $E4, rail cell-62, food probes, vX=+1
 35FA  23      	    inc  hl
 35FB  3680    	    ld   (hl),$80
 35FD  23      	    inc  hl
 35FE  1A      	    ld   a,(de)
 35FF  FEE4    	    cp   $E4
-3601  CAEE34  	    jp   z,$34EE
+3601  CAEE34  	    jp   z,snake_halt
 3604  DA0D36  	    jp   c,$360D
 3607  3EE4    	    ld   a,$E4
 3609  12      	    ld   (de),a
-360A  C3EE34  	    jp   $34EE
+360A  C3EE34  	    jp   snake_halt
 360D  13      	    inc  de
-360E  CDCA37  	    call $37CA
+360E  CDCA37  	    call get_tile_pos_b
 3611  44      	    ld   b,h
 3612  4D      	    ld   c,l
 3613  21C2FF  	    ld   hl,$FFC2
 3616  09      	    add  hl,bc
 3617  3EDF    	    ld   a,$DF
 3619  BE      	    cp   (hl)
-361A  D20135  	    jp   nc,$3501
+361A  D20135  	    jp   nc,snake_blocked
 361D  210B00  	    ld   hl,$000B
 3620  19      	    add  hl,de
 3621  EB      	    ex   de,hl
 3622  21E2FF  	    ld   hl,$FFE2
-3625  CDE537  	    call $37E5
+3625  CDE537  	    call snake_food_probeA
 3628  A7      	    and  a
 3629  C23236  	    jp   nz,$3632
 362C  21C2FF  	    ld   hl,$FFC2
-362F  CDE537  	    call $37E5
+362F  CDE537  	    call snake_food_probeA
 3632  13      	    inc  de
 3633  13      	    inc  de
 3634  21E2FF  	    ld   hl,$FFE2
-3637  CD0C38  	    call $380C
+3637  CD0C38  	    call snake_food_probeB
 363A  A7      	    and  a
 363B  C24436  	    jp   nz,$3644
 363E  21C2FF  	    ld   hl,$FFC2
-3641  CD0C38  	    call $380C
+3641  CD0C38  	    call snake_food_probeB
 3644  21F7FF  	    ld   hl,$FFF7
 3647  19      	    add  hl,de
 3648  54      	    ld   d,h
@@ -5544,43 +5551,44 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 364E  3E00    	    ld   a,$00
 3650  13      	    inc  de
 3651  12      	    ld   (de),a
-3652  C32237  	    jp   $3722
+3652  C32237  	    jp   snake_step_reset
+                snake_mover_yp:     ; Y+ mover: clamp $EC, rail cell-29, food probes, vY=+1
 3655  23      	    inc  hl
 3656  3604    	    ld   (hl),$04
 3658  23      	    inc  hl
 3659  13      	    inc  de
 365A  1A      	    ld   a,(de)
 365B  FEEC    	    cp   $EC
-365D  CAEE34  	    jp   z,$34EE
+365D  CAEE34  	    jp   z,snake_halt
 3660  DA6936  	    jp   c,$3669
 3663  3EEC    	    ld   a,$EC
 3665  12      	    ld   (de),a
-3666  C3EE34  	    jp   $34EE
-3669  CDCA37  	    call $37CA
+3666  C3EE34  	    jp   snake_halt
+3669  CDCA37  	    call get_tile_pos_b
 366C  44      	    ld   b,h
 366D  4D      	    ld   c,l
 366E  21E3FF  	    ld   hl,$FFE3
 3671  09      	    add  hl,bc
 3672  3EDF    	    ld   a,$DF
 3674  BE      	    cp   (hl)
-3675  D20135  	    jp   nc,$3501
+3675  D20135  	    jp   nc,snake_blocked
 3678  210B00  	    ld   hl,$000B
 367B  19      	    add  hl,de
 367C  EB      	    ex   de,hl
 367D  21E2FF  	    ld   hl,$FFE2
-3680  CDE537  	    call $37E5
+3680  CDE537  	    call snake_food_probeA
 3683  A7      	    and  a
 3684  C28D36  	    jp   nz,$368D
 3687  21E3FF  	    ld   hl,$FFE3
-368A  CDE537  	    call $37E5
+368A  CDE537  	    call snake_food_probeA
 368D  13      	    inc  de
 368E  13      	    inc  de
 368F  21E2FF  	    ld   hl,$FFE2
-3692  CD0C38  	    call $380C
+3692  CD0C38  	    call snake_food_probeB
 3695  A7      	    and  a
 3696  C29F36  	    jp   nz,$369F
 3699  21E3FF  	    ld   hl,$FFE3
-369C  CD0C38  	    call $380C
+369C  CD0C38  	    call snake_food_probeB
 369F  21F7FF  	    ld   hl,$FFF7
 36A2  19      	    add  hl,de
 36A3  3E00    	    ld   a,$00
@@ -5594,43 +5602,44 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 36AC  1A      	    ld   a,(de)
 36AD  77      	    ld   (hl),a
 36AE  EB      	    ex   de,hl
-36AF  C32237  	    jp   $3722
+36AF  C32237  	    jp   snake_step_reset
+                snake_mover_ym:     ; Y- mover: clamp $14, rail cell-31, food probes, vY=-1
 36B2  23      	    inc  hl
 36B3  3644    	    ld   (hl),$44
 36B5  23      	    inc  hl
 36B6  13      	    inc  de
 36B7  1A      	    ld   a,(de)
 36B8  FE14    	    cp   $14
-36BA  CAEE34  	    jp   z,$34EE
+36BA  CAEE34  	    jp   z,snake_halt
 36BD  D2C636  	    jp   nc,$36C6
 36C0  3E14    	    ld   a,$14
 36C2  12      	    ld   (de),a
-36C3  C3EE34  	    jp   $34EE
-36C6  CDCA37  	    call $37CA
+36C3  C3EE34  	    jp   snake_halt
+36C6  CDCA37  	    call get_tile_pos_b
 36C9  44      	    ld   b,h
 36CA  4D      	    ld   c,l
 36CB  21E1FF  	    ld   hl,$FFE1
 36CE  09      	    add  hl,bc
 36CF  3EDF    	    ld   a,$DF
 36D1  BE      	    cp   (hl)
-36D2  D20135  	    jp   nc,$3501
+36D2  D20135  	    jp   nc,snake_blocked
 36D5  210B00  	    ld   hl,$000B
 36D8  19      	    add  hl,de
 36D9  EB      	    ex   de,hl
 36DA  21E2FF  	    ld   hl,$FFE2
-36DD  CDE537  	    call $37E5
+36DD  CDE537  	    call snake_food_probeA
 36E0  A7      	    and  a
 36E1  C2EA36  	    jp   nz,$36EA
 36E4  21E1FF  	    ld   hl,$FFE1
-36E7  CDE537  	    call $37E5
+36E7  CDE537  	    call snake_food_probeA
 36EA  13      	    inc  de
 36EB  13      	    inc  de
 36EC  21E2FF  	    ld   hl,$FFE2
-36EF  CD0C38  	    call $380C
+36EF  CD0C38  	    call snake_food_probeB
 36F2  A7      	    and  a
 36F3  C2FC36  	    jp   nz,$36FC
 36F6  21E1FF  	    ld   hl,$FFE1
-36F9  CD0C38  	    call $380C
+36F9  CD0C38  	    call snake_food_probeB
 36FC  21F7FF  	    ld   hl,$FFF7
 36FF  19      	    add  hl,de
 3700  3E00    	    ld   a,$00
@@ -5645,7 +5654,8 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 370A  1A      	    ld   a,(de)
 370B  77      	    ld   (hl),a
 370C  EB      	    ex   de,hl
-370D  C32237  	    jp   $3722
+370D  C32237  	    jp   snake_step_reset
+                snake_move_midcell: ; between cell centers: keep food flags, run speed tiers
 3710  210700  	    ld   hl,$0007
 3713  19      	    add  hl,de
 3714  EB      	    ex   de,hl
@@ -5655,7 +5665,8 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 371A  4D      	    ld   c,l
 371B  210500  	    ld   hl,$0005
 371E  19      	    add  hl,de
-371F  C33037  	    jp   $3730
+371F  C33037  	    jp   snake_speed_tiers
+                snake_step_reset:   ; mover exit: zero tier phase ctrs +$1D/+$14, then speed tiers
 3722  210E00  	    ld   hl,$000E
 3725  19      	    add  hl,de
 3726  44      	    ld   b,h
@@ -5664,6 +5675,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 372A  210500  	    ld   hl,$0005
 372D  19      	    add  hl,de
 372E  3600    	    ld   (hl),$00
+                snake_speed_tiers:  ; food flags -> move 1-in-4 (+$13, food $E1-$E4) / 1-in-2 (+$15, $E0) / 6-in-8 (skip beats 3+5)
 3730  EB      	    ex   de,hl
 3731  1B      	    dec  de
 3732  1A      	    ld   a,(de)
@@ -5675,8 +5687,8 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 373A  E603    	    and  $03
 373C  12      	    ld   (de),a
 373D  FE01    	    cp   $01
-373F  CA7437  	    jp   z,$3774
-3742  C36837  	    jp   $3768
+373F  CA7437  	    jp   z,snake_move_apply
+3742  C36837  	    jp   snake_move_skip
 3745  13      	    inc  de
 3746  13      	    inc  de
 3747  1A      	    ld   a,(de)
@@ -5687,16 +5699,17 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 374E  E601    	    and  $01
 3750  02      	    ld   (bc),a
 3751  FE01    	    cp   $01
-3753  CA7437  	    jp   z,$3774
-3756  C36837  	    jp   $3768
+3753  CA7437  	    jp   z,snake_move_apply
+3756  C36837  	    jp   snake_move_skip
 3759  0A      	    ld   a,(bc)
 375A  3C      	    inc  a
 375B  E607    	    and  $07
 375D  02      	    ld   (bc),a
 375E  FE03    	    cp   $03
-3760  CA6837  	    jp   z,$3768
+3760  CA6837  	    jp   z,snake_move_skip
 3763  FE05    	    cp   $05
-3765  C27437  	    jp   nz,$3774
+3765  C27437  	    jp   nz,snake_move_apply
+                snake_move_skip:    ; skip movement this frame (anim/commit only)
 3768  54      	    ld   d,h
 3769  5D      	    ld   e,l
 376A  21F9FF  	    ld   hl,$FFF9
@@ -5705,6 +5718,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 376F  1B      	    dec  de
 3770  1B      	    dec  de
 3771  C38737  	    jp   $3787
+                snake_move_apply:   ; add velocities to X/Y, advance walk anim, commit sprite
 3774  00      	    nop
 3775  00      	    nop
 3776  00      	    nop
@@ -5779,6 +5793,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 37C8  77      	    ld   (hl),a
 37C9  C9      	    ret
 
+                get_tile_pos_b:     ; snake twin of get_tile_pos: X/Y -> VRAM cell addr in hl
 37CA  1A      	    ld   a,(de)
 37CB  0F      	    rrca
 37CC  0F      	    rrca
@@ -5803,6 +5818,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 37E4  C9      	    ret
 
 
+                snake_food_probeA:  ; tile at (bc+hl) in $E1-$E4? -> (de) flag +$13 (1 = quarter speed)
 37E5  09      	    add  hl,bc
 37E6  3EE1    	    ld   a,$E1
 37E8  BE      	    cp   (hl)
@@ -5828,6 +5844,7 @@ XXXX                db   $F5, $F5, $F5, $F4, $25, $25, $25, $f4
 3808  3E01    	    ld   a,$01
 380A  12      	    ld   (de),a
 380B  C9      	    ret
+                snake_food_probeB:  ; tile at (bc+hl) == $E0? -> (de) flag +$15 (1 = half speed)
 380C  09      	    add  hl,bc
 380D  3EE0    	    ld   a,$E0
 380F  BE      	    cp   (hl)
